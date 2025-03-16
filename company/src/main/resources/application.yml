@@ -1,0 +1,27 @@
+server:
+  port: 19095
+
+spring:
+  cloud:
+    config:
+      enabled: false
+  config:
+    import:
+      - optional:file:env/db.env[.properties]
+      - optional:file:env/security.env[.properties]
+  application:
+    name: company-service  # 여기서 변경합니다.
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:19090/eureka/
