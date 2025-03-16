@@ -11,6 +11,14 @@ spring:
           uri: lb://user-service # 'users-service'라는 이름으로 로드 밸런싱된 서비스로 라우팅
           predicates:
             - Path=api/users/**, api/delivery-agents/** # /users/** 경로로 들어오는 요청을 이 라우트로 처리
+        - id: company-service
+          uri: lb://company-service
+          predicates:
+            - Path=/api/companies/**
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
 
 server:
   port: 19091
