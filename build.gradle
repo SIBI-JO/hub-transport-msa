@@ -51,3 +51,28 @@ subprojects { //모든 하위 모튱에 적용
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 }
+
+project(':user') {
+    dependencies {
+        implementation project(':common')
+    }
+}
+
+//project(':hub') {
+//    dependencies {
+//        implementation project(':common')
+//    }
+//}
+//
+//project(':order') {
+//    dependencies {
+//        implementation project(':common')
+//    }
+//}
+//
+//project(':company') {
+//    dependencies {
+//        implementation project(':common')
+//    }
+//}
+

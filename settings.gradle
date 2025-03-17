@@ -3,3 +3,7 @@ rootProject.name = 'hub-transport-msa-root'
 include("eureka")
 include("gateway")
 include("user")
+include("common")
+include("hub")
+include("company")
+include("product")
