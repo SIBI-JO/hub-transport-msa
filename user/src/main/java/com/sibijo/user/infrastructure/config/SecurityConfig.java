@@ -1,13 +1,10 @@
 package com.sibijo.user.infrastructure.config;
 
 import com.sibijo.user.infrastructure.filter.JwtAuthenticationFilter;
-import com.sibijo.user.infrastructure.filter.JwtAuthorizationFilter;
-import com.sibijo.user.infrastructure.security.UserDetailsServiceImpl;
 import com.sibijo.user.infrastructure.util.JwtUtil;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -22,20 +19,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity  // pre/post 어노테이션을 사용할 수 있도록 활성화
-public class SecurityConfig{
+public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailsServiceImpl userDetailsService;
     private final AuthenticationConfiguration authenticationConfiguration;
 
-    public SecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService, AuthenticationConfiguration authenticationConfiguration) {
+    public SecurityConfig(JwtUtil jwtUtil,
+            AuthenticationConfiguration authenticationConfiguration) {
         this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
         this.authenticationConfiguration = authenticationConfiguration;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
+            throws Exception {
         return configuration.getAuthenticationManager();
     }
 
@@ -44,11 +41,6 @@ public class SecurityConfig{
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         return filter;
-    }
-
-    @Bean
-    public JwtAuthorizationFilter jwtAuthorizationFilter() {
-        return new JwtAuthorizationFilter(jwtUtil, userDetailsService);
     }
 
     @Bean
@@ -62,14 +54,12 @@ public class SecurityConfig{
         );
 
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() // resources 접근 허용
-                .requestMatchers("/api/users/signup", "/api/users/signin").permitAll() // 로그인, 회원가입 요청 접근 허용
-                .requestMatchers(HttpMethod.GET, "/api/users/health-check").permitAll() // GET 요청에 대해서만 허용
-                .anyRequest().authenticated() // 다른 모든 요청은 인증 필요
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
+                .permitAll() // resources 접근 허용
+                .anyRequest().permitAll() //gate way에서만 인가 처리
         );
 
         // 필터 관리
-        http.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -77,7 +67,7 @@ public class SecurityConfig{
 
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

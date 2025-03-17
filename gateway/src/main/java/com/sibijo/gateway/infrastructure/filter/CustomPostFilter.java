@@ -1,4 +1,4 @@
-package com.sibijo.gateway.filter;
+package com.sibijo.gateway.infrastructure.filter;
 
 import java.util.logging.Logger;
 import org.springframework.cloud.gateway.filter.GlobalFilter;

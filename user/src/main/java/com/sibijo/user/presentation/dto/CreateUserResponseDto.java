@@ -1,2 +1,10 @@
-package com.sibijo.user.presentation.dto;public class CreateUserResponseDto {
+package com.sibijo.user.presentation.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@Getter
+public class CreateUserResponseDto {
+    private Long userId;
 }

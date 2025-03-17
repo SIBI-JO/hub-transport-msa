@@ -2,6 +2,8 @@ package com.sibijo.user.presentation.controller;
 
 import com.sibijo.user.application.service.UserService;
 import com.sibijo.user.common.ApiResponse;
+import com.sibijo.user.presentation.dto.CreateUserRequestDto;
+import com.sibijo.user.presentation.dto.CreateUserResponseDto;
 import com.sibijo.user.presentation.dto.SignUpRequestDto;
 import com.sibijo.user.presentation.dto.SignUpResponseDto;
 import jakarta.validation.Valid;
@@ -10,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.Mapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,8 +40,20 @@ public class UserController {
         SignUpResponseDto signUpResponseDto = userService.signup(requestDto);
 
         return ResponseEntity
-                .created(URI.create("/users/" + signUpResponseDto.getUserId()))
+                .created(URI.create("/users" + signUpResponseDto.getUserId()))
                 .body(ApiResponse.success("성공", signUpResponseDto));
+    }
+
+    //CRUDS
+    @PostMapping("")
+    private ResponseEntity<ApiResponse<CreateUserResponseDto>> createUser(
+            @RequestBody CreateUserRequestDto requestDto) {
+
+        CreateUserResponseDto createUserResponseDto = userService.createUser(requestDto);
+
+        return ResponseEntity
+                .created(URI.create("/users" + createUserResponseDto.getUserId()))
+                .body(ApiResponse.success("성공", createUserResponseDto));
     }
 
 }

@@ -3,6 +3,8 @@ package com.sibijo.user.application.service;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.model.enumtype.Role;
 import com.sibijo.user.domain.repository.UserRepository;
+import com.sibijo.user.presentation.dto.CreateUserRequestDto;
+import com.sibijo.user.presentation.dto.CreateUserResponseDto;
 import com.sibijo.user.presentation.dto.SignUpRequestDto;
 import com.sibijo.user.presentation.dto.SignUpResponseDto;
 import java.util.Optional;
@@ -66,6 +68,27 @@ public class UserService {
         userRepository.save(user);
 
         return SignUpResponseDto
+                .builder()
+                .userId(user.getId())
+                .build();
+    }
+
+    public CreateUserResponseDto createUser(CreateUserRequestDto requestDto) {
+
+        // TODO: 권한 체크 ( Header에서 가져온 값 기반으로 Role, 본인 여부 판단)
+
+        // 유저 생성
+        String username = requestDto.getUsername();
+        String password = passwordEncoder.encode(requestDto.getPassword());
+        String hubId = requestDto.getHubId();
+        String companyId = requestDto.getCompanyId();
+        String slackId = requestDto.getSlackId();
+        Role role = requestDto.getRole();
+
+        User user = User.of(username, password, slackId, role, hubId, companyId);
+        userRepository.save(user);
+
+        return CreateUserResponseDto
                 .builder()
                 .userId(user.getId())
                 .build();

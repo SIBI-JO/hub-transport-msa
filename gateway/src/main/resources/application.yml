@@ -1,6 +1,8 @@
 spring:
   application:
     name: gateway-service
+  config:
+    import: optional:file:./gateway/.env[.properties]
   cloud:
     gateway:
       discovery:
@@ -28,3 +30,6 @@ eureka:
     service-url:
       defaultZone: http://localhost:19090/eureka/  # Eureka 서버 URL
 
+service:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
