@@ -1,6 +1,5 @@
-package com.sibijo.common.exception.codes;
+package com.sibijo.user.common;
 
-import com.sibijo.common.exception.ExceptionCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
