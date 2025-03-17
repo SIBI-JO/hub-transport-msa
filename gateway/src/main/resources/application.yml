@@ -1,6 +1,8 @@
 spring:
+  main:
+    web-application-type: reactive
   application:
-    name: gateway
+    name: gateway-service
   cloud:
     gateway:
       discovery:
@@ -8,9 +10,9 @@ spring:
           enabled: true  # 서비스 디스커버리를 통해 동적으로 라우트를 생성하도록 설정
       routes:
         - id: user-service  # 라우트 식별자
-          uri: lb://user-service # 'users-service'라는 이름으로 로드 밸런싱된 서비스로 라우팅
+          uri: lb://user-service # 'user-service'라는 이름으로 로드 밸런싱된 서비스로 라우팅
           predicates:
-            - Path=api/users/**, api/delivery-agents/** # /users/** 경로로 들어오는 요청을 이 라우트로 처리
+            - Path=/api/users/**, /api/product-agents/** # /users/** 경로로 들어오는 요청을 이 라우트로 처리
 
 server:
   port: 19091
