@@ -53,10 +53,20 @@ public abstract class BaseEntity {
     @Column(name = "deleted_by", updatable = false)
     private Integer deletedBy;
 
-    // 추후 softDelete 방식 논의
-    @PreRemove
-    private void softDelete() {
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
 
+    @PreRemove
+    protected void softDelete() {
+        if (isDeleted != null && !isDeleted) {
+            if (deletedAt == null) {
+                deletedAt = LocalDateTime.now();
+            }
+            if (deletedBy == null) {
+                deletedBy = updatedBy;
+            }
+            isDeleted = true;
+        }
     }
 
 }
