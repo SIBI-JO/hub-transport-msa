@@ -58,11 +58,11 @@ project(':user') {
     }
 }
 
-//project(':hub') {
-//    dependencies {
-//        implementation project(':common')
-//    }
-//}
+project(':hub') {
+    dependencies {
+        implementation project(':common')
+    }
+}
 //
 //project(':order') {
 //    dependencies {
