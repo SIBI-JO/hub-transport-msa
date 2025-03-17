@@ -12,6 +12,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+/**
+ * 전역 에러 처리 클래스
+ *
+ *  CustomException : 커스텀 예외 발생
+ *
+ *  IllegalArgumentException : 잘못된 인자값이 전달된 경우
+ *
+ *  Exception : 예상치 못한 예외
+ *
+ *  MethodArgumentNotValidException : 유효성 검사 실패 시
+ *  - dto 등 @Valid 검사 실패
+ */
+
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
