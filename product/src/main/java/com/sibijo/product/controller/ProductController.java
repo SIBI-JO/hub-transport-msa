@@ -1,12 +1,14 @@
 package com.sibijo.product.controller;
 
 import com.sibijo.product.dto.ProductRequest;
+import com.sibijo.product.dto.ProductResponseDto;
 import com.sibijo.product.entity.Product;
 import com.sibijo.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
@@ -15,44 +17,38 @@ public class ProductController {
 
     private final ProductService productService;
 
-    /**
-     * 전체 상품 조회 (페이징 없이 목록으로 조회)
-     */
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
     }
 
-    /**
-     * 특정 상품의 상세 정보 조회
-     */
     @GetMapping("/{productId}")
-    public Product getProduct(@PathVariable Long productId) {
-        return productService.getProductById(productId);
+    public ResponseEntity<Product> getProduct(@PathVariable UUID productId) {
+        return ResponseEntity.ok(productService.getProductById(productId));
     }
 
-    /**
-     * 신규 상품 등록
-     */
     @PostMapping
-    public Product createProduct(@RequestBody ProductRequest request) {
-        return productService.createProduct(request);
+    public ResponseEntity<Product> createProduct(@RequestBody ProductRequest request) {
+        return ResponseEntity.ok(productService.createProduct(request));
     }
 
-    /**
-     * 기존 상품 정보 수정
-     */
     @PutMapping("/{productId}")
-    public Product updateProduct(@PathVariable Long productId,
+    public ResponseEntity<Product> updateProduct(@PathVariable UUID productId,
             @RequestBody ProductRequest request) {
-        return productService.updateProduct(productId, request);
+        return ResponseEntity.ok(productService.updateProduct(productId, request));
+    }
+
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable UUID productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.ok().build();
     }
 
     /**
-     * 상품 삭제
+     * 주문 서비스에서 호출할 API – 상품의 재고 정보와 연결된 허브 ID 반환
      */
-    @DeleteMapping("/{productId}")
-    public void deleteProduct(@PathVariable Long productId) {
-        productService.deleteProduct(productId);
+    @GetMapping("/{productId}/order")
+    public ResponseEntity<ProductResponseDto> getProductOrderInfo(@PathVariable UUID productId) {
+        return ResponseEntity.ok(productService.getProductOrderInfo(productId));
     }
 }

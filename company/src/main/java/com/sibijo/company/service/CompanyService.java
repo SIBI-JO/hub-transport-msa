@@ -1,7 +1,5 @@
 package com.sibijo.company.service;
 
-
-
 import com.sibijo.company.dto.CompanyRequest;
 import com.sibijo.company.entity.Company;
 import com.sibijo.company.repository.CompanyRepository;
@@ -9,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +25,7 @@ public class CompanyService {
     /**
      * 특정 업체 조회
      */
-    public Company getCompanyById(Long companyId) {
+    public Company getCompanyById(UUID companyId) {
         return companyRepository.findById(companyId).orElse(null);
     }
 
@@ -40,31 +39,28 @@ public class CompanyService {
                 .hubId(request.getHubId())
                 .address(request.getAddress())
                 .build();
-
         return companyRepository.save(newCompany);
     }
 
     /**
      * 기존 업체 정보 수정
      */
-    public Company updateCompany(Long companyId, CompanyRequest request) {
+    public Company updateCompany(UUID companyId, CompanyRequest request) {
         Company existingCompany = getCompanyById(companyId);
         if (existingCompany == null) {
-            return null; // 실제 프로젝트에서는 예외 처리 권장
+            return null; // 실제 프로젝트에서는 예외 처리를 권장합니다.
         }
-
         existingCompany.setCompanyName(request.getCompanyName());
         existingCompany.setCompanyType(request.getCompanyType());
         existingCompany.setHubId(request.getHubId());
         existingCompany.setAddress(request.getAddress());
-
         return companyRepository.save(existingCompany);
     }
 
     /**
      * 업체 삭제
      */
-    public void deleteCompany(Long companyId) {
+    public void deleteCompany(UUID companyId) {
         companyRepository.deleteById(companyId);
     }
 }

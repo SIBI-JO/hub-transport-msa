@@ -1,9 +1,7 @@
 package com.sibijo.company.controller;
 
-
-
-
 import com.sibijo.company.dto.CompanyRequest;
+import com.sibijo.company.dto.CompanyResponseDto;
 import com.sibijo.company.entity.Company;
 import com.sibijo.company.service.CompanyService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,13 +30,11 @@ public class CompanyController {
      * 특정 업체 조회
      */
     @GetMapping("/{companyId}")
-    public ResponseEntity<Company> getCompany(@PathVariable Long companyId) {
+    public ResponseEntity<Company> getCompany(@PathVariable UUID companyId) {
         Company company = companyService.getCompanyById(companyId);
         if (company == null) {
-            // 회사가 없으면 404 Not Found
             return ResponseEntity.notFound().build();
         }
-        // 회사가 있으면 200 OK + JSON 본문
         return ResponseEntity.ok(company);
     }
 
@@ -53,7 +50,7 @@ public class CompanyController {
      * 기존 업체 정보 수정
      */
     @PutMapping("/{companyId}")
-    public Company updateCompany(@PathVariable Long companyId,
+    public Company updateCompany(@PathVariable UUID companyId,
             @RequestBody CompanyRequest request) {
         return companyService.updateCompany(companyId, request);
     }
@@ -62,8 +59,24 @@ public class CompanyController {
      * 업체 삭제
      */
     @DeleteMapping("/{companyId}")
-    public void deleteCompany(@PathVariable Long companyId) {
+    public void deleteCompany(@PathVariable UUID companyId) {
         companyService.deleteCompany(companyId);
     }
-}
 
+    /**
+     * 주문 처리를 위한 전용 엔드포인트
+     * 해당 회사의 hubId와 배송지 정보를 반환합니다.
+     */
+    @GetMapping("/{companyId}/order")
+    public ResponseEntity<CompanyResponseDto> getCompanyOrderInfo(@PathVariable UUID companyId) {
+        Company company = companyService.getCompanyById(companyId);
+        if (company == null) {
+            return ResponseEntity.notFound().build();
+        }
+        CompanyResponseDto responseDto = CompanyResponseDto.builder()
+                .hubId(company.getHubId())
+                .deliveryAddress(company.getAddress())  // address를 배송지로 활용하거나 별도의 필드를 사용
+                .build();
+        return ResponseEntity.ok(responseDto);
+    }
+}

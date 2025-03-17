@@ -1,73 +1,92 @@
 package com.sibijo.product.service;
 
 import com.sibijo.product.client.CompanyClient;
+import com.sibijo.product.client.CompanyResponseDto;
 import com.sibijo.product.dto.ProductRequest;
+import com.sibijo.product.dto.ProductResponseDto;
+import com.sibijo.product.entity.HubStock;
 import com.sibijo.product.entity.Product;
+import com.sibijo.product.repository.HubStockRepository;
 import com.sibijo.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final HubStockRepository hubStockRepository;
     private final CompanyClient companyClient;
 
-    /**
-     * 전체 상품 조회 (페이징 없이)
-     */
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    /**
-     * 특정 상품 조회
-     */
-    public Product getProductById(Long productId) {
-        return productRepository.findById(productId).orElse(null);
+    public Product getProductById(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
     }
 
-    /**
-     * 신규 상품 등록 (회사 존재 여부 검증)
-     */
+    @Transactional
     public Product createProduct(ProductRequest request) {
-        if (!companyClient.existsCompany(request.getCompanyId())) {
-            throw new IllegalArgumentException("회사 정보가 존재하지 않습니다. companyId: " + request.getCompanyId());
+        // 회사 서비스에 등록된 hub 정보를 조회 (존재하지 않으면 예외 발생)
+        CompanyResponseDto companyResponse = companyClient.getHubByCompanyId(request.getCompanyId());
+        if (companyResponse == null || companyResponse.getHubId() == null) {
+            throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
         }
         Product product = Product.builder()
                 .productName(request.getProductName())
                 .price(request.getPrice())
                 .companyId(request.getCompanyId())
-                .hubId(request.getHubId())
                 .build();
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+
+        // 회사 서비스에서 받아온 hubId를 사용해 초기 재고 0 기록 생성
+        HubStock hubStock = HubStock.builder()
+                .hubId(companyResponse.getHubId())
+                .companyId(request.getCompanyId())
+                .product(savedProduct)
+                .amount(0L)
+                .build();
+        hubStockRepository.save(hubStock);
+
+        return savedProduct;
     }
 
-    /**
-     * 기존 상품 정보 수정
-     */
-    public Product updateProduct(Long productId, ProductRequest request) {
+    @Transactional
+    public Product updateProduct(UUID productId, ProductRequest request) {
         Product existingProduct = getProductById(productId);
-        if(existingProduct == null) {
-            throw new IllegalArgumentException("상품을 찾을 수 없습니다. productId: " + productId);
-        }
-        if (!companyClient.existsCompany(request.getCompanyId())) {
-            throw new IllegalArgumentException("회사 정보가 존재하지 않습니다. companyId: " + request.getCompanyId());
+        // 업데이트 전에도 회사 검증 (필요시)
+        CompanyResponseDto companyResponse = companyClient.getHubByCompanyId(request.getCompanyId());
+        if (companyResponse == null || companyResponse.getHubId() == null) {
+            throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
         }
         existingProduct.setProductName(request.getProductName());
         existingProduct.setPrice(request.getPrice());
         existingProduct.setCompanyId(request.getCompanyId());
-        existingProduct.setHubId(request.getHubId());
+        // 재고 기록의 hubId 업데이트는 별도 로직(필요 시)로 처리
+
         return productRepository.save(existingProduct);
     }
 
-    /**
-     * 상품 삭제
-     */
-    public void deleteProduct(Long productId) {
+    public void deleteProduct(UUID productId) {
         productRepository.deleteById(productId);
+    }
+
+    /**
+     * 주문 서비스가 호출할 API – 해당 상품의 재고와 연결된 허브 정보를 반환합니다.
+     */
+    public ProductResponseDto getProductOrderInfo(UUID productId) {
+        Product product = getProductById(productId);
+        HubStock hubStock = hubStockRepository.findByProduct(product)
+                .orElseThrow(() -> new IllegalArgumentException("Hub stock not found for productId: " + productId));
+        return ProductResponseDto.builder()
+                .hubId(hubStock.getHubId())
+                .amount(hubStock.getAmount())
+                .build();
     }
 }

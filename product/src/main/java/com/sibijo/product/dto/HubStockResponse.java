@@ -8,8 +8,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductRequest {
-    private String productName;
-    private Integer price;
+public class HubStockResponse {
+    private UUID hubStockId;
+    private UUID hubId;
     private UUID companyId;
+    private UUID productId;
+    private Long amount;
 }
