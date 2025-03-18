@@ -16,10 +16,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserJwtUtil {
 
-    // Header KEY 값
-    public static final String AUTHORIZATION_HEADER = "Authorization";
     // 사용자 권한 값의 KEY
     public static final String AUTHORIZATION_KEY = "auth";
+    // 사용자 ID
+    public static final String USER_ID = "userId";
     // 사용자 Hub ID
     public static final String HUB_ID = "hubId";
     // 사용자 Hub ID
@@ -44,12 +44,13 @@ public class UserJwtUtil {
     }
 
     // 토큰 생성
-    public String createToken(String username, Role role, String hubId, String CompanyId) {
+    public String createToken(String username, Long userId, Role role, String hubId, String CompanyId) {
         Date date = new Date();
 
         return BEARER_PREFIX +
                 Jwts.builder()
                         .setSubject(username) // 사용자 식별자값(ID)
+                        .claim(USER_ID, userId)
                         .claim(AUTHORIZATION_KEY, role) // 사용자 권한
                         .claim(HUB_ID, hubId) //hub id
                         .claim(COMPANY_ID, CompanyId) //company id

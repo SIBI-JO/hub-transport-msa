@@ -56,11 +56,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             throws IOException, ServletException {
         log.info("로그인 성공 및 JWT 생성");
         String username = ((UserDetailsImpl) authResult.getPrincipal()).getUsername();
+        Long userId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getId();
         Role role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
         String hubId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getHubId();
         String companyId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getCompanyId();
 
-        String token = jwtUtil.createToken(username, role, hubId, companyId);
+        String token = jwtUtil.createToken(username, userId, role, hubId, companyId);
 
         //Jwt Token을 JSON 응답으로 반환
         ApiResponse<SignInResponseDto> responseBody = ApiResponse.success(

@@ -39,9 +39,16 @@ public class JwtUtil {
 
     // JWT에서 사용자 추출
     public String extractUserName(String token) {
-        log.info("extract User Id");
+        log.info("extract User Name");
         Claims claims = parseToken(token);
         return claims.getSubject(); // JWT payload에서 user 추출
+    }
+
+    // JWT에서 사용자 추출
+    public Long extractUserID(String token) {
+        log.info("extract User Id");
+        Claims claims = parseToken(token);
+        return claims.get("userId", Long.class); // JWT payload에서 user 추출
     }
 
     // JWT에서 역할(Role) 추출

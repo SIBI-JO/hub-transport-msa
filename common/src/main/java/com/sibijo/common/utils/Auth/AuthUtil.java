@@ -1,5 +1,6 @@
 package com.sibijo.common.utils.Auth;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -10,14 +11,38 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @Component
 public class AuthUtil {
-    @Builder
-    public <E> void checkSelf(String userName, String user, String role, Set<E> permitRoles) {
-        log.info("userId: {}, id: {}, role: {}, permitRoles: {}", userName, user, role, permitRoles);
-        if (permitRoles.contains(role)) {
-            if (!userName.equals(user)) {
+
+    private final JwtUtil jwtUtil;
+
+    public AuthUtil(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+
+    // 사용자 본인인지
+    public <E> void authorizeSelfAccess(HttpServletRequest request, Long id, Set<E> targetRoles) {
+
+        //JWT parsing
+        String token = jwtUtil.extractToken(request);
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
+
+        if (role == null || userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰에서 사용자 정보를 추출할 수 없습니다.");
+        }
+
+        // Authorization Detail check
+        log.info("userId: {}, id: {}, role: {}, permitRoles: {}", userId, id, role, targetRoles);
+        if (targetRoles.contains(role)) {
+            if (!userId.equals(id)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 사용자의 정보를 조회할 권한이 없습니다.");
             }
         }
     }
+    // 여기에 필요한 검증 메서드 추가해서 사용
+    // 담당 허브인지
+
+    // 담당 배송인지
+
+    // 본인 업체인지
 
 }

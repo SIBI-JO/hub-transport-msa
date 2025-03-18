@@ -70,46 +70,6 @@ public class UserController {
                 .ok(ApiResponse.success("success", userDetailsResponseDto));
     }
 
-    //    @GetMapping("")
-//    private ResponseEntity<ApiResponse<UserPageResponseDto>> searchUsers(
-//            @AuthenticationPrincipal UserDetailsImpl userDetails,
-//            @RequestParam(value = "page", defaultValue = "1") int page,
-//            @RequestParam(value = "size", defaultValue = "10") int size, //기본값 10
-//            @RequestParam(value = "orderby", defaultValue = "createdAt") String criteria,
-//            @RequestParam(value = "sort", defaultValue = "DESC") String sort,
-//            @RequestParam(value = "username", required = false) String username
-//    ) {
-//        // client 에서 1페이지 요청하면 0페이지를 반환하기 위해 page-1로 설정.
-//        UserPageResponseDto userPageResponseDto = userService.searchUsers(userDetails, page-1, size, criteria, sort, username);
-//        return ResponseEntity
-//                .ok(ApiResponse.success(userPageResponseDto));
-//    }
-//
-//    @PatchMapping("/{id}")
-//    private ResponseEntity<ApiResponse<UserUpdateResponseDto>> updateUser(
-//            @PathVariable("id") Long id,
-//            @Valid @RequestBody UserUpdateRequestDto requestDto,
-//            BindingResult bindingResult,
-//            @AuthenticationPrincipal UserDetailsImpl userDetails
-//    ) {
-//        // validation 예외처리
-//        raiseValidationException(bindingResult);
-//
-//        UserDetailsResponseDto userDetailsResponseDto = userService.updateUser(id, requestDto, userDetails);
-//        return ResponseEntity
-//                .ok(ApiResponse.success(userDetailsResponseDto));
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    private ResponseEntity<ApiResponse<UserDeleteResponseDto>> deleteUser(
-//            @PathVariable("id") Long id,
-//            @AuthenticationPrincipal UserDetailsImpl userDetails
-//    ) {
-//        UserDeleteResponseDto userDeleteResponseDto = userService.deleteUser(id, userDetails);
-//        return ResponseEntity
-//                .ok(ApiResponse.success(userDeleteResponseDto));
-//    }
-//
     private static void raiseValidationException(BindingResult bindingResult) {
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         if (fieldErrors.size() > 0) {
