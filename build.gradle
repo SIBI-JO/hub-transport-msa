@@ -77,6 +77,9 @@ project(':order') {
     dependencies {
         implementation project(':common')
     }
+    tasks.named('bootJar') {
+        enabled = true
+    }
 }
 //
 project(':company') {
@@ -100,5 +103,8 @@ project(':product') {
 project(':delivery') {
     dependencies {
         implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
     }
 }
