@@ -1,6 +1,5 @@
-package com.sibijo.order.infrastructure.client.Delivery;
+package com.sibijo.delivery.infrastructure.client.hub;
 
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,12 +7,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeliveryRouteRequestDto {
+public class HubResponseDto {
 
-    private Long sequence;
-    private UUID startHubId;
-    private UUID endHubId;
     private String expectedDistance;
+
     private String expectedTime;
 
 }

@@ -1,14 +1,13 @@
 package com.sibijo.delivery.domain.entity;
 
+import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
+import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,7 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @Table(catalog = "sibijo", name = "p_delivery")
-public class Delivery {
+public class Delivery extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -48,24 +47,6 @@ public class Delivery {
     private UUID deliveryManagerId;
 
 
-    private LocalDateTime createdAt;
-    private String createdBy;
-    private LocalDateTime updatedAt;
-    private String updatedBy;
-    private LocalDateTime deletedAt;
-    private String deletedBy;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
 
     public static Delivery createDelivery(DeliveryRequestDto requestDto) {
         return Delivery.builder()
@@ -79,12 +60,7 @@ public class Delivery {
 
     public void updateDeliveryManager(UUID deliveryManagerId) {
         this.deliveryManagerId = deliveryManagerId;
-        this.updatedAt = LocalDateTime.now();
     }
 
-    public void deleteDelivery(String deletedBy) {
-        this.deletedBy = deletedBy;
-        this.deletedAt = LocalDateTime.now();
-    }
 
 }

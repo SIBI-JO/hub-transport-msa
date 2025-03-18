@@ -1,7 +1,6 @@
-package com.sibijo.order.infrastructure.client.Hub;
+package com.sibijo.delivery.infrastructure.client.hub;
 
 import java.util.UUID;
-import lombok.Getter;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 public class ProductResponseDto {
 
     private UUID hubId;
-    private Long amount;
+    private Integer amount;
 
 }

@@ -1,8 +1,7 @@
 package com.sibijo.delivery.presentation.controller;
 
-import com.sibijo.delivery.application.service.DeliveryService;
-import com.sibijo.delivery.presentation.dto.DeliveryCreateRequestDto;
-import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
+import com.sibijo.delivery.application.service.DeliveryServiceCenter;
+import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DeliveryController {
 
-    private final DeliveryService deliveryService;
+    private final DeliveryServiceCenter deliveryService;
 
     @PostMapping
     public void createDelivery(
-            @RequestBody DeliveryCreateRequestDto requestDto,
+            @RequestBody OrderToDeliveryRequestDto requestDto,
             @RequestHeader(value = "X-User-Id", required = true) String userId,
             @RequestHeader(value = "X-Role", required = true) String role) {
 
