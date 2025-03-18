@@ -4,6 +4,6 @@ spring:
   config:
     import: optional:file:./common/.env[.properties]
 
-service:
-  jwt:
-    secret-key: ${JWT_SECRET_KEY}
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}

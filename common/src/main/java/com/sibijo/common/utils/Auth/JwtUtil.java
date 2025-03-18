@@ -1,6 +1,5 @@
 package com.sibijo.common.utils.Auth;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -20,21 +19,12 @@ public class JwtUtil {
     // Header KEY 값
     public static final String AUTHORIZATION_HEADER = "Authorization";
 
-//    @Value("${service.jwt.secret-key}")
+    @Value("${jwt.secret.key}")
     private String secretKey;
     private Key key;
 
     @PostConstruct
     public void init() {
-
-        // 환경 변수에서 JWT_SECRET_KEY 직접 로드
-        Dotenv dotenv = Dotenv.configure().directory("./common").load();
-        secretKey = dotenv.get("JWT_SECRET_KEY");
-
-        if (secretKey == null || secretKey.isEmpty()) {
-            throw new IllegalStateException("JWT_SECRET_KEY 환경 변수가 설정되지 않았습니다.");
-        }
-
         byte[] bytes = Base64.getDecoder().decode(secretKey);
         key = Keys.hmacShaKeyFor(bytes);
     }
