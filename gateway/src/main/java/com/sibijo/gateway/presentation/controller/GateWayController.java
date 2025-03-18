@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class GateWayController {
 
-
     @GetMapping("/health-check")
     private ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok().body("OK, gateway health check");
