@@ -1,5 +1,6 @@
 package com.sibijo.product.domain.entity;
 
+import com.sibijo.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
@@ -11,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Product {
+public class Product extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -26,4 +27,11 @@ public class Product {
 
     @Column(name = "company_id", nullable = false)
     private UUID companyId;
+
+
+    public Product(String productName, Integer price, UUID companyId) {
+        this.productName = productName;
+        this.price = price;
+        this.companyId = companyId;
+    }
 }

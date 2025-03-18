@@ -24,6 +24,7 @@ public class CompanyService {
 
     /**
      * 특정 업체 조회
+     * - 존재하지 않으면 null 반환 (Controller 단에서 처리)
      */
     public Company getCompanyById(UUID companyId) {
         return companyRepository.findById(companyId).orElse(null);
@@ -33,12 +34,13 @@ public class CompanyService {
      * 신규 업체 생성
      */
     public Company createCompany(CompanyRequest request) {
-        Company newCompany = Company.builder()
-                .companyName(request.getCompanyName())
-                .companyType(request.getCompanyType())
-                .hubId(request.getHubId())
-                .address(request.getAddress())
-                .build();
+        // Builder 대신 생성자를 사용하여 객체를 간단하게 생성
+        Company newCompany = new Company(
+                request.getCompanyName(),
+                request.getCompanyType(),
+                request.getHubId(),
+                request.getAddress()
+        );
         return companyRepository.save(newCompany);
     }
 
@@ -48,7 +50,7 @@ public class CompanyService {
     public Company updateCompany(UUID companyId, CompanyRequest request) {
         Company existingCompany = getCompanyById(companyId);
         if (existingCompany == null) {
-            return null; // 실제 프로젝트에서는 예외 처리를 권장합니다.
+            return null;  // Controller에서 404 처리
         }
         existingCompany.setCompanyName(request.getCompanyName());
         existingCompany.setCompanyType(request.getCompanyType());
