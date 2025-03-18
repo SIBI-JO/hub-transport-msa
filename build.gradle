@@ -67,11 +67,14 @@ project(':user') {
     }
 }
 
-//project(':hub') {
-//    dependencies {
-//        implementation project(':common')
-//    }
-//}
+project(':hub') {
+    dependencies {
+        implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
 //
 //project(':order') {
 //    dependencies {
@@ -79,9 +82,21 @@ project(':user') {
 //    }
 //}
 //
-//project(':company') {
-//    dependencies {
-//        implementation project(':common')
-//    }
-//}
+project(':company') {
+    dependencies {
+        implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
+
+project(':product') {
+    dependencies {
+        implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
 

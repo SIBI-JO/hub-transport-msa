@@ -21,6 +21,10 @@ spring:
           uri: lb://product-service
           predicates:
             - Path=/api/products/**
+        - id: hub-service
+          uri: lb://hub-service
+          predicates:
+            - Path=/api/hubs/**
 
 server:
   port: 19091
