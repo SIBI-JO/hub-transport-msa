@@ -1,7 +1,7 @@
 package com.sibijo.user.infrastructure.config;
 
 import com.sibijo.user.infrastructure.filter.JwtAuthenticationFilter;
-import com.sibijo.user.infrastructure.util.JwtUtil;
+import com.sibijo.user.infrastructure.util.UserJwtUtil;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,10 +21,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity  // pre/post 어노테이션을 사용할 수 있도록 활성화
 public class SecurityConfig {
 
-    private final JwtUtil jwtUtil;
+    private final UserJwtUtil jwtUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
 
-    public SecurityConfig(JwtUtil jwtUtil,
+    public SecurityConfig(UserJwtUtil jwtUtil,
             AuthenticationConfiguration authenticationConfiguration) {
         this.jwtUtil = jwtUtil;
         this.authenticationConfiguration = authenticationConfiguration;

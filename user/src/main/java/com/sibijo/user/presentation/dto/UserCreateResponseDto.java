@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class CreateUserResponseDto {
+public class UserCreateResponseDto {
     private Long userId;
 }

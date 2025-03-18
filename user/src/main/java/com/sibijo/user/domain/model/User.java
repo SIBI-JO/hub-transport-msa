@@ -1,7 +1,7 @@
 package com.sibijo.user.domain.model;
 
-import com.sibijo.user.common.BaseEntity;
-import com.sibijo.user.domain.model.enumtype.Role;
+import com.sibijo.common.entity.BaseEntity;
+import com.sibijo.user.domain.enums.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

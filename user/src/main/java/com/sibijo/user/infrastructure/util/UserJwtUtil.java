@@ -1,6 +1,6 @@
 package com.sibijo.user.infrastructure.util;
 
-import com.sibijo.user.domain.model.enumtype.Role;
+import com.sibijo.user.domain.enums.Role;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JwtUtil {
+public class UserJwtUtil {
 
     // Header KEY 값
     public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -58,4 +58,47 @@ public class JwtUtil {
                         .signWith(key, signatureAlgorithm) // 암호화 알고리즘
                         .compact();
     }
+
+    // 공통되는 것들(gateway와 중복)
+    // 헤더에서 JWT 추출
+//    public String extractToken(HttpServletRequest request) {
+//        String authHeader = request.getHeader(AUTHORIZATION_HEADER);
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//            return authHeader.substring(7); // "Bearer " 제거 후 토큰 반환
+//        }
+//        return null;
+//    }
+//
+//    // JWT에서 사용자 ID 추출
+//    public Long extractUserId(String token) {
+//        Claims claims = parseToken(token);
+//        return Long.valueOf(claims.getSubject()); // JWT payload에서 userId 추출
+//    }
+//
+//    // JWT에서 역할(Role) 추출
+//    public String extractRole(String token) {
+//        Claims claims = parseToken(token);
+//        return claims.get("auth", String.class); // JWT payload에서 role 추출
+//    }
+//
+//    //JWT에서 허브 ID 추출
+//    public UUID extractHubId(String token) {
+//        Claims claims = parseToken(token);
+//        return claims.get("hubId", UUID.class); // JWT payload에서 role 추출
+//    }
+//
+//    //JWT에서 허브 ID 추출
+//    public UUID extractCompanyId(String token) {
+//        Claims claims = parseToken(token);
+//        return claims.get("companyId", UUID.class); // JWT payload에서 role 추출
+//    }
+//
+//    // 토큰 파싱
+//    private Claims parseToken(String token) {
+//        return Jwts.parserBuilder()
+//                .setSigningKey(key)
+//                .build()
+//                .parseClaimsJws(token)
+//                .getBody();
+//    }
 }

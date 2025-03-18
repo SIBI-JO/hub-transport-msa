@@ -5,11 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableFeignClients
-@SpringBootApplication//(scanBasePackages = {"com.sibijo.user", "com.sibijo.common"})
+@SpringBootApplication(scanBasePackages = {"com.sibijo.user", "com.sibijo.common"})
 public class UserApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(UserApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(UserApplication.class, args);
+    }
 
 }

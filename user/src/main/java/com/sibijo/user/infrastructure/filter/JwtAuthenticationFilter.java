@@ -1,13 +1,13 @@
 package com.sibijo.user.infrastructure.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sibijo.user.common.ApiResponse;
-import com.sibijo.user.common.CommonExceptionCode;
+import com.sibijo.common.dto.ApiResponse;
+import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.user.presentation.dto.SignInRequestDto;
 import com.sibijo.user.presentation.dto.SignInResponseDto;
-import com.sibijo.user.domain.model.enumtype.Role;
+import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.infrastructure.security.UserDetailsImpl;
-import com.sibijo.user.infrastructure.util.JwtUtil;
+import com.sibijo.user.infrastructure.util.UserJwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,9 +22,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Slf4j(topic = "로그인 및 JWT 생성")
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private final JwtUtil jwtUtil;
+    private final UserJwtUtil jwtUtil;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(UserJwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
         setFilterProcessesUrl("/api/users/signin");
     }

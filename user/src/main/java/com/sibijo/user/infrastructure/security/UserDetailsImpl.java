@@ -1,7 +1,7 @@
 package com.sibijo.user.infrastructure.security;
 
 import com.sibijo.user.domain.model.User;
-import com.sibijo.user.domain.model.enumtype.Role;
+import com.sibijo.user.domain.enums.Role;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;

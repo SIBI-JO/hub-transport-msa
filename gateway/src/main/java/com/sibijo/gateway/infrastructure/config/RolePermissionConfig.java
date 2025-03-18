@@ -112,7 +112,28 @@ public class RolePermissionConfig {
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
                                 new RoleAuthorizationFilter.Config(productRolePermissions))))
                         .uri("lb://product-service"))
+                // Hub
+                .route("hub-service", r -> r.path("/api/hubs/**")
+                        .filters(f -> f.filter(roleAuthorizationFilter.apply(
+                                new RoleAuthorizationFilter.Config(hubRolePermissions))))
+                        .uri("lb://hub-service"))
+                // Hub Route
+                .route("hub-service", r -> r.path("/api/hub-routes/**")
+                        .filters(f -> f.filter(roleAuthorizationFilter.apply(
+                                new RoleAuthorizationFilter.Config(hubRouteRolePermissions))))
+                        .uri("lb://hub-service"))
 
+                // Order
+                .route("order-service", r -> r.path("/api/orders/**")
+                        .filters(f -> f.filter(roleAuthorizationFilter.apply(
+                                new RoleAuthorizationFilter.Config(orderRolePermissions))))
+                        .uri("lb://order-service"))
+
+                // Delivery
+                .route("delivery-service", r -> r.path("/api/deliveries/**")
+                        .filters(f -> f.filter(roleAuthorizationFilter.apply(
+                                new RoleAuthorizationFilter.Config(orderRolePermissions))))
+                        .uri("lb://order-service"))
 
                 .build();
     }

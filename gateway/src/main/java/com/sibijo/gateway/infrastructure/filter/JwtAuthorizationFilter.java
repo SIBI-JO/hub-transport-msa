@@ -1,6 +1,6 @@
 package com.sibijo.gateway.infrastructure.filter;
 
-import com.sibijo.gateway.infrastructure.filter.util.JwtUtil;
+import com.sibijo.gateway.infrastructure.util.GatewayJwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -14,9 +14,9 @@ import reactor.core.publisher.Mono;
 @Component
 public class JwtAuthorizationFilter implements GlobalFilter, Ordered {
 
-    private final JwtUtil jwtUtil;
+    private final GatewayJwtUtil jwtUtil;
 
-    public JwtAuthorizationFilter(JwtUtil jwtUtil) {
+    public JwtAuthorizationFilter(GatewayJwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 

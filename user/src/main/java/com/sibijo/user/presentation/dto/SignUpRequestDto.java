@@ -1,6 +1,6 @@
 package com.sibijo.user.presentation.dto;
 
-import com.sibijo.user.domain.model.enumtype.Role;
+import com.sibijo.user.domain.enums.Role;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Getter;

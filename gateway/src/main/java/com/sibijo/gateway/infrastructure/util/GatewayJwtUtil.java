@@ -1,4 +1,4 @@
-package com.sibijo.gateway.infrastructure.filter.util;
+package com.sibijo.gateway.infrastructure.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -12,7 +12,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 @Slf4j
 @Component
-public class JwtUtil {
+public class GatewayJwtUtil {
 
     @Value("${service.jwt.secret-key}")
     private String secretKey;

@@ -1,4 +1,4 @@
-package com.sibijo.user.domain.model.enumtype;
+package com.sibijo.user.domain.enums;
 
 public enum Role {
     COMPANY(Authority.COMPANY),

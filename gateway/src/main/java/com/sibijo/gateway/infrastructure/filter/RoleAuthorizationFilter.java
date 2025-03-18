@@ -1,6 +1,7 @@
 package com.sibijo.gateway.infrastructure.filter;
 
-import com.sibijo.gateway.infrastructure.filter.util.JwtUtil;
+
+import com.sibijo.gateway.infrastructure.util.GatewayJwtUtil;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
@@ -15,9 +16,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class RoleAuthorizationFilter extends AbstractGatewayFilterFactory<RoleAuthorizationFilter.Config> {
 
-    private final JwtUtil jwtUtil;
+    private final GatewayJwtUtil jwtUtil;
 
-    public RoleAuthorizationFilter(JwtUtil jwtUtil) {
+    public RoleAuthorizationFilter(GatewayJwtUtil jwtUtil) {
         super(Config.class);
         this.jwtUtil = jwtUtil;
     }
