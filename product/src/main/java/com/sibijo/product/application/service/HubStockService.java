@@ -17,14 +17,19 @@ public class HubStockService {
     private final HubStockRepository hubStockRepository;
     private final ProductRepository productRepository;
 
+    /**
+     * 상품 ID만으로 재고 업데이트
+     */
     @Transactional
-    public HubStockResponse updateStock(UUID productId, UUID hubId, Long newAmount) {
+    public HubStockResponse updateStock(UUID productId, Long newAmount) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
-        HubStock hubStock = hubStockRepository.findByProductAndHubId(product, hubId)
-                .orElseThrow(() -> new IllegalArgumentException("Hub stock not found for hubId: " + hubId));
+        HubStock hubStock = hubStockRepository.findByProduct(product)
+                .orElseThrow(() -> new IllegalArgumentException("Hub stock not found for product: " + productId));
+
         hubStock.setAmount(newAmount);
         hubStockRepository.save(hubStock);
+
         return HubStockResponse.builder()
                 .hubStockId(hubStock.getHubStockId())
                 .hubId(hubStock.getHubId())
@@ -34,11 +39,15 @@ public class HubStockService {
                 .build();
     }
 
-    public HubStockResponse getStock(UUID productId, UUID hubId) {
+    /**
+     * 상품 ID만으로 재고 조회
+     */
+    public HubStockResponse getStock(UUID productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
-        HubStock hubStock = hubStockRepository.findByProductAndHubId(product, hubId)
-                .orElseThrow(() -> new IllegalArgumentException("Hub stock not found for hubId: " + hubId));
+        HubStock hubStock = hubStockRepository.findByProduct(product)
+                .orElseThrow(() -> new IllegalArgumentException("Hub stock not found for product: " + productId));
+
         return HubStockResponse.builder()
                 .hubStockId(hubStock.getHubStockId())
                 .hubId(hubStock.getHubId())

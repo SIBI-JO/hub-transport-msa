@@ -1,5 +1,6 @@
 package com.sibijo.product.domain.entity;
 
+import com.sibijo.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
@@ -11,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class HubStock {
+public class HubStock extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -30,4 +31,12 @@ public class HubStock {
 
     @Column(name = "amount", nullable = false)
     private Long amount;
+
+
+    public HubStock(UUID hubId, UUID companyId, Product product, Long amount) {
+        this.hubId = hubId;
+        this.companyId = companyId;
+        this.product = product;
+        this.amount = amount;
+    }
 }

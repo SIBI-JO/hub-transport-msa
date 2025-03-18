@@ -22,68 +22,93 @@ public class ProductService {
     private final HubStockRepository hubStockRepository;
     private final CompanyClient companyClient;
 
+    /**
+     * 전체 상품 조회
+     */
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
+    /**
+     * 특정 상품 조회 (존재하지 않으면 null)
+     */
     public Product getProductById(UUID productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+        return productRepository.findById(productId).orElse(null);
     }
 
+    /**
+     * 신규 상품 등록
+     */
     @Transactional
     public Product createProduct(ProductRequest request) {
-        // 회사 서비스에 등록된 hub 정보를 조회 (존재하지 않으면 예외 발생)
+        // 회사 서비스에서 hub 정보 조회
         CompanyResponseDto companyResponse = companyClient.getHubByCompanyId(request.getCompanyId());
         if (companyResponse == null || companyResponse.getHubId() == null) {
             throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
         }
-        Product product = Product.builder()
-                .productName(request.getProductName())
-                .price(request.getPrice())
-                .companyId(request.getCompanyId())
-                .build();
+
+        // 생성자를 사용하여 상품 객체 생성
+        Product product = new Product(
+                request.getProductName(),
+                request.getPrice(),
+                request.getCompanyId()
+        );
         Product savedProduct = productRepository.save(product);
 
-        // 회사 서비스에서 받아온 hubId를 사용해 초기 재고 0 기록 생성
-        HubStock hubStock = HubStock.builder()
-                .hubId(companyResponse.getHubId())
-                .companyId(request.getCompanyId())
-                .product(savedProduct)
-                .amount(0L)
-                .build();
+        // 생성자를 사용하여 허브 재고(초기값 0) 생성
+        HubStock hubStock = new HubStock(
+                companyResponse.getHubId(),
+                request.getCompanyId(),
+                savedProduct,
+                0L
+        );
         hubStockRepository.save(hubStock);
 
         return savedProduct;
     }
 
+    /**
+     * 기존 상품 정보 수정
+     */
     @Transactional
     public Product updateProduct(UUID productId, ProductRequest request) {
         Product existingProduct = getProductById(productId);
-        // 업데이트 전에도 회사 검증 (필요시)
+        if (existingProduct == null) {
+            throw new IllegalArgumentException("Product not found: " + productId);
+        }
+
+        // 회사 서비스에서 hub 정보 조회 (필요 시)
         CompanyResponseDto companyResponse = companyClient.getHubByCompanyId(request.getCompanyId());
         if (companyResponse == null || companyResponse.getHubId() == null) {
             throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
         }
+
         existingProduct.setProductName(request.getProductName());
         existingProduct.setPrice(request.getPrice());
         existingProduct.setCompanyId(request.getCompanyId());
-        // 재고 기록의 hubId 업데이트는 별도 로직(필요 시)로 처리
+        // (허브 재고 테이블에 대한 별도 수정 로직이 필요하다면 추가)
 
         return productRepository.save(existingProduct);
     }
 
+    /**
+     * 상품 삭제
+     */
     public void deleteProduct(UUID productId) {
         productRepository.deleteById(productId);
     }
 
     /**
-     * 주문 서비스가 호출할 API – 해당 상품의 재고와 연결된 허브 정보를 반환합니다.
+     * 주문 서비스가 호출할 API – 상품의 재고와 연결된 허브 정보를 반환
      */
     public ProductResponseDto getProductOrderInfo(UUID productId) {
         Product product = getProductById(productId);
+        if (product == null) {
+            throw new IllegalArgumentException("Product not found: " + productId);
+        }
         HubStock hubStock = hubStockRepository.findByProduct(product)
                 .orElseThrow(() -> new IllegalArgumentException("Hub stock not found for productId: " + productId));
+
         return ProductResponseDto.builder()
                 .hubId(hubStock.getHubId())
                 .amount(hubStock.getAmount())

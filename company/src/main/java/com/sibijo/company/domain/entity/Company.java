@@ -1,5 +1,6 @@
 package com.sibijo.company.domain.entity;
 
+import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.company.domain.enums.CompanyType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Company {
+public class Company extends BaseEntity {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -33,4 +34,12 @@ public class Company {
 
     @Column(name = "address", length = 100)
     private String address;
+
+
+    public Company(String companyName, CompanyType companyType, UUID hubId, String address) {
+        this.companyName = companyName;
+        this.companyType = companyType;
+        this.hubId = hubId;
+        this.address = address;
+    }
 }
