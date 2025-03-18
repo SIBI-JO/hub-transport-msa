@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: common
+  config:
+    import: optional:file:./common/.env[.properties]
+
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}

@@ -36,7 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-### .env ###
-*.env*
-### personal note ###
-plan.md
+### secrets ###
+.env
