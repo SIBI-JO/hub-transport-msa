@@ -9,12 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeliveryRequestDto {
-
-    private UUID startHubId;   // 출발 허브 ID
-    private UUID endHubId;     // 도착 허브 ID
-    private String deliveryAddress; // 배송 주소
-    private String receiver;   // 수령인
-    private String receiverSlackId; // 수령인의 Slack ID
-    private UUID deliveryManagerId; // 배송 담당자 ID
+    private UUID startHubId;
+    private UUID endHubId;
+    private String deliveryAddress;
+    private String receiver;
+    private String receiverSlackId;
 
 }

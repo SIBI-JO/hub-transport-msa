@@ -76,11 +76,14 @@ project(':hub') {
     }
 }
 //
-//project(':order') {
-//    dependencies {
-//        implementation project(':common')
-//    }
-//}
+project(':order') {
+    dependencies {
+        implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
 //
 project(':company') {
     dependencies {
@@ -100,3 +103,11 @@ project(':product') {
     }
 }
 
+project(':delivery') {
+    dependencies {
+        implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}

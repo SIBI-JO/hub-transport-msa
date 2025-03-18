@@ -1,16 +1,17 @@
 package com.sibijo.order.domain.entity;
 
 
+import com.sibijo.common.entity.BaseEntity;
+import com.sibijo.order.domain.enums.OrderStatusEnum;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @Table(catalog = "sibijo", name = "p_order")
-public class Order {
+public class Order extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -40,7 +41,6 @@ public class Order {
     @Column(nullable = false)
     private UUID productId;
 
-    @Column(nullable = false)
     private UUID deliveryId;
 
     @Column(nullable = false)
@@ -49,46 +49,25 @@ public class Order {
     @Column(nullable = false)
     private String request;
 
-    private LocalDateTime createdAt;
-    private String createdBy;
-    private LocalDateTime updatedAt;
-    private String updatedBy;
-    private LocalDateTime deletedAt;
-    private String deletedBy;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatusEnum status;
 
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
-    public static Order createOrder(OrderRequestDto requestDto, UUID deliveryId) {
+    public static Order createOrder(OrderRequestDto requestDto) {
         return Order.builder()
                 .supplierId(requestDto.getSupplierId())
                 .recipientsId(requestDto.getRecipientsId())
                 .productId(requestDto.getProductId())
-                .deliveryId(deliveryId)
                 .amount(requestDto.getAmount())
                 .request(requestDto.getRequest())
+                .status(OrderStatusEnum.PENDING)
                 .build();
     }
 
-
-//    public void updateOrder(List<Long> orderItemIds, String updatedBy, ) {
-//
-//        this.updatedBy = updatedBy;
-//        this.updatedAt = LocalDateTime.now();
-//    }
-
-
-    public void deleteOrder(String deletedBy) {
-        this.deletedBy = deletedBy;
-        this.deletedAt = LocalDateTime.now();
+    // 주문 ID(Delivery ID)만 업데이트하는 메서드 추가
+    public void updateDelivery(UUID deliveryId) {
+        this.deliveryId = deliveryId;
     }
 
 }

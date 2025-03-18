@@ -1,4 +1,4 @@
-package com.sibijo.order.infrastructure.client.Company;
+package com.sibijo.delivery.infrastructure.client.company;
 
 import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
