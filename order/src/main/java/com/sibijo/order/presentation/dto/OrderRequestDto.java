@@ -23,5 +23,5 @@ public class OrderRequestDto {
     // 배송에 관한 정보를 위한 수령인과 수령인의 SlackId
     private String receiver;
 
-    private String receiverSlcakId;
+    private String receiverSlackId;
 }

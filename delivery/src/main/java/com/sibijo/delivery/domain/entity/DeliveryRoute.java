@@ -61,22 +61,6 @@ public class DeliveryRoute {
 
     private UUID deliveryManagerId; // 배송 담당자 ID
 
-    private LocalDateTime createdAt;
-    private String createdBy;
-    private LocalDateTime updatedAt;
-    private String updatedBy;
-    private LocalDateTime deletedAt;
-    private String deletedBy;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 
     public static DeliveryRoute createRoute(
             Delivery delivery, DeliveryRouteRequestDto requestDto) {
@@ -94,11 +78,7 @@ public class DeliveryRoute {
     public void updateRealTimeAndDistance(String realDistance, String realTime) {
         this.realDistance = realDistance;
         this.realTime = realTime;
-        this.updatedAt = LocalDateTime.now();
     }
 
-    public void deleteRoute(String deletedBy) {
-        this.deletedBy = deletedBy;
-        this.deletedAt = LocalDateTime.now();
-    }
+
 }

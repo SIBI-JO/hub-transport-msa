@@ -1,4 +1,4 @@
-package com.sibijo.order.infrastructure.client.Delivery;
+package com.sibijo.delivery.presentation.dto;
 
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeliveryRequestDto {
+public class OrderToDeliveryRequestDto {
 
     private UUID orderId;
 

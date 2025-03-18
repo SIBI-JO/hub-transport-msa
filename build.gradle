@@ -73,11 +73,11 @@ project(':hub') {
     }
 }
 //
-//project(':order') {
-//    dependencies {
-//        implementation project(':common')
-//    }
-//}
+project(':order') {
+    dependencies {
+        implementation project(':common')
+    }
+}
 //
 project(':company') {
     dependencies {
@@ -97,3 +97,8 @@ project(':product') {
     }
 }
 
+project(':delivery') {
+    dependencies {
+        implementation project(':common')
+    }
+}
