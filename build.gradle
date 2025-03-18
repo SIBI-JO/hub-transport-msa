@@ -52,6 +52,12 @@ subprojects { //모든 하위 모튱에 적용
     }
 }
 
+project(':common') {
+    tasks.named('jar') {
+        enabled = true
+    }
+}
+
 project(':user') {
     dependencies {
         implementation project(':common')
@@ -61,6 +67,9 @@ project(':user') {
 project(':hub') {
     dependencies {
         implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
     }
 }
 //
