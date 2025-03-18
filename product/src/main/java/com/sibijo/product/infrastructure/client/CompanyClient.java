@@ -1,5 +1,6 @@
 package com.sibijo.product.infrastructure.client;
 
+import com.sibijo.common.dto.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,5 +10,5 @@ import java.util.UUID;
 public interface CompanyClient {
 
     @GetMapping("/api/companies/{companyId}/order")
-    CompanyResponseDto getHubByCompanyId(@PathVariable("companyId") UUID companyId);
+    ApiResponse<CompanyResponseDto> getHubByCompanyId(@PathVariable("companyId") UUID companyId);
 }

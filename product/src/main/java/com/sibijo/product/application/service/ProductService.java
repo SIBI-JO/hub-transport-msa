@@ -1,5 +1,6 @@
 package com.sibijo.product.application.service;
 
+import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.product.infrastructure.client.CompanyClient;
 import com.sibijo.product.infrastructure.client.CompanyResponseDto;
 import com.sibijo.product.presentation.dto.ProductRequest;
@@ -41,13 +42,14 @@ public class ProductService {
      */
     @Transactional
     public Product createProduct(ProductRequest request) {
-        // 회사 서비스에서 hub 정보 조회
-        CompanyResponseDto companyResponse = companyClient.getHubByCompanyId(request.getCompanyId());
+        // 회사 서비스에서 ApiResponse로 감싼 응답을 받아 data 필드를 추출합니다.
+        ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
+        CompanyResponseDto companyResponse = response.getData();
         if (companyResponse == null || companyResponse.getHubId() == null) {
             throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
         }
 
-        // 생성자를 사용하여 상품 객체 생성
+        // 상품 생성 및 저장
         Product product = new Product(
                 request.getProductName(),
                 request.getPrice(),
@@ -55,7 +57,7 @@ public class ProductService {
         );
         Product savedProduct = productRepository.save(product);
 
-        // 생성자를 사용하여 허브 재고(초기값 0) 생성
+        // 허브 재고 생성
         HubStock hubStock = new HubStock(
                 companyResponse.getHubId(),
                 request.getCompanyId(),
@@ -77,8 +79,9 @@ public class ProductService {
             throw new IllegalArgumentException("Product not found: " + productId);
         }
 
-        // 회사 서비스에서 hub 정보 조회 (필요 시)
-        CompanyResponseDto companyResponse = companyClient.getHubByCompanyId(request.getCompanyId());
+        // 회사 서비스에서 ApiResponse로 감싼 응답을 받아 data 필드를 추출합니다.
+        ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
+        CompanyResponseDto companyResponse = response.getData();
         if (companyResponse == null || companyResponse.getHubId() == null) {
             throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
         }
