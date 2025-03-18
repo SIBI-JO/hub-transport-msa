@@ -36,21 +36,21 @@ public abstract class BaseEntity {
     private LocalDateTime createdAt;
 
     @CreatedBy
-    @Column(name = "created_by", updatable = false, nullable = false)
+    @Column(name = "created_by")
     private Integer createdBy;
 
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @LastModifiedBy
-    @Column(name = "updated_by", nullable = false)
+    @Column(name = "updated_by")
     private Integer updatedBy;
 
-    @Column(name = "deleted_at", updatable = false)
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "deleted_by", updatable = false)
+    @Column(name = "deleted_by")
     private Integer deletedBy;
 
     @Column(name = "is_deleted")
