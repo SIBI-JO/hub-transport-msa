@@ -30,3 +30,7 @@ eureka:
 company:
   service:
     url: http://company-service
+
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}

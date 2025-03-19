@@ -10,3 +10,5 @@ include("product")
 
 include("order")
 include("delivery")
+
+include("ai")
