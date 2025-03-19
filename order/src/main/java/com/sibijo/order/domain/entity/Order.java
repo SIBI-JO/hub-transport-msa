@@ -4,6 +4,7 @@ package com.sibijo.order.domain.entity;
 import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.order.domain.enums.OrderStatusEnum;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
+import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -65,9 +67,18 @@ public class Order extends BaseEntity {
                 .build();
     }
 
-    // 주문 ID(Delivery ID)만 업데이트하는 메서드 추가
+    // 미완성인 주문 배송 정보 업데이트
     public void updateDelivery(UUID deliveryId) {
         this.deliveryId = deliveryId;
+        this.status = OrderStatusEnum.COMPLETED;
+    }
+
+    public void updateOrder(OrderUpdateRequestDto requestDto) {
+        this.supplierId = requestDto.getSupplierId();
+        this.recipientsId = requestDto.getRecipientsId();
+        this.productId = requestDto.getProductId();
+        this.amount = requestDto.getAmount();
+        this.request = requestDto.getRequest();
     }
 
 }
