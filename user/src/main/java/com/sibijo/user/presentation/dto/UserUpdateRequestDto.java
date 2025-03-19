@@ -17,8 +17,7 @@ public class UserUpdateRequestDto {
     @Pattern(regexp = "^[a-z0-9]+$")
     private String username;
 
-    @Email
-    private String email;
+    private String slackId;
 
     @Size(min = 8, max = 20)
     @Pattern(regexp = "^[A-Za-z0-9_!#$%&'*+/=?`{|}~^.-]+$")

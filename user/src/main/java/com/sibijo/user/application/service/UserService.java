@@ -5,19 +5,25 @@ import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.repository.UserRepository;
+import com.sibijo.user.infrastructure.security.UserDetailsImpl;
 import com.sibijo.user.presentation.dto.SignUpRequestDto;
 import com.sibijo.user.presentation.dto.SignUpResponseDto;
 import com.sibijo.user.presentation.dto.UserCreateRequestDto;
 import com.sibijo.user.presentation.dto.UserCreateResponseDto;
+import com.sibijo.user.presentation.dto.UserDeleteResponseDto;
 import com.sibijo.user.presentation.dto.UserDetailsResponseDto;
+import com.sibijo.user.presentation.dto.UserUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -79,16 +85,29 @@ public class UserService {
                 .build();
     }
 
-    public UserCreateResponseDto createUser(UserCreateRequestDto requestDto) {
-
-        // TODO: 권한 체크 ( Header에서 가져온 값 기반으로 Role, 본인 여부 판단)
-
-        // 유저 생성
+    public UserCreateResponseDto createUser(UserCreateRequestDto requestDto, HttpServletRequest request) {
         String username = requestDto.getUsername();
-        String password = passwordEncoder.encode(requestDto.getPassword());
         String hubId = requestDto.getHubId();
         String companyId = requestDto.getCompanyId();
         String slackId = requestDto.getSlackId();
+
+        // TODO: 권한 체크 ( Header에서 가져온 값 기반으로 Role, 본인 여부 판단)
+
+        // 회원 중복 확인
+
+        Optional<User> checkUsername = userRepository.findByUsername(username);
+        if (checkUsername.isPresent()) {
+            throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
+        }
+
+        // slackId 중복확인
+        Optional<User> checkEmail = userRepository.findBySlackId(slackId);
+        if (checkEmail.isPresent()) {
+            throw new IllegalArgumentException("중복된 Email 입니다.");
+        }
+
+        // 유저 생성
+        String password = passwordEncoder.encode(requestDto.getPassword());
         Role role = requestDto.getRole();
 
         User user = User.of(username, password, slackId, role, hubId, companyId);
@@ -108,7 +127,7 @@ public class UserService {
                 Role.COMPANY.getAuthority());
         authUtil.authorizeSelfAccess(request, id, targetRoles);
 
-        // 중복 체크
+        // 존재 확인
         User user = userRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
         );
@@ -120,5 +139,85 @@ public class UserService {
                 .slackId(user.getSlackId())
                 .build();
     }
+
+    @Transactional
+    public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto, HttpServletRequest request) {
+
+        // TODO: 권한 체크
+
+        log.info(requestDto.toString());
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
+        );
+
+        //TODO: username 변경 시, Jwt 를 새로 발급해 주던지, 로그아웃 시키고, 로그인하도록 해야함. => 지금은 client가 없으므로, Jwt를 새로 발급해줘야 할 듯.
+
+        // username, slackId 중복 확인
+        if (StringUtils.hasText(requestDto.getUsername()) && !user.getUsername().equals(requestDto.getUsername())) {
+            Optional<User> userFindByUsername = userRepository.findByUsername(requestDto.getUsername());
+            if (userFindByUsername.isPresent()) {
+                throw new IllegalArgumentException("이미 존재하는 username입니다.");
+            }
+        }
+
+        if (StringUtils.hasText(requestDto.getSlackId()) && !user.getSlackId().equals(requestDto.getSlackId())) {
+            Optional<User> userFindBySlackId = userRepository.findBySlackId(requestDto.getSlackId());
+            if (userFindBySlackId.isPresent()) {
+                throw new IllegalArgumentException("이미 존재하는 slack ID입니다.");
+            }
+        }
+
+        String newPassword = null;
+        // newPassword 가 있으면 originPassword 확인
+        if (StringUtils.hasText(requestDto.getNewPassword())) {
+            if (!passwordEncoder.matches(requestDto.getOriginPassword(), user.getPassword())) {
+                throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            }
+            newPassword = passwordEncoder.encode(requestDto.getNewPassword());
+        }
+
+        // 유저 정보 업데이트
+        user.updateUser(
+                requestDto.getUsername(),
+                requestDto.getSlackId(),
+                newPassword
+        );
+
+        log.info(user.toString());
+        return UserDetailsResponseDto
+                .builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .slackId(user.getSlackId())
+                .build();
+    }
+
+    public UserDeleteResponseDto deleteUser(Long id, HttpServletRequest request) {
+        // TODO: 권한 체크
+
+        // 유저 존재 여부 확인
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
+        );
+
+        //이미 삭제된 유저 확인
+        if(user.getIsDeleted()){
+            throw new IllegalArgumentException("이미 삭제된 유저입니다.");
+        }
+
+        //삭제
+        userRepository.deleteById(id);
+
+        return UserDeleteResponseDto
+                .builder()
+                .userId(user.getId())
+                .build();
+    }
+
+
+
+
+
+
 
 }

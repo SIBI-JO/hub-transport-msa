@@ -13,12 +13,16 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.util.StringUtils;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "p_users")
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE p_users SET is_deleted = true WHERE id = ?")
 public class User extends BaseEntity {
 
     @Id
@@ -59,7 +63,8 @@ public class User extends BaseEntity {
         return new User(username, password, slackId, role, hubId, companyId);
     }
 
-    public void updateUser(String slackId, String password) {
+    public void updateUser(String username, String slackId, String password) {
+        this.username = StringUtils.hasText(username) ? username : this.username;
         this.slackId = StringUtils.hasText(slackId) ? slackId : this.slackId;
         this.password = StringUtils.hasText(password) ? password : this.password;
     }
