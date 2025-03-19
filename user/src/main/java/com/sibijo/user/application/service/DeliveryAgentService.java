@@ -6,6 +6,7 @@ import com.sibijo.common.utils.Auth.AuthUtil;
 import com.sibijo.common.utils.page.PageSize;
 import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.user.domain.enums.DeliveryType;
+import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.repository.DeliveryAgentRepository;
@@ -21,6 +22,8 @@ import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentUpdateRespons
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +31,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -46,15 +48,18 @@ public class DeliveryAgentService {
     public DeliveryAgentCreateResponseDto createDeliveryAgent(
             DeliveryAgentCreateRequestDto requestDto, HttpServletRequest request) {
 
-        String hubId = requestDto.getHubId();
         DeliveryType deliveryType = requestDto.getDeliveryType();
-
-        // TODO: 권한 체크 ( Header에서 가져온 값 기반으로 Role, 본인 여부 판단)
+        UUID hubId = requestDto.getHubId();
 
         // 배송담당자 중복 확인
         Long userId = requestDto.getUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 세부 권한 처리
+        // 특정 역할을 가진 사용자 (허브 관리자)인 경우 자기 자신만 조회 가능
+        Set<String> targetRoles = Set.of(Role.HUB.getAuthority());
+        authUtil.authoizeHubAccess(request, user.getHubId(), targetRoles);
 
         Optional<DeliveryAgent> existingAgent = deliveryAgentRepository.findByIdForUpdate(userId);
         if (existingAgent.isPresent()) {
@@ -88,7 +93,6 @@ public class DeliveryAgentService {
         // 배송담당자 생성
         DeliveryAgent deliveryAgent = DeliveryAgent.of(user, hubId, deliveryType,
                 deliveryOrder);
-//        deliveryAgentRepository.save(deliveryAgent);
         deliveryAgentRepository.saveAndFlush(deliveryAgent);
 
         return DeliveryAgentCreateResponseDto
@@ -102,12 +106,19 @@ public class DeliveryAgentService {
 
     public DeliveryAgentDetailsResponseDto getDeliveryAgent(Long id, HttpServletRequest request) {
 
-        // TODO: 세부 권한 처리
-
         // 존재 확인
         DeliveryAgent user = deliveryAgentRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
         );
+
+        // 세부 권한 처리
+        // 특정 역할을 가진 사용자 (허브 관리자)인 경우 자기 자신만 조회 가능
+        UUID hubId = user.getHubId();
+        Set<String> targetRoles = Set.of(Role.HUB.getAuthority());
+        authUtil.authoizeHubAccess(request, hubId, targetRoles);
+        // 본인 확인
+        targetRoles = Set.of(Role.DELIVERY.getAuthority());
+        authUtil.authorizeSelfAccess(request, user.getId(), targetRoles);
 
         return DeliveryAgentDetailsResponseDto
                 .builder()
@@ -122,17 +133,20 @@ public class DeliveryAgentService {
     public DeliveryAgentUpdateResponseDto updateDeliveryAgent(Long id,
             DeliveryAgentUpdateRequestDto requestDto, HttpServletRequest request) {
 
-        // TODO: 권한 체크
-
         log.info(requestDto.toString());
         DeliveryAgent user = deliveryAgentRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
         );
 
+        // 세부 권한 처리
+        // 특정 역할을 가진 사용자 (허브 관리자)인 경우 자기 자신만 조회 가능
+        Set<String> targetRoles = Set.of(Role.HUB.getAuthority());
+        authUtil.authoizeHubAccess(request, user.getHubId(), targetRoles);
+
         DeliveryType deliveryType = requestDto.getDeliveryType();
 
         // 배송자 타입 변경
-        String hubId = null;
+        UUID hubId = null;
         if (deliveryType != null) {
             // 허브 -> 업체
             if (deliveryType.equals(DeliveryType.COMPANY)) {
@@ -208,6 +222,12 @@ public class DeliveryAgentService {
         if (user.getIsDeleted()) {
             throw new IllegalArgumentException("이미 삭제된 유저입니다.");
         }
+
+        // 세부 권한 처리
+        // 특정 역할을 가진 사용자 (허브 관리자)인 경우 자기 자신만 조회 가능
+        UUID hubId = user.getHubId();
+        Set<String> targetRoles = Set.of(Role.HUB.getAuthority());
+        authUtil.authoizeHubAccess(request, hubId, targetRoles);
 
         //삭제
         deliveryAgentRepository.deleteById(id);

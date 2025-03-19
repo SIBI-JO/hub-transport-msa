@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,13 +44,13 @@ public class User extends BaseEntity {
     private Role role;
 
     @Column
-    private String hubId;
+    private UUID hubId;
 
     @Column
-    private String companyId;
+    private UUID companyId;
 
-    private User(String username, String password, String slackId, Role role, String hubId,
-            String companyId) {
+    private User(String username, String password, String slackId, Role role, UUID hubId,
+            UUID companyId) {
         this.username = username;
         this.slackId = slackId;
         this.password = password;
@@ -58,8 +59,8 @@ public class User extends BaseEntity {
         this.companyId = companyId;
     }
 
-    public static User of(String username, String password, String slackId, Role role, String hubId,
-            String companyId) {
+    public static User of(String username, String password, String slackId, Role role, UUID hubId,
+            UUID companyId) {
         return new User(username, password, slackId, role, hubId, companyId);
     }
 

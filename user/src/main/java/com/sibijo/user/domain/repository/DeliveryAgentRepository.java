@@ -5,6 +5,7 @@ import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,7 +16,7 @@ public interface DeliveryAgentRepository extends JpaRepository<DeliveryAgent, Lo
 
 
     @Query("SELECT MAX(d.deliveryOrder) FROM DeliveryAgent d WHERE d.hubId = :hubId AND d.deliveryType = :deliveryType")
-    Optional<Integer> findMaxDeliveryOrderByHubIdAndType(String hubId, DeliveryType deliveryType);
+    Optional<Integer> findMaxDeliveryOrderByHubIdAndType(UUID hubId, DeliveryType deliveryType);
 
     @Query("SELECT MAX(d.deliveryOrder) FROM DeliveryAgent d WHERE d.deliveryType = :deliveryType")
     Optional<Integer> findMaxDeliveryOrderByType(DeliveryType deliveryType);

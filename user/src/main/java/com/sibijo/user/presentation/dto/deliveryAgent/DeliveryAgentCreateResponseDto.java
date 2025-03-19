@@ -1,6 +1,7 @@
 package com.sibijo.user.presentation.dto.deliveryAgent;
 
 import com.sibijo.user.domain.enums.DeliveryType;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,7 +10,7 @@ import lombok.Getter;
 public class DeliveryAgentCreateResponseDto {
 
     private Long userId;
-    private String hubId;
+    private UUID hubId;
     private DeliveryType deliveryType;
     private int deliveryOrder;
 

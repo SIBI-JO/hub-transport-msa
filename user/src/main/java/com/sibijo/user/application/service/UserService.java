@@ -4,12 +4,9 @@ import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
-import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageSize;
 import com.sibijo.common.utils.page.PageableUtils;
-import com.sibijo.user.domain.enums.DeliveryType;
 import com.sibijo.user.domain.enums.Role;
-import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
@@ -58,8 +55,8 @@ public class UserService {
     public SignUpResponseDto signup(SignUpRequestDto requestDto) {
         String username = requestDto.getUsername();
         String password = passwordEncoder.encode(requestDto.getPassword());
-        String hubId = requestDto.getHubId();
-        String companyId = requestDto.getCompanyId();
+        UUID hubId = requestDto.getHubId();
+        UUID companyId = requestDto.getCompanyId();
 
         // 회원 중복 확인
         Optional<User> checkUsername = userRepository.findByUsername(username);
@@ -105,8 +102,8 @@ public class UserService {
     public UserCreateResponseDto createUser(UserCreateRequestDto requestDto,
             HttpServletRequest request) {
         String username = requestDto.getUsername();
-        String hubId = requestDto.getHubId();
-        String companyId = requestDto.getCompanyId();
+        UUID hubId = requestDto.getHubId();
+        UUID companyId = requestDto.getCompanyId();
         String slackId = requestDto.getSlackId();
 
         // TODO: 권한 체크 ( Header에서 가져온 값 기반으로 Role, 본인 여부 판단)
@@ -239,6 +236,7 @@ public class UserService {
 
     public UserPageResponseDto searchUsers(HttpServletRequest request, int page, int size,
             String criteria, String sort, String username) {
+
         // 유효한 페이지 크기인지 검증
         if (!PageSize.isValidSize(size)) {
             throw new CustomException(CommonExceptionCode.INVALID_PAGE_SIZE);
@@ -280,8 +278,10 @@ public class UserService {
                 )
                 .build();
     }
+
+
     /**
-    FeignClient Test
+     * FeignClient Test
      **/
 
     // Company Feign Client Fetch Test

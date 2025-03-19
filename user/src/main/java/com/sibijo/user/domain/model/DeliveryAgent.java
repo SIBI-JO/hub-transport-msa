@@ -13,6 +13,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,7 @@ public class DeliveryAgent extends BaseEntity {
     private Long id;
 
     @Column
-    private String hubId;
+    private UUID hubId;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -48,7 +49,7 @@ public class DeliveryAgent extends BaseEntity {
     @Version  // 낙관적 락 적용
     private Integer version;
 
-    private DeliveryAgent(User user, String hubId, DeliveryType deliveryType, int deliveryOrder) {
+    private DeliveryAgent(User user, UUID hubId, DeliveryType deliveryType, int deliveryOrder) {
         this.user = user;
         this.id = user.getId();  // User의 PK를 가져옴
         this.hubId = hubId;
@@ -56,11 +57,11 @@ public class DeliveryAgent extends BaseEntity {
         this.deliveryOrder = deliveryOrder;
     }
 
-    public static DeliveryAgent of(User user, String hubId, DeliveryType deliveryType, int deliveryOrder) {
+    public static DeliveryAgent of(User user, UUID hubId, DeliveryType deliveryType, int deliveryOrder) {
         return new DeliveryAgent(user, hubId, deliveryType, deliveryOrder);
     }
 
-    public void update(String hubId, DeliveryType deliveryType, int deliveryOrder) {
+    public void update(UUID hubId, DeliveryType deliveryType, int deliveryOrder) {
         this.hubId = hubId;
         this.deliveryType = deliveryType;
         this.deliveryOrder = deliveryOrder;

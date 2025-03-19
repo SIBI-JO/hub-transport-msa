@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,6 +28,6 @@ public class UserCreateRequestDto {
     @NotNull(message = "role는 필수 입력값입니다.")
     private Role role;
 
-    private String hubId;
-    private String companyId;
+    private UUID hubId;
+    private UUID companyId;
 }

@@ -2,6 +2,7 @@ package com.sibijo.user.presentation.dto.user;
 
 import com.sibijo.user.domain.enums.Role;
 import jakarta.validation.constraints.*;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -24,7 +25,7 @@ public class SignUpRequestDto {
     @NotNull(message = "role는 필수 입력값입니다.")
     private Role role;
 
-    private String hubId;
-    private String companyId;
+    private UUID hubId;
+    private UUID companyId;
     private String adminToken;
 }
