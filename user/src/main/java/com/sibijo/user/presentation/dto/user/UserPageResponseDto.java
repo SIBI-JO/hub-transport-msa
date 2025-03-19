@@ -1,4 +1,4 @@
-package com.sibijo.user.presentation.dto;
+package com.sibijo.user.presentation.dto.user;
 
 import java.util.List;
 import lombok.Builder;

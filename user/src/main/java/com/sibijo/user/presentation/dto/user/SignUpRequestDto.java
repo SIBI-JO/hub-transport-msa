@@ -1,4 +1,4 @@
-package com.sibijo.user.presentation.dto;
+package com.sibijo.user.presentation.dto.user;
 
 import com.sibijo.user.domain.enums.Role;
 import jakarta.validation.constraints.*;

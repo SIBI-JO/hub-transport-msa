@@ -96,7 +96,7 @@ public class RolePermissionConfig {
                         .uri("lb://user-service"))
 
                 // User Service (배송 담당자)
-                .route("delivery-agent-service", r -> r.path("/api/delivery-agents/**")
+                .route("user-service-delivery-agents", r -> r.path("/api/delivery-agents/**")
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
                                 new RoleAuthorizationFilter.Config(deliveryAgentRolePermissions))))
                         .uri("lb://user-service"))  // 같은 user-service지만 권한이 다름
@@ -118,7 +118,7 @@ public class RolePermissionConfig {
                                 new RoleAuthorizationFilter.Config(hubRolePermissions))))
                         .uri("lb://hub-service"))
                 // Hub Route
-                .route("hub-service", r -> r.path("/api/hub-routes/**")
+                .route("hub-route-service", r -> r.path("/api/hub-routes/**")
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
                                 new RoleAuthorizationFilter.Config(hubRouteRolePermissions))))
                         .uri("lb://hub-service"))
@@ -132,8 +132,8 @@ public class RolePermissionConfig {
                 // Delivery
                 .route("delivery-service", r -> r.path("/api/deliveries/**")
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
-                                new RoleAuthorizationFilter.Config(orderRolePermissions))))
-                        .uri("lb://order-service"))
+                                new RoleAuthorizationFilter.Config(deliveryRolePermissions))))
+                        .uri("lb://delivery-service"))
 
                 .build();
     }

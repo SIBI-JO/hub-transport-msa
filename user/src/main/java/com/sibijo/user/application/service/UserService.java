@@ -1,27 +1,33 @@
 package com.sibijo.user.application.service;
 
+import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
 import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageSize;
 import com.sibijo.common.utils.page.PageableUtils;
+import com.sibijo.user.domain.enums.DeliveryType;
 import com.sibijo.user.domain.enums.Role;
+import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
+import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
-import com.sibijo.user.infrastructure.security.UserDetailsImpl;
-import com.sibijo.user.presentation.dto.SignUpRequestDto;
-import com.sibijo.user.presentation.dto.SignUpResponseDto;
-import com.sibijo.user.presentation.dto.UserCreateRequestDto;
-import com.sibijo.user.presentation.dto.UserCreateResponseDto;
-import com.sibijo.user.presentation.dto.UserDeleteResponseDto;
-import com.sibijo.user.presentation.dto.UserDetailsResponseDto;
-import com.sibijo.user.presentation.dto.UserPageResponseDto;
-import com.sibijo.user.presentation.dto.UserSearchDetailsReponseDto;
-import com.sibijo.user.presentation.dto.UserUpdateRequestDto;
+import com.sibijo.user.infrastructure.client.company.CompanyClient;
+import com.sibijo.user.infrastructure.client.company.CompanyResponseDto;
+import com.sibijo.user.presentation.dto.user.SignUpRequestDto;
+import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
+import com.sibijo.user.presentation.dto.user.UserCreateRequestDto;
+import com.sibijo.user.presentation.dto.user.UserCreateResponseDto;
+import com.sibijo.user.presentation.dto.user.UserDeleteResponseDto;
+import com.sibijo.user.presentation.dto.user.UserDetailsResponseDto;
+import com.sibijo.user.presentation.dto.user.UserPageResponseDto;
+import com.sibijo.user.presentation.dto.user.UserSearchDetailsReponseDto;
+import com.sibijo.user.presentation.dto.user.UserUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +36,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,9 +47,10 @@ import org.springframework.util.StringUtils;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final DeliveryAgentRepository deliveryAgentRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
     private final AuthUtil authUtil;
+    private final CompanyClient companyClient;
 
     @Value("${admin.token}")
     private String ADMIN_TOKEN;
@@ -96,7 +102,8 @@ public class UserService {
                 .build();
     }
 
-    public UserCreateResponseDto createUser(UserCreateRequestDto requestDto, HttpServletRequest request) {
+    public UserCreateResponseDto createUser(UserCreateRequestDto requestDto,
+            HttpServletRequest request) {
         String username = requestDto.getUsername();
         String hubId = requestDto.getHubId();
         String companyId = requestDto.getCompanyId();
@@ -105,7 +112,6 @@ public class UserService {
         // TODO: 권한 체크 ( Header에서 가져온 값 기반으로 Role, 본인 여부 판단)
 
         // 회원 중복 확인
-
         Optional<User> checkUsername = userRepository.findByUsername(username);
         if (checkUsername.isPresent()) {
             throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
@@ -152,7 +158,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto, HttpServletRequest request) {
+    public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto,
+            HttpServletRequest request) {
 
         // TODO: 권한 체크
 
@@ -164,15 +171,19 @@ public class UserService {
         //TODO: username 변경 시, Jwt 를 새로 발급해 주던지, 로그아웃 시키고, 로그인하도록 해야함. => 지금은 client가 없으므로, Jwt를 새로 발급해줘야 할 듯.
 
         // username, slackId 중복 확인
-        if (StringUtils.hasText(requestDto.getUsername()) && !user.getUsername().equals(requestDto.getUsername())) {
-            Optional<User> userFindByUsername = userRepository.findByUsername(requestDto.getUsername());
+        if (StringUtils.hasText(requestDto.getUsername()) && !user.getUsername()
+                .equals(requestDto.getUsername())) {
+            Optional<User> userFindByUsername = userRepository.findByUsername(
+                    requestDto.getUsername());
             if (userFindByUsername.isPresent()) {
                 throw new IllegalArgumentException("이미 존재하는 username입니다.");
             }
         }
 
-        if (StringUtils.hasText(requestDto.getSlackId()) && !user.getSlackId().equals(requestDto.getSlackId())) {
-            Optional<User> userFindBySlackId = userRepository.findBySlackId(requestDto.getSlackId());
+        if (StringUtils.hasText(requestDto.getSlackId()) && !user.getSlackId()
+                .equals(requestDto.getSlackId())) {
+            Optional<User> userFindBySlackId = userRepository.findBySlackId(
+                    requestDto.getSlackId());
             if (userFindBySlackId.isPresent()) {
                 throw new IllegalArgumentException("이미 존재하는 slack ID입니다.");
             }
@@ -203,6 +214,7 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
     public UserDeleteResponseDto deleteUser(Long id, HttpServletRequest request) {
         // TODO: 권한 체크
 
@@ -212,7 +224,7 @@ public class UserService {
         );
 
         //이미 삭제된 유저 확인
-        if(user.getIsDeleted()){
+        if (user.getIsDeleted()) {
             throw new IllegalArgumentException("이미 삭제된 유저입니다.");
         }
 
@@ -225,16 +237,18 @@ public class UserService {
                 .build();
     }
 
-    public UserPageResponseDto searchUsers(HttpServletRequest request, int page, int size, String criteria, String sort, String username) {
+    public UserPageResponseDto searchUsers(HttpServletRequest request, int page, int size,
+            String criteria, String sort, String username) {
         // 유효한 페이지 크기인지 검증
         if (!PageSize.isValidSize(size)) {
             throw new CustomException(CommonExceptionCode.INVALID_PAGE_SIZE);
         }
 
         // sort 설정
-        String pageCriteria  = criteria.equals("createdAt") ? "createdAt" : "updatedAt";
+        String pageCriteria = criteria.equals("createdAt") ? "createdAt" : "updatedAt";
 
-        Sort pageSort = sort.equals("ASC") ? Sort.by(Sort.Direction.ASC, pageCriteria)  : Sort.by(Sort.Direction.DESC, pageCriteria);
+        Sort pageSort = sort.equals("ASC") ? Sort.by(Sort.Direction.ASC, pageCriteria)
+                : Sort.by(Sort.Direction.DESC, pageCriteria);
 
         // 페이지네이션 설정
         Pageable pageable = PageableUtils.validatePageable(PageRequest.of(page, size, pageSort));
@@ -243,8 +257,7 @@ public class UserService {
         Page<User> userList;
         if (StringUtils.hasText(username)) {
             userList = userRepository.findAllByUsernameContains(username, pageable);
-        }
-        else {
+        } else {
             userList = userRepository.findAll(pageable);
         }
 
@@ -267,5 +280,18 @@ public class UserService {
                 )
                 .build();
     }
+    /**
+    FeignClient Test
+     **/
+
+    // Company Feign Client Fetch Test
+    public void TestFeignClient() {
+        ApiResponse<CompanyResponseDto> company = companyClient.getCompanyById(
+                UUID.fromString("3bd1d8c1-1e5d-48d8-9374-f86861dd048d"));
+
+        log.info("feign client test: {}, {}, {}", company.getData().getCompanyId(),
+                company.getData().getCompanyName(), company.getData().getHubId());
+    }
+
 
 }

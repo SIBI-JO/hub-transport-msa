@@ -2,22 +2,20 @@ package com.sibijo.user.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.user.application.service.UserService;
-import com.sibijo.user.infrastructure.security.UserDetailsImpl;
-import com.sibijo.user.presentation.dto.SignUpRequestDto;
-import com.sibijo.user.presentation.dto.SignUpResponseDto;
-import com.sibijo.user.presentation.dto.UserCreateRequestDto;
-import com.sibijo.user.presentation.dto.UserCreateResponseDto;
-import com.sibijo.user.presentation.dto.UserDeleteResponseDto;
-import com.sibijo.user.presentation.dto.UserDetailsResponseDto;
-import com.sibijo.user.presentation.dto.UserPageResponseDto;
-import com.sibijo.user.presentation.dto.UserUpdateRequestDto;
+import com.sibijo.user.presentation.dto.user.SignUpRequestDto;
+import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
+import com.sibijo.user.presentation.dto.user.UserCreateRequestDto;
+import com.sibijo.user.presentation.dto.user.UserCreateResponseDto;
+import com.sibijo.user.presentation.dto.user.UserDeleteResponseDto;
+import com.sibijo.user.presentation.dto.user.UserDetailsResponseDto;
+import com.sibijo.user.presentation.dto.user.UserPageResponseDto;
+import com.sibijo.user.presentation.dto.user.UserUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,6 +37,7 @@ public class UserController {
 
     @GetMapping("/health-check")
     private ResponseEntity<String> healthCheck() {
+        userService.TestFeignClient();
         return ResponseEntity.ok().body("OK");
     }
 

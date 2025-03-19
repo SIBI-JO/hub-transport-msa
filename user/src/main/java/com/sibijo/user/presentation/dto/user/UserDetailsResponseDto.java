@@ -1,4 +1,4 @@
-package com.sibijo.user.presentation.dto;
+package com.sibijo.user.presentation.dto.user;
 
 import com.sibijo.user.domain.enums.Role;
 import lombok.Builder;
@@ -6,9 +6,9 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class UserUpdateResponseDto {
+public class UserDetailsResponseDto {
     private Long userId;
     private String username;
-    private String email;
+    private String slackId;
     private Role role;
 }

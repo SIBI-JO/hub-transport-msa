@@ -38,7 +38,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String slackId;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
     private Role role;
 

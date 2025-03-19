@@ -1,14 +1,16 @@
-package com.sibijo.user.presentation.dto;
+package com.sibijo.user.presentation.dto.user;
 
 import com.sibijo.user.domain.enums.Role;
 import lombok.Builder;
 import lombok.Getter;
 
-@Getter
 @Builder
-public class UserDetailsResponseDto {
+@Getter
+public class UserSearchDetailsReponseDto {
     private Long userId;
     private String username;
     private String slackId;
     private Role role;
+    private Boolean isDeleted;
+
 }
