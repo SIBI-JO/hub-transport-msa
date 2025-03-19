@@ -2,6 +2,7 @@ package com.sibijo.delivery.domain.entity;
 
 import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
+import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,7 +25,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Builder(access = AccessLevel.PRIVATE)
 @Table(catalog = "sibijo", name = "p_delivery")
 @SQLRestriction("is_deleted = false")
-@SQLDelete(sql = "UPDATE p_hub SET is_deleted = true WHERE hub_id = ?")
+@SQLDelete(sql = "UPDATE p_delivery SET is_deleted = true WHERE delivery_id = ?")
 public class Delivery extends BaseEntity {
 
     @Id
@@ -47,8 +48,11 @@ public class Delivery extends BaseEntity {
     @Column(nullable = false)
     private String receiverSlackId;
 
+    @Column(nullable = false)
+    private UUID recipientsId;
 
-    private UUID deliveryManagerId;
+
+    private Long deliveryManagerId;
 
 
 
@@ -59,11 +63,22 @@ public class Delivery extends BaseEntity {
                 .deliveryAddress(requestDto.getDeliveryAddress())
                 .receiver(requestDto.getReceiver())
                 .receiverSlackId(requestDto.getReceiverSlackId())
+                .recipientsId(requestDto.getRecipientsId())
                 .build();
     }
 
-    public void updateDeliveryManager(UUID deliveryManagerId) {
+    public void updateDeliveryManager(Long deliveryManagerId) {
         this.deliveryManagerId = deliveryManagerId;
+    }
+
+    public void updateDelivery(DeliveryUpdateRequestDto requestDto) {
+        this.startHubId = requestDto.getStartHubId();
+        this.endHubId = requestDto.getEndHubId();
+        this.deliveryAddress = requestDto.getDeliveryAddress();
+        this.receiver = requestDto.getReceiver();
+        this.receiverSlackId = requestDto.getReceiverSlackId();
+        this.recipientsId = requestDto.getRecipientsId();
+        this.deliveryManagerId = requestDto.getDeliveryManagerId();
     }
 
 

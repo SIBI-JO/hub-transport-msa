@@ -29,7 +29,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Builder(access = AccessLevel.PRIVATE)
 @Table(catalog = "sibijo", name = "p_order")
 @SQLRestriction("is_deleted = false")
-@SQLDelete(sql = "UPDATE p_hub SET is_deleted = true WHERE hub_id = ?")
+@SQLDelete(sql = "UPDATE p_order SET is_deleted = true WHERE order_id = ?")
 public class Order extends BaseEntity {
 
     @Id

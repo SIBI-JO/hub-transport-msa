@@ -1,7 +1,10 @@
 package com.sibijo.delivery.domain.entity;
 
+import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
+import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
+import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,7 +31,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Table(catalog = "sibijo", name = "p_delivery_route")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE p_hub SET is_deleted = true WHERE hub_id = ?")
-public class DeliveryRoute {
+public class DeliveryRoute extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -39,7 +42,7 @@ public class DeliveryRoute {
     @JoinColumn(name = "delivery_id", nullable = false, unique = true)
     private Delivery delivery; // 1:1 관계 (배송 ID)
 
-    private Long sequence;   // 배송 경로 상 허브의 순번
+    private Integer sequence;   // 배송 경로 상 허브의 순번
 
     @Column(nullable = false)
     private UUID startHubId; // 출발 허브 ID
@@ -51,16 +54,16 @@ public class DeliveryRoute {
     private String expectedDistance; // 예상 거리
 
     @Column(nullable = false)
-    private String expectedTime; // 예상 소요 시간
+    private String expectedDuration; // 예상 소요 시간
 
     private String realDistance; // 실제 거리
-    private String realTime; // 실제 소요 시간
+    private String realDuration; // 실제 소요 시간
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DeliveryStatusEnum DeliveryStatus;
+    private DeliveryStatusEnum deliveryStatus;
 
-    private UUID deliveryManagerId; // 배송 담당자 ID
+    private Long deliveryManagerId; // 배송 담당자 ID
 
 
     public static DeliveryRoute createRoute(
@@ -71,15 +74,27 @@ public class DeliveryRoute {
                 .startHubId(requestDto.getStartHubId())
                 .endHubId(requestDto.getEndHubId())
                 .expectedDistance(requestDto.getExpectedDistance())
-                .expectedTime(requestDto.getExpectedTime())
-                .DeliveryStatus(DeliveryStatusEnum.HUB_WAITING) // 기본값 : 허브 이동 대기 중
+                .expectedDuration(requestDto.getExpectedTime())
+                .deliveryStatus(DeliveryStatusEnum.HUB_WAITING) // 기본값 : 허브 이동 대기 중
                 .build();
     }
 
-    public void updateRealTimeAndDistance(String realDistance, String realTime) {
+    public void updateRealTimeAndDistance(String realDistance, String realDuration) {
         this.realDistance = realDistance;
-        this.realTime = realTime;
+        this.realDuration = realDuration;
     }
 
+    public void updateRoute(DeliveryRouteUpdateRequestDto requestDto) {
+        this.delivery = requestDto.getDelivery();
+        this.sequence = requestDto.getSequence();
+        this.startHubId = requestDto.getStartHubId();
+        this.endHubId = requestDto.getEndHubId();
+        this.expectedDistance = requestDto.getExpectedDistance();
+        this.expectedDuration = requestDto.getExpectedDuration();
+        this.realDistance = requestDto.getRealDistance();
+        this.realDuration = requestDto.getRealDuration();
+        this.deliveryStatus = requestDto.getDeliveryStatus();
+        this.deliveryManagerId = requestDto.getDeliveryManagerId();
+    }
 
 }

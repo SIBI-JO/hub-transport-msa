@@ -1,6 +1,11 @@
 package com.sibijo.delivery.application.service;
 
+import com.sibijo.common.exception.CustomException;
+import com.sibijo.common.exception.codes.CommonExceptionCode;
+import com.sibijo.common.utils.Auth.JwtUtil;
+import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.delivery.application.dto.DeliveryResponseDto;
+import com.sibijo.delivery.application.dto.DeliveryRouteResponseDto;
 import com.sibijo.delivery.domain.entity.Delivery;
 import com.sibijo.delivery.domain.entity.DeliveryRoute;
 import com.sibijo.delivery.domain.service.DeliveryRouteService;
@@ -13,10 +18,14 @@ import com.sibijo.delivery.infrastructure.client.order.OrderClient;
 import com.sibijo.delivery.infrastructure.client.order.OrderCreateUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
+import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
+import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +36,19 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class CustomDeliveryService {
 
+    private final JwtUtil jwtUtil;
     private final DeliveryService deliveryService;
     private final DeliveryRouteService deliveryRouteService;
     private final CompanyClient companyClient;
     private final HubClient hubClient;
     private final OrderClient orderClient;
 
+    /**
+     *  배송 & 배송 경로 생성
+     *  미구현 : User 서버에서 delivery_manager_id 가져와서 넣기
+     */
 
-    public void createDelivery(OrderToDeliveryRequestDto requestDto, String userId) {
+    public void createDelivery(OrderToDeliveryRequestDto requestDto) {
 
         // 1. 공급업체 & 수령업체 정보를 통해 출발/도착 허브 조회
         CompanyResponseDto startHub = companyClient.getHubByCompanyId(requestDto.getSupplierId());
@@ -49,7 +63,8 @@ public class CustomDeliveryService {
                 endHub.getHubId(),
                 endHub.getDeliveryAddress(),
                 requestDto.getReceiver(),
-                requestDto.getReceiverSlackId()
+                requestDto.getReceiverSlackId(),
+                requestDto.getRecipientsId()
         );
 
         // 4. 배송 정보 생성 및 저장
@@ -65,7 +80,7 @@ public class CustomDeliveryService {
 
         // 5. 배송 경로 생성에 필요한 정보 생성
         DeliveryRouteRequestDto routeRequestDto = new DeliveryRouteRequestDto(
-                1L,
+                1,
                 startHub.getHubId(),
                 endHub.getHubId(),
                 hubRoute.getExpectedDistance(),
@@ -83,7 +98,21 @@ public class CustomDeliveryService {
      *  권한 : Hub_Manager -> 자신의 허브만    //   Delivery_Manager -> 자신의 배송만
      *                                      // Company_Manager -> 자신의 업체만
      */
+    public Page<DeliveryResponseDto> getDeliveries(String token, Pageable pageable) {
+        Pageable validatedPageable = PageableUtils.validatePageable(pageable);
 
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
+
+        // 권한 및 사용자 ID 검증
+        if (userId == null || role == null) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+
+        Page<Delivery> deliveryList = deliveryService.getDeliveries(token, validatedPageable);
+
+        return deliveryList.map(DeliveryResponseDto::new);
+    }
 
 
 
@@ -92,8 +121,16 @@ public class CustomDeliveryService {
      *  권한 : Hub_Manager -> 자신의 허브만    //   Delivery_Manager -> 자신의 배송만
      *                                      // Company_Manager -> 자신의 업체만 : 수령인과 SlackId로 본인 확인
      */
-    public DeliveryResponseDto getDeliveryDetails(UUID deliveryId, String userId) {
-        return deliveryService.getDeliveryDetails(deliveryId);
+    public DeliveryResponseDto getDeliveryDetails(UUID deliveryId, String token) {
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
+
+        // 권한 및 사용자 ID 검증
+        if (userId == null || role == null) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+
+        return deliveryService.getDeliveryDetails(deliveryId, token);
     }
 
 
@@ -103,7 +140,15 @@ public class CustomDeliveryService {
      *  업체 배송 담당자 수정을 어떻게 처리해야하는가
      *  -> 배송을 만들 때 유저 서버로 업체ID를 보내서 업체 관계자 정보 받아서 넣어야 하나?
      */
+    public DeliveryResponseDto updateDelivery(UUID deliveryId, DeliveryUpdateRequestDto requestDto, String token) {
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
 
+        if (userId == null || role == null || role.equals("COMPANY")) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+        return deliveryService.updateDelivery(deliveryId, requestDto, token);
+    }
 
 
 
@@ -111,7 +156,15 @@ public class CustomDeliveryService {
      *  배송 취소
      *  권한 : Hub_Manager -> 자신의 허브만
      */
+    public DeliveryResponseDto deleteDelivery(UUID deliveryId, String token) {
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
 
+        if (userId == null || role == null || role.equals("COMPANY")) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+        return deliveryService.deleteDelivery(deliveryId, token);
+    }
 
 
 
@@ -120,7 +173,21 @@ public class CustomDeliveryService {
      *  권한 : Hub_Manager -> 자신의 허브만    //   Delivery_Manager -> 자신의 배송만
      *                                      // Company_Manager -> 자신의 업체만
      */
+    public Page<DeliveryRouteResponseDto> getDeliveryRoutes(String token, Pageable pageable) {
+        Pageable validatedPageable = PageableUtils.validatePageable(pageable);
 
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
+
+        // 권한 및 사용자 ID 검증
+        if (userId == null || role == null) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+
+        Page<DeliveryRoute> deliveryRouteList = deliveryRouteService.getDeliveryRoutes(token, validatedPageable);
+
+        return deliveryRouteList.map(DeliveryRouteResponseDto::new);
+    }
 
 
 
@@ -129,17 +196,44 @@ public class CustomDeliveryService {
      *  권한 : Hub_Manager -> 자신의 허브만    // Delivery_Manager -> 자신의 배송만
      *                                      // Company_Manager -> 자신의 업체만
      */
+    public DeliveryRouteResponseDto getDeliveryRouteDetails(UUID routeId, String token) {
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
 
+        // 권한 및 사용자 ID 검증
+        if (userId == null || role == null) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+
+        return deliveryRouteService.getDeliveryRouteDetails(routeId, token);
+    }
 
     /**
      *  배송 경로 수정
      *  권한 : Hub_Manager -> 자신의 허브만    //   Delivery_Manager -> 자신의 배송만
      *  실제 거리 / 실제 소요 시간만 수정 가능? 아니면 다른 부분도 수정 가눙?
      */
+    public DeliveryRouteResponseDto updateDeliveryRoute(UUID routeId, DeliveryRouteUpdateRequestDto requestDto, String token) {
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
 
+        if (userId == null || role == null || role.equals("COMPANY")) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+        return deliveryRouteService.updateDeliveryRoute(routeId, requestDto, token);
+    }
 
     /**
      *  배송 경로 삭제
      *  권한 : Hub_Manager -> 자신의 허브만
      */
+    public DeliveryRouteResponseDto deleteDeliveryRoute(UUID routeId, String token) {
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
+
+        if (userId == null || role == null || role.equals("COMPANY") || role.equals("DELIVERY")) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+        return deliveryRouteService.deleteDeliveryRoute(routeId, token);
+    }
 }

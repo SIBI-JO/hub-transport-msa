@@ -62,7 +62,6 @@ public class OrderController {
 
     /**
      *   주문 전체 조회
-     *   미완성 : 1. 권한 별 조회, 2. 주문 상태가 완료 상태인 주문만 조회
      *   권한 : Hub_Manager -> 자신의 허브만, Delivery_Manager/Company_Manager -> 본인의 주문만
      */
     @GetMapping
@@ -75,7 +74,6 @@ public class OrderController {
 
     /**
      *   주문 상세 조회
-     *   미완성 : 1. 권한 별 조회, 2. 주문 상태가 완료 상태인 주문만 조회
      *   권한 : Hub_Manager -> 자신의 허브만, Delivery_Manager/Company_Manager -> 본인의 주문만
      */
     @GetMapping("/{orderId}")
@@ -88,7 +86,6 @@ public class OrderController {
 
     /**
      *   주문 수정
-     *   미완성 : 1. 권한 별 접근, 2. 주문 상태가 완료 상태인 주문만 조회
      *   권한 : Hub_Manager -> 자신의 허브만 , Master -> All
      */
     @PutMapping("/{orderId}")
@@ -101,7 +98,6 @@ public class OrderController {
 
     /**
      *   주문 삭제
-     *   미완성 : 1. 권한 별 접근, 2. 주문 상태가 완료 상태인 주문만 조회
      *   권한 : Hub_Manager -> 자신의 허브만 , Master -> All
      */
     @DeleteMapping("/{orderId}")
