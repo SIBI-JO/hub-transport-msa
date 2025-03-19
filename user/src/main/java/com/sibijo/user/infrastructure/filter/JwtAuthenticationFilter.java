@@ -13,6 +13,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -58,8 +59,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String username = ((UserDetailsImpl) authResult.getPrincipal()).getUsername();
         Long userId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getId();
         Role role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
-        String hubId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getHubId();
-        String companyId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getCompanyId();
+        UUID hubId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getHubId();
+        UUID companyId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getCompanyId();
 
         String token = jwtUtil.createToken(username, userId, role, hubId, companyId);
 

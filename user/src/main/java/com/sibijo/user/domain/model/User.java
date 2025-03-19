@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -61,7 +62,14 @@ public class User extends BaseEntity {
 
     public static User of(String username, String password, String slackId, Role role, UUID hubId,
             UUID companyId) {
-        return new User(username, password, slackId, role, hubId, companyId);
+        return new User(
+                username,
+                password,
+                slackId,
+                role,
+                hubId,
+                companyId
+        );
     }
 
     public void updateUser(String username, String slackId, String password) {

@@ -1,0 +1,10 @@
+package com.sibijo.user.presentation.dto.auth;
+
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class SignUpResponseDto {
+    private Long userId;
+}

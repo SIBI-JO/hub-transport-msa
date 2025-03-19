@@ -8,6 +8,7 @@ import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +45,7 @@ public class UserJwtUtil {
     }
 
     // 토큰 생성
-    public String createToken(String username, Long userId, Role role, String hubId, String CompanyId) {
+    public String createToken(String username, Long userId, Role role, UUID hubId, UUID CompanyId) {
         Date date = new Date();
 
         return BEARER_PREFIX +
