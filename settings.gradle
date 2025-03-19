@@ -5,6 +5,7 @@ include("gateway")
 include("user")
 include("common")
 include("hub")
+include("hub-routes")
 include("company")
 include("product")
 

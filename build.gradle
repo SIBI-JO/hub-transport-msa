@@ -75,6 +75,16 @@ project(':hub') {
         enabled = true
     }
 }
+
+project(':hub-routes') {
+    dependencies {
+        implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
+
 //
 project(':order') {
     dependencies {
