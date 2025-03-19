@@ -41,26 +41,30 @@ public class AiController {
     /**
      * 주문 정보를 기반으로 AI 메시지를 생성하고, Slack으로 전송합니다.
      */
-    @GetMapping("/orders/{orderId}/slack-message")
-    public ResponseEntity<?> generateAndSendSlackMessage(@PathVariable("orderId") Long orderId) {
+    @GetMapping("/orders/{orderId}/dm")
+    public ResponseEntity<?> generateAndSendDmToUser(
+            @PathVariable("orderId") Long orderId,
+            @RequestParam("userSlackId") String userSlackId
+    ) {
         try {
-            // 1. Order 마이크로서비스에서 주문 상세정보 조회 또는 더미 데이터 생성
+            // 1) 주문 상세정보 조회
             OrderServiceResponseDto orderServiceData = fetchOrderFromOrderService(orderId);
             if (orderServiceData == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
             }
-            // 2. 조회한 데이터를 AI 메시지 생성용 OrderDto로 매핑
+            // 2) OrderDto 변환
             OrderDto orderDto = mapToOrderDto(orderServiceData);
-            // 3. Gemini API를 호출해 AI 메시지 생성
+            // 3) AI 메시지 생성
             String aiMessage = geminiNotificationService.generateAiSlackMessage(orderDto);
-            // 4. 생성된 AI 메시지를 Slack으로 전송
-            slackNotificationService.sendSlackMessage(slackChannel, aiMessage);
-            // 5. 결과 반환
+            // 4) Slack DM 전송 (userSlackId에 전송)
+            slackNotificationService.sendDirectMessageToUser(userSlackId, aiMessage);
+
+            // 결과 반환
             return ResponseEntity.ok(Collections.singletonMap("aiMessage", aiMessage));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("AI 메시지 생성 및 Slack 전송 중 오류 발생: " + e.getMessage());
+                    .body("AI 메시지 생성 및 Slack DM 전송 중 오류 발생: " + e.getMessage());
         }
     }
 
