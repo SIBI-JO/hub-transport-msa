@@ -1,18 +1,31 @@
 package com.sibijo.order.domain.repository;
 
 import com.sibijo.order.domain.entity.Order;
+import com.sibijo.order.domain.enums.OrderStatusEnum;
+import com.sibijo.order.infrastructure.repository.OrderRepositoryCustom;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface OrderRepository {
+
+public interface OrderRepository extends JpaRepository<Order, UUID>, OrderRepositoryCustom {
 
     List<Order> findAll();
 
     Optional<Order> findById(UUID id);
 
     Order save(Order user);
+
+    Page<Order> findAllByDeletedAtIsNull(Pageable pageable);
+
+    // 배송 담당자(DELIVERY) - 본인의 허브와 관련된 주문 중 COMPLETED 상태인 것만 조회
+    Page<Order> findByRecipientHubIdAndDeletedAtIsNullAndOrderStatus(UUID hubId, OrderStatusEnum status, Pageable pageable);
+
+    // 업체 담당자(COMPANY) - 본인의 업체가 포함된 주문 중 COMPLETED 상태인 것만 조회
+    Page<Order> findBySupplierIdOrRecipientsIdAndDeletedAtIsNullAndOrderStatus(UUID supplierId, UUID recipientsId, OrderStatusEnum status, Pageable pageable);
 
 }

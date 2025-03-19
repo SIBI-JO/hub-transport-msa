@@ -8,19 +8,13 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderUpdateRequestDto {
+public class OrderCreateUpdateRequestDto {
 
-    private UUID supplierId;
-    private UUID supplierHubId;
-
-    private UUID recipientsId;
-    private UUID recipientHubId;
-
-    private UUID productId;
     private UUID deliveryId;
 
-    private Integer amount;
-    private String request;
+    private UUID supplierHubId;
+
+    private UUID recipientHubId;
 
 
 }

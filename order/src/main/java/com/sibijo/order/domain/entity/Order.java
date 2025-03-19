@@ -3,6 +3,7 @@ package com.sibijo.order.domain.entity;
 
 import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.order.domain.enums.OrderStatusEnum;
+import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
 import jakarta.persistence.Column;
@@ -12,14 +13,14 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
@@ -27,6 +28,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @Table(catalog = "sibijo", name = "p_order")
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE p_order SET is_deleted = true WHERE order_id = ?")
 public class Order extends BaseEntity {
 
     @Id
@@ -37,8 +40,12 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private UUID supplierId;
 
+    private UUID supplierHubId;
+
     @Column(nullable = false)
     private UUID recipientsId;
+
+    private UUID recipientHubId;
 
     @Column(nullable = false)
     private UUID productId;
@@ -53,7 +60,7 @@ public class Order extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatusEnum status;
+    private OrderStatusEnum orderStatus;
 
 
     public static Order createOrder(OrderRequestDto requestDto) {
@@ -63,14 +70,16 @@ public class Order extends BaseEntity {
                 .productId(requestDto.getProductId())
                 .amount(requestDto.getAmount())
                 .request(requestDto.getRequest())
-                .status(OrderStatusEnum.PENDING)
+                .orderStatus(OrderStatusEnum.PENDING)
                 .build();
     }
 
     // 미완성인 주문 배송 정보 업데이트
-    public void updateDelivery(UUID deliveryId) {
-        this.deliveryId = deliveryId;
-        this.status = OrderStatusEnum.COMPLETED;
+    public void updateDelivery(OrderCreateUpdateRequestDto requestDto) {
+        this.deliveryId = requestDto.getDeliveryId();
+        this.supplierHubId = requestDto.getSupplierHubId();
+        this.recipientHubId = requestDto.getRecipientHubId();
+        this.orderStatus = OrderStatusEnum.COMPLETED;
     }
 
     public void updateOrder(OrderUpdateRequestDto requestDto) {
