@@ -10,16 +10,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
@@ -27,6 +26,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @Table(catalog = "sibijo", name = "p_delivery_route")
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE p_hub SET is_deleted = true WHERE hub_id = ?")
 public class DeliveryRoute {
 
     @Id
@@ -57,7 +58,7 @@ public class DeliveryRoute {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DeliveryStatusEnum status;
+    private DeliveryStatusEnum DeliveryStatus;
 
     private UUID deliveryManagerId; // 배송 담당자 ID
 
@@ -71,7 +72,7 @@ public class DeliveryRoute {
                 .endHubId(requestDto.getEndHubId())
                 .expectedDistance(requestDto.getExpectedDistance())
                 .expectedTime(requestDto.getExpectedTime())
-                .status(DeliveryStatusEnum.HUB_WAITING) // 기본값 : 허브 이동 대기 중
+                .DeliveryStatus(DeliveryStatusEnum.HUB_WAITING) // 기본값 : 허브 이동 대기 중
                 .build();
     }
 

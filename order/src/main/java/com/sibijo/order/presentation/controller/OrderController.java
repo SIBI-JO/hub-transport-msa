@@ -1,11 +1,15 @@
 package com.sibijo.order.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
+import com.sibijo.common.utils.Auth.AuthUtil;
+import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.order.application.dto.OrderResponseDto;
 import com.sibijo.order.application.service.OrderService;
 import com.sibijo.order.domain.entity.Order;
+import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,19 +35,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class OrderController {
 
+    private final JwtUtil jwtUtil;
     private final OrderService orderService;
 
     /**
      *  주문 생성
      */
     @PostMapping
-    public void createOrder(
-            @RequestBody OrderRequestDto requestDto,
-            @RequestHeader(value = "X-User-Id", required = true) String userId,
-            @RequestHeader(value = "X-Role", required = true) String role) {
-
-        orderService.createOrder(requestDto, userId);
-//        return ResponseEntity.ok();
+    public ResponseEntity<ApiResponse<OrderResponseDto>> createOrder(HttpServletRequest request,
+            @RequestBody OrderRequestDto requestDto
+            ) {
+        String token = jwtUtil.extractToken(request);
+        return ResponseEntity.ok(ApiResponse.success("주문 생성 성공", orderService.createOrder(requestDto, token)));
     }
 
 
@@ -51,8 +54,9 @@ public class OrderController {
      *  생성 완료 전인 주문 수정
      */
     @PutMapping("/{orderId}/update-delivery")
-    public void updateOrderFromDelivery(@PathVariable UUID orderId, @RequestParam UUID deliveryId) {
-        orderService.updateOrderWithDelivery(orderId, deliveryId);
+    public void updateOrderFromDelivery(@PathVariable UUID orderId, @RequestBody
+            OrderCreateUpdateRequestDto requestDto) {
+        orderService.updateOrderWithDelivery(orderId, requestDto);
     }
 
 
@@ -61,17 +65,13 @@ public class OrderController {
      *   미완성 : 1. 권한 별 조회, 2. 주문 상태가 완료 상태인 주문만 조회
      *   권한 : Hub_Manager -> 자신의 허브만, Delivery_Manager/Company_Manager -> 본인의 주문만
      */
-//    @GetMapping
-//    public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> getOrders(
-//            @RequestHeader(value = "X-User-Id", required = true) String userId,
-//            @RequestHeader(value = "X-Role", required = true) String role,
-//            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-//
-//
-//        Page<OrderResponseDto> orders = orderService.getOrders(userId, role, pageable);
-//
-//        return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orders));
-//    }
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> getOrders(
+            HttpServletRequest request,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        String token = jwtUtil.extractToken(request);
+        return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orderService.getOrders(token, pageable)));
+    }
 
     /**
      *   주문 상세 조회
@@ -80,9 +80,9 @@ public class OrderController {
      */
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponseDto>> getOrderById(@PathVariable UUID orderId,
-            @RequestHeader(value = "X-User-Id", required = true) String userId,
-            @RequestHeader(value = "X-Role", required = true) String role) {
-        return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orderService.getOrderById(orderId, userId)));
+            HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orderService.getOrderById(orderId, token)));
     }
 
 
@@ -94,9 +94,9 @@ public class OrderController {
     @PutMapping("/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponseDto>> updateOrder(@PathVariable UUID orderId,
             @RequestBody OrderUpdateRequestDto requestDto,
-            @RequestHeader(value = "X-User-Id", required = true) String userId,
-            @RequestHeader(value = "X-Role", required = true) String role) {
-        return ResponseEntity.ok(ApiResponse.success("주문 수정 성공", orderService.updateOrder(orderId, requestDto, userId)));
+            HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        return ResponseEntity.ok(ApiResponse.success("주문 수정 성공", orderService.updateOrder(orderId, requestDto, token)));
     }
 
     /**
@@ -104,12 +104,12 @@ public class OrderController {
      *   미완성 : 1. 권한 별 접근, 2. 주문 상태가 완료 상태인 주문만 조회
      *   권한 : Hub_Manager -> 자신의 허브만 , Master -> All
      */
-//    @DeleteMapping("/{orderId}")
-//    public ResponseEntity<ApiResponse<OrderResponseDto>> deleteOrder(
-//            @PathVariable UUID orderId,
-//            @RequestHeader(value = "X-User-Id", required = true) String userId,
-//            @RequestHeader(value = "X-Role", required = true) String role) {
-//        return ResponseEntity.ok(ApiResponse.success("주문 삭제 성공", orderService.deleteOrder(orderId, userId)));
-//    }
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<ApiResponse<OrderResponseDto>> deleteOrder(
+            @PathVariable UUID orderId,
+            HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        return ResponseEntity.ok(ApiResponse.success("주문 삭제 성공", orderService.deleteOrder(orderId, token)));
+    }
 
 }

@@ -14,6 +14,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
@@ -21,6 +23,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @Table(catalog = "sibijo", name = "p_delivery")
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE p_hub SET is_deleted = true WHERE hub_id = ?")
 public class Delivery extends BaseEntity {
 
     @Id

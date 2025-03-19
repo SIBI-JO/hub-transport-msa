@@ -10,6 +10,7 @@ import com.sibijo.delivery.infrastructure.client.company.CompanyResponseDto;
 import com.sibijo.delivery.infrastructure.client.hub.HubClient;
 import com.sibijo.delivery.infrastructure.client.hub.HubResponseDto;
 import com.sibijo.delivery.infrastructure.client.order.OrderClient;
+import com.sibijo.delivery.infrastructure.client.order.OrderCreateUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
@@ -55,7 +56,12 @@ public class CustomDeliveryService {
         Delivery delivery = deliveryService.createDelivery(deliveryRequestDto);
 
         // 5. 주문 서버로 배송 ID 보내기
-        orderClient.updateOrderWithDelivery(requestDto.getOrderId(), delivery.getDeliveryId());
+        OrderCreateUpdateRequestDto updateRequestDto = new OrderCreateUpdateRequestDto(
+                delivery.getDeliveryId(),
+                startHub.getHubId(),
+                endHub.getHubId()
+        );
+        orderClient.updateOrderWithDelivery(requestDto.getOrderId(), updateRequestDto);
 
         // 5. 배송 경로 생성에 필요한 정보 생성
         DeliveryRouteRequestDto routeRequestDto = new DeliveryRouteRequestDto(
@@ -84,7 +90,7 @@ public class CustomDeliveryService {
     /**
      *  배송 상세 조회
      *  권한 : Hub_Manager -> 자신의 허브만    //   Delivery_Manager -> 자신의 배송만
-     *                                      // Company_Manager -> 자신의 업체만
+     *                                      // Company_Manager -> 자신의 업체만 : 수령인과 SlackId로 본인 확인
      */
     public DeliveryResponseDto getDeliveryDetails(UUID deliveryId, String userId) {
         return deliveryService.getDeliveryDetails(deliveryId);
