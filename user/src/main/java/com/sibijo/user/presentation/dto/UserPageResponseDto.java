@@ -11,5 +11,5 @@ public class UserPageResponseDto {
     private int size;
     private int total;
 
-    private List<UserDetailsResponseDto> users;
+    private List<UserSearchDetailsReponseDto> users;
 }

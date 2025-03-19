@@ -1,7 +1,11 @@
 package com.sibijo.user.application.service;
 
+import com.sibijo.common.exception.CustomException;
+import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
 import com.sibijo.common.utils.Auth.JwtUtil;
+import com.sibijo.common.utils.page.PageSize;
+import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.repository.UserRepository;
@@ -12,13 +16,20 @@ import com.sibijo.user.presentation.dto.UserCreateRequestDto;
 import com.sibijo.user.presentation.dto.UserCreateResponseDto;
 import com.sibijo.user.presentation.dto.UserDeleteResponseDto;
 import com.sibijo.user.presentation.dto.UserDetailsResponseDto;
+import com.sibijo.user.presentation.dto.UserPageResponseDto;
+import com.sibijo.user.presentation.dto.UserSearchDetailsReponseDto;
 import com.sibijo.user.presentation.dto.UserUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -214,10 +225,47 @@ public class UserService {
                 .build();
     }
 
+    public UserPageResponseDto searchUsers(HttpServletRequest request, int page, int size, String criteria, String sort, String username) {
+        // 유효한 페이지 크기인지 검증
+        if (!PageSize.isValidSize(size)) {
+            throw new CustomException(CommonExceptionCode.INVALID_PAGE_SIZE);
+        }
 
+        // sort 설정
+        String pageCriteria  = criteria.equals("createdAt") ? "createdAt" : "updatedAt";
 
+        Sort pageSort = sort.equals("ASC") ? Sort.by(Sort.Direction.ASC, pageCriteria)  : Sort.by(Sort.Direction.DESC, pageCriteria);
 
+        // 페이지네이션 설정
+        Pageable pageable = PageableUtils.validatePageable(PageRequest.of(page, size, pageSort));
 
+        // username 포함한 유저 검색
+        Page<User> userList;
+        if (StringUtils.hasText(username)) {
+            userList = userRepository.findAllByUsernameContains(username, pageable);
+        }
+        else {
+            userList = userRepository.findAll(pageable);
+        }
 
+        return UserPageResponseDto.builder()
+                .page(userList.getNumber() + 1)
+                .size(userList.getSize())
+                .total(userList.getTotalPages())
+                .users(
+                        //리스트 형태로 넣기
+                        userList.stream()
+                                .map(user -> UserSearchDetailsReponseDto.builder()
+                                        .userId(user.getId())
+                                        .username(user.getUsername())
+                                        .slackId(user.getSlackId())
+                                        .role(user.getRole())
+                                        .isDeleted((user.getDeletedAt() != null))
+                                        .build()
+                                )
+                                .collect(Collectors.toList())
+                )
+                .build();
+    }
 
 }
