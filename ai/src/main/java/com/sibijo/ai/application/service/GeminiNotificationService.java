@@ -36,7 +36,7 @@ public class GeminiNotificationService {
         String transitCenters = (centers == null || centers.isEmpty()) ? "" : String.join(", ", centers);
 
         return String.format(
-                "주문 번호: %s\n" +
+                        "주문 번호: %s\n" +
                         "주문자 정보: %s / %s\n" +
                         "상품 정보: %s\n" +
                         "요청 사항: %s\n" +
