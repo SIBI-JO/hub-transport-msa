@@ -1,8 +1,8 @@
-package com.sibijo.ai.application.service;
+package com.sibijo.company.application.service;
 
-import com.sibijo.ai.presentation.dto.CompanyRequest;
-import com.sibijo.ai.domain.entity.Company;
-import com.sibijo.ai.infrastructure.repository.CompanyRepository;
+import com.sibijo.company.presentation.dto.CompanyRequest;
+import com.sibijo.company.domain.entity.Company;
+import com.sibijo.company.infrastructure.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.sibijo.ai.presentation.dto;
+package com.sibijo.company.presentation.dto;
 
 import lombok.*;
 import java.util.UUID;

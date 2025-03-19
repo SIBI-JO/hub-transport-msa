@@ -2,24 +2,21 @@ package com.sibijo.ai.presentation.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sibijo.ai.application.service.GeminiNotificationService;
+import com.sibijo.ai.application.service.SlackNotificationService;
 import com.sibijo.ai.presentation.dto.OrderDto;
 import com.sibijo.ai.presentation.dto.OrderServiceResponseDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.Collections;
 
-/**
- * AI 마이크로서비스 컨트롤러
- * - Order 마이크로서비스로부터 주문 정보를 조회하거나, 더미 데이터를 사용해 AI 메시지를 생성합니다.
- */
 @RestController
 @RequestMapping("/api/ai")
 public class AiController {
 
     private final GeminiNotificationService geminiNotificationService;
+    private final SlackNotificationService slackNotificationService;
     private final RestTemplate restTemplate;
 
     @Value("${order.service.url}")
@@ -28,36 +25,45 @@ public class AiController {
     @Value("${order.service.useDummyData:false}")
     private boolean useDummyData;
 
+    // Slack 전송 시 사용할 채널 (예: "#dispatch-channel")
+    @Value("${slack.channel}")
+    private String slackChannel;
+
     public AiController(GeminiNotificationService geminiNotificationService,
+            SlackNotificationService slackNotificationService,
             RestTemplate restTemplate) {
         this.geminiNotificationService = geminiNotificationService;
+        this.slackNotificationService = slackNotificationService;
         this.restTemplate = restTemplate;
     }
 
     /**
-     * /api/ai/orders/{orderId}/slack-message
-     * - Order 마이크로서비스에서 주문 상세정보를 조회하거나 더미 데이터를 사용해 AI 메시지를 생성합니다.
+     * 주문 정보를 기반으로 AI 메시지를 생성하고, Slack으로 전송합니다.
      */
-    @GetMapping("/orders/{orderId}/slack-message")
-    public ResponseEntity<?> generateSlackMessageFromOrder(
-            @PathVariable("orderId") Long orderId
+    @GetMapping("/orders/{orderId}/dm")
+    public ResponseEntity<?> generateAndSendDmToUser(
+            @PathVariable("orderId") Long orderId,
+            @RequestParam("userSlackId") String userSlackId
     ) {
         try {
-            // 1. Order 마이크로서비스에서 주문 상세정보 조회 또는 더미 데이터 생성
+            // 1) 주문 상세정보 조회
             OrderServiceResponseDto orderServiceData = fetchOrderFromOrderService(orderId);
             if (orderServiceData == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
             }
-            // 2. 조회한 데이터를 AI 메시지 생성용 OrderDto로 매핑
+            // 2) OrderDto 변환
             OrderDto orderDto = mapToOrderDto(orderServiceData);
-            // 3. Gemini API를 호출해 AI 메시지 생성
+            // 3) AI 메시지 생성
             String aiMessage = geminiNotificationService.generateAiSlackMessage(orderDto);
-            // 4. 결과 반환
+            // 4) Slack DM 전송 (userSlackId에 전송)
+            slackNotificationService.sendDirectMessageToUser(userSlackId, aiMessage);
+
+            // 결과 반환
             return ResponseEntity.ok(Collections.singletonMap("aiMessage", aiMessage));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("AI 메시지 생성 중 오류가 발생했습니다: " + e.getMessage());
+                    .body("AI 메시지 생성 및 Slack DM 전송 중 오류 발생: " + e.getMessage());
         }
     }
 
@@ -72,7 +78,6 @@ public class AiController {
 
         String url = orderServiceUrl + "/" + orderId;
         HttpHeaders headers = new HttpHeaders();
-        // Authorization 헤더 제거
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
@@ -111,18 +116,17 @@ public class AiController {
 
     /**
      * OrderServiceResponseDto를 AI 메시지 생성을 위한 OrderDto로 매핑합니다.
-     * (필요에 따라 실제 필드 및 로직은 수정)
      */
     private OrderDto mapToOrderDto(OrderServiceResponseDto src) {
         OrderDto target = new OrderDto();
         target.setOrderId(src.getOrderId().toString());
-        // supplierName을 주문자 정보로 사용 (실제 상황에 맞게 조정)
+        // supplierName을 주문자 정보로 사용 (필요시 실제 필드에 맞게 수정)
         target.setOrdererName(src.getSupplierName());
-        target.setOrdererEmail("unknown@example.com"); // 추가 정보가 없으면 기본값
+        target.setOrdererEmail("unknown@example.com"); // 추가 정보가 없으면 기본값 사용
         target.setProductInfo(String.format("%s %d개", src.getProductName(), src.getAmount()));
         target.setRequestInfo(src.getRequest());
-        target.setDispatchCenter("경기 북부 센터"); // 예시 값, 실제값은 Order 서비스 등에서 제공
-        target.setTransitCenters(null); // 필요시 경유지 리스트 채워주기
+        target.setDispatchCenter("경기 북부 센터"); // 예시 값, 실제값은 Order 서비스에서 제공
+        target.setTransitCenters(null); // 필요 시 경유지 리스트 채워주기
         target.setDestination("부산시 사하구 낙동대로 1번길 1 해산물월드");
         target.setDeliveryPersonName("고길동");
         target.setDeliveryPersonEmail("kdk@sparta.world");

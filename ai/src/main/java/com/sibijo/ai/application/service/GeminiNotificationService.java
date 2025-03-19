@@ -3,12 +3,8 @@ package com.sibijo.ai.application.service;
 import com.sibijo.ai.infrastructure.client.GeminiApiClient;
 import com.sibijo.ai.presentation.dto.OrderDto;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
-/**
- * Gemini API를 통해 AI 메시지를 생성하는 서비스
- */
 @Service
 public class GeminiNotificationService {
 
@@ -36,7 +32,7 @@ public class GeminiNotificationService {
         String transitCenters = (centers == null || centers.isEmpty()) ? "" : String.join(", ", centers);
 
         return String.format(
-                        "주문 번호: %s\n" +
+                "주문 번호: %s\n" +
                         "주문자 정보: %s / %s\n" +
                         "상품 정보: %s\n" +
                         "요청 사항: %s\n" +

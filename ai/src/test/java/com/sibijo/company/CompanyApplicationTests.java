@@ -1,4 +1,4 @@
-package com.sibijo.ai;
+package com.sibijo.company;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

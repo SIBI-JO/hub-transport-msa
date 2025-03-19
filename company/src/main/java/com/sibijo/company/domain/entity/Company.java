@@ -1,7 +1,7 @@
-package com.sibijo.ai.domain.entity;
+package com.sibijo.company.domain.entity;
 
 import com.sibijo.common.entity.BaseEntity;
-import com.sibijo.ai.domain.enums.CompanyType;
+import com.sibijo.company.domain.enums.CompanyType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;

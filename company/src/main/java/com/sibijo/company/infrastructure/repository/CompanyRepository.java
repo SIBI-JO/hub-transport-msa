@@ -1,6 +1,6 @@
-package com.sibijo.ai.infrastructure.repository;
+package com.sibijo.company.infrastructure.repository;
 
-import com.sibijo.ai.domain.entity.Company;
+import com.sibijo.company.domain.entity.Company;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 

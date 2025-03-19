@@ -1,6 +1,6 @@
-package com.sibijo.ai.presentation.dto;
+package com.sibijo.company.presentation.dto;
 
-import com.sibijo.ai.domain.enums.CompanyType;
+import com.sibijo.company.domain.enums.CompanyType;
 import lombok.*;
 import java.util.UUID;
 

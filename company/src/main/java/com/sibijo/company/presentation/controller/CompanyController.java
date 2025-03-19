@@ -1,10 +1,10 @@
-package com.sibijo.ai.presentation.controller;
+package com.sibijo.company.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
-import com.sibijo.ai.presentation.dto.CompanyRequest;
-import com.sibijo.ai.presentation.dto.CompanyResponseDto;
-import com.sibijo.ai.domain.entity.Company;
-import com.sibijo.ai.application.service.CompanyService;
+import com.sibijo.company.presentation.dto.CompanyRequest;
+import com.sibijo.company.presentation.dto.CompanyResponseDto;
+import com.sibijo.company.domain.entity.Company;
+import com.sibijo.company.application.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

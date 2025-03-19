@@ -1,10 +1,10 @@
-package com.sibijo.ai;
+package com.sibijo.company;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class CompanyApplicationTests {
+class ProductApplicationTests {
 
 	@Test
 	void contextLoads() {
