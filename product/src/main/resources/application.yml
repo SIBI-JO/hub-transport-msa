@@ -7,7 +7,7 @@ spring:
       enabled: false
   config:
     import:
-      - optional:file:./product/env/db.env[.properties]
+      - optional:file:./product/.env[.properties]
   application:
     name: product-service  # Eureka에 등록될 서비스 이름
   datasource:

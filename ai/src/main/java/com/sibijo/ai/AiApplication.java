@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootApplication(scanBasePackages = {"com.sibijo.company", "com.sibijo.common"})
+@SpringBootApplication(scanBasePackages = {"com.sibijo.ai", "com.sibijo.common"})
 public class AiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AiApplication.class, args);
