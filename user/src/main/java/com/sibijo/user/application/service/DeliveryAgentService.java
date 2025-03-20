@@ -5,12 +5,14 @@ import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
 import com.sibijo.common.utils.page.PageSize;
 import com.sibijo.common.utils.page.PageableUtils;
+import com.sibijo.user.application.dto.HubResponseDto;
 import com.sibijo.user.domain.enums.DeliveryType;
 import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
+import com.sibijo.user.infrastructure.client.FeignClientUtil;
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentCreateRequestDto;
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentCreateResponseDto;
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentDeleteResponseDto;
@@ -43,6 +45,7 @@ public class DeliveryAgentService {
     private final UserRepository userRepository;
     private final DeliveryAgentRepository deliveryAgentRepository;
     private final AuthUtil authUtil;
+    private final FeignClientUtil feignClientUtil;
 
     @Transactional
     public DeliveryAgentCreateResponseDto createDeliveryAgent(
@@ -71,6 +74,10 @@ public class DeliveryAgentService {
         // 업체 배송 담당자
         if (deliveryType.equals(DeliveryType.COMPANY)) {
             // TODO: 허브 ID 존재 확인 => msa to msa api 요청!
+            HubResponseDto response = feignClientUtil.CallHubFeignClient(requestDto.getHubId());
+            if (!response.isHubStatus()) {
+                throw new IllegalArgumentException("등록이 불가한 허브입니다.");
+            }
             // 배송 순번 지정 0~10 - 같은 hubId, deliveryType을 가진 기존 배송 담당자 중 max(deliveryOrder) 찾기
             Optional<Integer> maxOrderOpt = deliveryAgentRepository.findMaxDeliveryOrderByHubIdAndType(
                     hubId, deliveryType);
@@ -160,7 +167,10 @@ public class DeliveryAgentService {
                 throw new IllegalArgumentException("허브 배송 담당자는 허브 정보를 변경할 수 없습니다.");
             }
             //TODO: 허브 ID 존재 확인 (feign client)
-
+            HubResponseDto response = feignClientUtil.CallHubFeignClient(requestDto.getHubId());
+            if (!response.isHubStatus()) {
+                throw new IllegalArgumentException("존재하지 않는 허브입니다.");
+            }
 
             hubId = requestDto.getHubId();
         }
@@ -230,7 +240,7 @@ public class DeliveryAgentService {
         authUtil.authoizeHubAccess(request, hubId, targetRoles);
 
         //삭제
-        deliveryAgentRepository.deleteById(id);
+        user.softDelete();
 
         return DeliveryAgentDeleteResponseDto
                 .builder()
