@@ -22,8 +22,10 @@ import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentSearchDetails
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentUpdateRequestDto;
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentUpdateResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,6 +48,7 @@ public class DeliveryAgentService {
     private final DeliveryAgentRepository deliveryAgentRepository;
     private final AuthUtil authUtil;
     private final FeignClientService feignClientService;
+    private final Random random = new Random();
 
     @Transactional
     public DeliveryAgentCreateResponseDto createDeliveryAgent(
@@ -178,10 +181,9 @@ public class DeliveryAgentService {
         //배송 순번 재배치
 
         int deliveryOrder = user.getDeliveryOrder();
-        if (Objects.equals(deliveryType, DeliveryType.HUB) && !user.getHubId().equals(hubId)){
+        if (Objects.equals(deliveryType, DeliveryType.HUB) && !user.getHubId().equals(hubId)) {
             deliveryOrder = user.getDeliveryOrder();
-        }
-        else if (Objects.equals(deliveryType, DeliveryType.COMPANY)) {
+        } else if (Objects.equals(deliveryType, DeliveryType.COMPANY)) {
             // 배송 순번 지정 0~10 - 같은 hubId, deliveryType을 가진 기존 배송 담당자 중 max(deliveryOrder) 찾기
             Optional<Integer> maxOrderOpt = deliveryAgentRepository.findMaxDeliveryOrderByHubIdAndType(
                     hubId, deliveryType);
@@ -189,8 +191,7 @@ public class DeliveryAgentService {
             if (maxOrderOpt.isPresent()) {
                 deliveryOrder = (maxOrderOpt.get() + 1) % 10;
             }
-        }
-        else if (Objects.equals(deliveryType, DeliveryType.HUB)) {
+        } else if (Objects.equals(deliveryType, DeliveryType.HUB)) {
             Optional<Integer> maxOrderOpt = deliveryAgentRepository.findMaxDeliveryOrderByType(
                     deliveryType);
 
@@ -248,7 +249,8 @@ public class DeliveryAgentService {
                 .build();
     }
 
-    public DeliveryAgentPageResponseDto searchDeliveryAgents(HttpServletRequest request, int page, int size,
+    public DeliveryAgentPageResponseDto searchDeliveryAgents(HttpServletRequest request, int page,
+            int size,
             String criteria, String sort, String deliveryType) {
         // 유효한 페이지 크기인지 검증
         if (!PageSize.isValidSize(size)) {
@@ -267,7 +269,8 @@ public class DeliveryAgentService {
         // username 포함한 유저 검색
         Page<DeliveryAgent> userList;
         if (StringUtils.hasText(deliveryType)) {
-            userList = deliveryAgentRepository.findAllBydeliveryTypeContains(deliveryType, pageable);
+            userList = deliveryAgentRepository.findAllBydeliveryTypeContains(deliveryType,
+                    pageable);
         } else {
             userList = deliveryAgentRepository.findAll(pageable);
         }
@@ -290,6 +293,37 @@ public class DeliveryAgentService {
                                 .collect(Collectors.toList())
                 )
                 .build();
+    }
+
+    // internal API 비즈니스 로직
+    @Transactional
+    public Long assignHubDeliveryAgent() {
+        // 배송 담당자가 없는 경우 확인 (deliveryType = Hub인 것)
+        List<DeliveryAgent> agents = deliveryAgentRepository.findAllByDeliveryType(
+                DeliveryType.HUB);
+
+        if (agents.isEmpty()) {
+            throw new RuntimeException("배정 가능한 Hub 배송 담당자가 없습니다.");
+        }
+
+        // TODO: 랜덤 -> 순서대로 배정
+        DeliveryAgent selectedAgent = agents.get(random.nextInt(agents.size()));
+        return  selectedAgent.getId();
+    }
+
+    @Transactional
+    public Long assignCompanyDeliveryAgent(UUID hubId) {
+        // 배송 담당자가 없는 경우 확인 (deliveryType = Company, hubId = hubId 인 것)
+        List<DeliveryAgent> agents = deliveryAgentRepository.findAllByDeliveryTypeAndHubId(
+                DeliveryType.COMPANY, hubId);
+
+        if (agents.isEmpty()) {
+            throw new IllegalArgumentException("배정 가능한 Hub 배송 담당자가 없습니다.");
+        }
+
+        // TODO: 랜덤 -> 순서대로 배정
+        DeliveryAgent selectedAgent = agents.get(random.nextInt(agents.size()));
+        return  selectedAgent.getId();
     }
 
 

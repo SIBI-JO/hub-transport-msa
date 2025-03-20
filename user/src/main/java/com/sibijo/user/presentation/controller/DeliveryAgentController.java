@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -101,6 +102,25 @@ public class DeliveryAgentController {
                 size, criteria, sort, deliveryType);
         return ResponseEntity
                 .ok(ApiResponse.success("검색 성공", deliveryAgentPageResponseDto));
+    }
+
+    // internal API
+    @GetMapping("/hub")
+    private ResponseEntity<ApiResponse<Long>> getHubDeliveryAgent() {
+        // 배송 담당자 배정
+        Long deliveryAgentId = deliveryAgentService.assignHubDeliveryAgent();
+
+        return ResponseEntity
+                .ok(ApiResponse.success("배송 담당자 지정 성공", deliveryAgentId));
+    }
+
+    @GetMapping("/company/{hubId}")
+    private ResponseEntity<ApiResponse<Long>> getCompanyDeliveryAgent(@PathVariable UUID hubId) {
+        // 배송 담당자 배정
+        Long deliveryAgentId = deliveryAgentService.assignCompanyDeliveryAgent(hubId);
+
+        return ResponseEntity
+                .ok(ApiResponse.success("배송 담당자 지정 성공", deliveryAgentId));
     }
 
 
