@@ -16,6 +16,8 @@ import com.sibijo.delivery.infrastructure.client.hub.HubClient;
 import com.sibijo.delivery.infrastructure.client.hub.HubResponseDto;
 import com.sibijo.delivery.infrastructure.client.order.OrderClient;
 import com.sibijo.delivery.infrastructure.client.order.OrderCreateUpdateRequestDto;
+import com.sibijo.delivery.infrastructure.client.user.UserClient;
+import com.sibijo.delivery.infrastructure.client.user.UserResponseDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
@@ -26,10 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j(topic = "배송 통합 Service")
 @Service
@@ -42,6 +41,7 @@ public class CustomDeliveryService {
     private final CompanyClient companyClient;
     private final HubClient hubClient;
     private final OrderClient orderClient;
+    private final UserClient userClient;
 
     /**
      *  배송 & 배송 경로 생성
@@ -53,9 +53,16 @@ public class CustomDeliveryService {
         // 1. 공급업체 & 수령업체 정보를 통해 출발/도착 허브 조회
         CompanyResponseDto startHub = companyClient.getHubByCompanyId(requestDto.getSupplierId());
         CompanyResponseDto endHub = companyClient.getHubByCompanyId(requestDto.getRecipientsId());
+//        CompanyResponseDto startHub = new CompanyResponseDto(UUID.fromString("45c4d201-1655-4716-8a7d-66b1d31a0684"), "서울특별시 광진구 12번지");
+//        CompanyResponseDto endHub = new CompanyResponseDto(UUID.fromString("46c4d201-1655-4716-8a7d-66b1d31a0685"), "서울특별시 광진구 29번지");
 
         // 2. 허브 서버에서 허브 간 경로 조회
         HubResponseDto hubRoute = hubClient.getHubRouteForOrder(startHub.getHubId(), endHub.getHubId());
+//        HubResponseDto hubRoute = new HubResponseDto("15km", "20분");
+
+        // 2.5 배송 담당자 정보 가져오기
+        Long deliveryManagerId = userClient.getDeliveryAgent();
+//        Long deliveryManagerId = 2L;
 
         // 3. 배송 생성에 필요한 정보 생성
         DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
@@ -64,7 +71,8 @@ public class CustomDeliveryService {
                 endHub.getDeliveryAddress(),
                 requestDto.getReceiver(),
                 requestDto.getReceiverSlackId(),
-                requestDto.getRecipientsId()
+                requestDto.getRecipientsId(),
+                deliveryManagerId
         );
 
         // 4. 배송 정보 생성 및 저장
@@ -76,6 +84,8 @@ public class CustomDeliveryService {
                 startHub.getHubId(),
                 endHub.getHubId()
         );
+
+        System.out.println("주문의 Id  :   " + requestDto.getOrderId());
         orderClient.updateOrderWithDelivery(requestDto.getOrderId(), updateRequestDto);
 
         // 5. 배송 경로 생성에 필요한 정보 생성
@@ -84,7 +94,8 @@ public class CustomDeliveryService {
                 startHub.getHubId(),
                 endHub.getHubId(),
                 hubRoute.getExpectedDistance(),
-                hubRoute.getExpectedTime()
+                hubRoute.getExpectedTime(),
+                deliveryManagerId
         );
 
         // 6. 배송 경로 생성

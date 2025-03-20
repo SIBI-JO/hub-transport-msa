@@ -15,5 +15,5 @@ public class DeliveryRequestDto {
     private String receiver;
     private String receiverSlackId;
     private UUID recipientsId;
-
+    private Long deliveryManagerId;
 }

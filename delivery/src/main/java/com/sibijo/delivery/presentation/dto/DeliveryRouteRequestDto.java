@@ -15,5 +15,6 @@ public class DeliveryRouteRequestDto {
     private UUID endHubId;
     private String expectedDistance;
     private String expectedTime;
+    private Long deliveryManagerId;
 
 }
