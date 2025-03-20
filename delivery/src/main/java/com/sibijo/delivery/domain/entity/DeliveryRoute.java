@@ -28,9 +28,9 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
-@Table(catalog = "sibijo", name = "p_delivery_route")
+@Table(name = "p_delivery_route")
 @SQLRestriction("is_deleted = false")
-@SQLDelete(sql = "UPDATE p_hub SET is_deleted = true WHERE hub_id = ?")
+@SQLDelete(sql = "UPDATE p_delivery_route SET is_deleted = true WHERE route_id = ?")
 public class DeliveryRoute extends BaseEntity {
 
     @Id

@@ -27,7 +27,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
-@Table(catalog = "sibijo", name = "p_order")
+@Table(name = "p_order")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE p_order SET is_deleted = true WHERE order_id = ?")
 public class Order extends BaseEntity {

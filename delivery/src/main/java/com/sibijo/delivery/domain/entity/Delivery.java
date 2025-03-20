@@ -23,7 +23,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
-@Table(catalog = "sibijo", name = "p_delivery")
+@Table(name = "p_delivery")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE p_delivery SET is_deleted = true WHERE delivery_id = ?")
 public class Delivery extends BaseEntity {
@@ -64,6 +64,7 @@ public class Delivery extends BaseEntity {
                 .receiver(requestDto.getReceiver())
                 .receiverSlackId(requestDto.getReceiverSlackId())
                 .recipientsId(requestDto.getRecipientsId())
+                .deliveryManagerId(requestDto.getDeliveryManagerId())
                 .build();
     }
 

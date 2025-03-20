@@ -52,7 +52,8 @@ public class OrderService {
         }
 
         // 상품 서버에서 재고 확인
-        ProductResponseDto product = productClient.getProductStock(requestDto.getProductId());
+//        ProductResponseDto product = productClient.getProductStock(requestDto.getProductId());
+        ProductResponseDto product = new ProductResponseDto(UUID.fromString("56c4d201-1655-4716-8a7d-66b1d31a0684"), 1);
 
         if (product.getAmount() < requestDto.getAmount()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "재고 부족하여 주문을 진행할 수 없습니다.");
