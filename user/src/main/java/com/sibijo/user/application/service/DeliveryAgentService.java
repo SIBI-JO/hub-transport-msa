@@ -12,7 +12,7 @@ import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
-import com.sibijo.user.infrastructure.client.FeignClientUtil;
+import com.sibijo.user.infrastructure.client.FeignClientService;
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentCreateRequestDto;
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentCreateResponseDto;
 import com.sibijo.user.presentation.dto.deliveryAgent.DeliveryAgentDeleteResponseDto;
@@ -45,7 +45,7 @@ public class DeliveryAgentService {
     private final UserRepository userRepository;
     private final DeliveryAgentRepository deliveryAgentRepository;
     private final AuthUtil authUtil;
-    private final FeignClientUtil feignClientUtil;
+    private final FeignClientService feignClientService;
 
     @Transactional
     public DeliveryAgentCreateResponseDto createDeliveryAgent(
@@ -74,7 +74,7 @@ public class DeliveryAgentService {
         // 업체 배송 담당자
         if (deliveryType.equals(DeliveryType.COMPANY)) {
             // TODO: 허브 ID 존재 확인 => msa to msa api 요청!
-            HubResponseDto response = feignClientUtil.CallHubFeignClient(requestDto.getHubId());
+            HubResponseDto response = feignClientService.CallHubFeignClient(requestDto.getHubId());
             if (!response.isHubStatus()) {
                 throw new IllegalArgumentException("등록이 불가한 허브입니다.");
             }
@@ -167,7 +167,7 @@ public class DeliveryAgentService {
                 throw new IllegalArgumentException("허브 배송 담당자는 허브 정보를 변경할 수 없습니다.");
             }
             //TODO: 허브 ID 존재 확인 (feign client)
-            HubResponseDto response = feignClientUtil.CallHubFeignClient(requestDto.getHubId());
+            HubResponseDto response = feignClientService.CallHubFeignClient(requestDto.getHubId());
             if (!response.isHubStatus()) {
                 throw new IllegalArgumentException("존재하지 않는 허브입니다.");
             }

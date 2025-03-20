@@ -6,7 +6,7 @@ import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
-import com.sibijo.user.infrastructure.client.FeignClientUtil;
+import com.sibijo.user.infrastructure.client.FeignClientService;
 import com.sibijo.user.presentation.dto.auth.AssignRoleRequestDto;
 import com.sibijo.user.presentation.dto.auth.AssignRoleResponseDto;
 import com.sibijo.user.presentation.dto.auth.CommonSignUpRequestDto;
@@ -28,7 +28,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final FeignClientUtil feignClientUtil;
+    private final FeignClientService feignClientService;
     private final DeliveryAgentRepository deliveryAgentRepository;
 
     @Value("${admin.token}")
@@ -118,7 +118,7 @@ public class AuthService {
 
     private AssignRoleResponseDto assignHubRole(User user, AssignRoleRequestDto requestDto) {
         // feign 호출
-        HubResponseDto response = feignClientUtil.CallHubFeignClient(requestDto.getHubId());
+        HubResponseDto response = feignClientService.CallHubFeignClient(requestDto.getHubId());
         if (!response.isHubStatus()) {
             throw new IllegalArgumentException("등록이 불가한 허브입니다.");
         }
@@ -131,7 +131,7 @@ public class AuthService {
 
     private AssignRoleResponseDto assignCompanyRole(User user, AssignRoleRequestDto requestDto) {
         // feign 호출
-        UUID CompanyHubId = feignClientUtil.CallCompanyFeignClient(requestDto.getCompanyId());
+        UUID CompanyHubId = feignClientService.CallCompanyFeignClient(requestDto.getCompanyId());
         if (CompanyHubId == null) {
             throw new IllegalArgumentException("등록이 불가한 업체입니다.");
         }
@@ -159,7 +159,7 @@ public class AuthService {
     private AssignRoleResponseDto assignCompanyDeliveryRole(User user,
             AssignRoleRequestDto requestDto) {
         // 허브 존재 확인
-        HubResponseDto response = feignClientUtil.CallHubFeignClient(requestDto.getHubId());
+        HubResponseDto response = feignClientService.CallHubFeignClient(requestDto.getHubId());
         if (!response.isHubStatus()) {
             throw new IllegalArgumentException("등록이 불가한 허브입니다.");
         }
