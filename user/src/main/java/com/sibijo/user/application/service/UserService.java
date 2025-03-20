@@ -49,8 +49,6 @@ public class UserService {
     private final DeliveryAgentRepository deliveryAgentRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthUtil authUtil;
-    private final CompanyClient companyClient;
-    private final HubClient hubClient;
 
     @Value("${admin.token}")
     private String ADMIN_TOKEN;
@@ -274,37 +272,6 @@ public class UserService {
                                 )
                                 .collect(Collectors.toList())
                 )
-                .build();
-    }
-
-
-    /**
-     * FeignClient Test
-     **/
-
-    // Company Feign Client Fetch Test
-    public void TestFeignClient(UUID companyId) {
-        ApiResponse<CompanyResponseDto> company = companyClient.getCompanyHubByCompanyId(
-                companyId);
-
-        log.info("feign client test: {}, {}", company.getMessage(), company.getData().getHubId());
-    }
-
-    public void TestCompanyFeignClient(UUID companyId) {
-        ApiResponse<CompanyResponseDto> company = companyClient.getCompanyHubByCompanyId(
-                companyId);
-
-        log.info("feign client test: {}, {}", company.getMessage(), company.getData().getHubId());
-    }
-
-    // Hub Feign Client Fetch Test
-    public HubResponseDto TestHubFeignClient(UUID hubId) {
-        ApiResponse hub = hubClient.hubExists(hubId);
-
-        log.info("feign client test: {}, {}, {}", hub.getMessage(), hub.getData());
-        return HubResponseDto.builder()
-                .hubId(hubId)
-                .hubStatus((Boolean) hub.getData())
                 .build();
     }
 
