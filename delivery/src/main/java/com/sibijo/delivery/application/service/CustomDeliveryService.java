@@ -51,18 +51,18 @@ public class CustomDeliveryService {
     public void createDelivery(OrderToDeliveryRequestDto requestDto) {
 
         // 1. 공급업체 & 수령업체 정보를 통해 출발/도착 허브 조회
-        CompanyResponseDto startHub = companyClient.getHubByCompanyId(requestDto.getSupplierId());
-        CompanyResponseDto endHub = companyClient.getHubByCompanyId(requestDto.getRecipientsId());
+        CompanyResponseDto startHub = companyClient.getCompanyOrderInfo(requestDto.getSupplierId()).getData();
+        CompanyResponseDto endHub = companyClient.getCompanyOrderInfo(requestDto.getRecipientsId()).getData();
 //        CompanyResponseDto startHub = new CompanyResponseDto(UUID.fromString("45c4d201-1655-4716-8a7d-66b1d31a0684"), "서울특별시 광진구 12번지");
 //        CompanyResponseDto endHub = new CompanyResponseDto(UUID.fromString("46c4d201-1655-4716-8a7d-66b1d31a0685"), "서울특별시 광진구 29번지");
-
+        System.out.println("수령 업체 주소 :   "+endHub.getDeliveryAddress());
         // 2. 허브 서버에서 허브 간 경로 조회
-        HubResponseDto hubRoute = hubClient.getHubRouteForOrder(startHub.getHubId(), endHub.getHubId());
-//        HubResponseDto hubRoute = new HubResponseDto("15km", "20분");
+//        HubResponseDto hubRoute = hubClient.getHubRouteForOrder(startHub.getHubId(), endHub.getHubId());
+        HubResponseDto hubRoute = new HubResponseDto("400km", "4시간 50분");
 
         // 2.5 배송 담당자 정보 가져오기
-        Long deliveryManagerId = userClient.getDeliveryAgent();
-//        Long deliveryManagerId = 2L;
+//        Long deliveryManagerId = userClient.getDeliveryAgent();
+        Long deliveryManagerId = 2L;
 
         // 3. 배송 생성에 필요한 정보 생성
         DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(

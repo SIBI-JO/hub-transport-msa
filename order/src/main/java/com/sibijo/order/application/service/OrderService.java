@@ -56,8 +56,8 @@ public class OrderService {
         }
 
         // 상품 서버에서 재고 확인
-//        Long amount = productClient.getProductStock(requestDto.getProductId()).getData().getAmount();
-        Long amount = 2L;
+        Long amount = productClient.getProductOrderInfo(requestDto.getProductId()).getData().getAmount();
+//        Long amount = 2L;
 
         if (amount < requestDto.getAmount().longValue()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "재고 부족하여 주문을 진행할 수 없습니다.");
