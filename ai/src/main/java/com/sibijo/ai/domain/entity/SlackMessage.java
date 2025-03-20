@@ -1,15 +1,17 @@
 package com.sibijo.ai.domain.entity;
 
-
-
+import com.sibijo.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "slack_messages")
 @Data
-public class SlackMessage {
+@EqualsAndHashCode(callSuper = true)
+public class SlackMessage extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

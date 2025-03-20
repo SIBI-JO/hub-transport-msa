@@ -34,7 +34,7 @@ public class SlackNotificationService {
      * (기존 channel 기반)
      */
     public void sendSlackMessage(String channel, String message) {
-        // ... (기존 채널 전송 코드와 동일)
+        // 삭제
     }
 
     /**

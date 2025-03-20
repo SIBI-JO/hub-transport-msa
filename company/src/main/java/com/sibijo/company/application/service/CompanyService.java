@@ -1,13 +1,19 @@
 package com.sibijo.company.application.service;
 
+import com.sibijo.company.domain.enums.CompanyType;
 import com.sibijo.company.presentation.dto.CompanyRequest;
 import com.sibijo.company.domain.entity.Company;
 import com.sibijo.company.infrastructure.repository.CompanyRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -60,9 +66,18 @@ public class CompanyService {
     }
 
     /**
-     * 업체 삭제
+     * 업체 삭제 (Soft Delete)
      */
-    public void deleteCompany(UUID companyId) {
-        companyRepository.deleteById(companyId);
+    @Transactional
+    public Company deleteCompany(UUID companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "업체를 찾을 수 없습니다."));
+        companyRepository.delete(company);
+        return company;
+    }
+
+    // 검색 기능: 회사명, 업체 타입, 허브 ID 기준
+    public Page<Company> searchCompanies(String companyName, CompanyType companyType, UUID hubId, Pageable pageable) {
+        return companyRepository.searchCompanies(companyName, companyType, hubId, pageable);
     }
 }

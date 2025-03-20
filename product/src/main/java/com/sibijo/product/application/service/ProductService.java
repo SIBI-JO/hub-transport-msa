@@ -10,6 +10,8 @@ import com.sibijo.product.domain.entity.Product;
 import com.sibijo.product.domain.repository.HubStockRepository;
 import com.sibijo.product.domain.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -79,7 +81,6 @@ public class ProductService {
             throw new IllegalArgumentException("Product not found: " + productId);
         }
 
-        // 회사 서비스에서 ApiResponse로 감싼 응답을 받아 data 필드를 추출합니다.
         ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
         CompanyResponseDto companyResponse = response.getData();
         if (companyResponse == null || companyResponse.getHubId() == null) {
@@ -89,16 +90,19 @@ public class ProductService {
         existingProduct.setProductName(request.getProductName());
         existingProduct.setPrice(request.getPrice());
         existingProduct.setCompanyId(request.getCompanyId());
-        // (허브 재고 테이블에 대한 별도 수정 로직이 필요하다면 추가)
 
         return productRepository.save(existingProduct);
     }
 
     /**
-     * 상품 삭제
+     * 상품 삭제 (Soft Delete)
      */
-    public void deleteProduct(UUID productId) {
-        productRepository.deleteById(productId);
+    @Transactional
+    public Product deleteProduct(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+        productRepository.delete(product);
+        return product;
     }
 
     /**
@@ -116,5 +120,10 @@ public class ProductService {
                 .hubId(hubStock.getHubId())
                 .amount(hubStock.getAmount())
                 .build();
+    }
+
+    // 검색 기능: 상품명, 가격 기준
+    public Page<Product> searchProducts(String productName, Integer price, Pageable pageable) {
+        return productRepository.searchProducts(productName, price, pageable);
     }
 }
