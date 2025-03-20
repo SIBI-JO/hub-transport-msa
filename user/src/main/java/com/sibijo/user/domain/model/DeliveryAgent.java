@@ -24,7 +24,6 @@ import org.hibernate.annotations.SQLRestriction;
 @Getter
 @Table(name = "p_delivery_agent")
 @SQLRestriction("is_deleted = false")
-@SQLDelete(sql = "UPDATE p_delivery_agent SET is_deleted = true WHERE user_id = ?")
 public class DeliveryAgent extends BaseEntity {
 
     @Id
