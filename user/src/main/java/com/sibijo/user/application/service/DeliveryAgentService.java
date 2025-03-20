@@ -230,7 +230,7 @@ public class DeliveryAgentService {
         authUtil.authoizeHubAccess(request, hubId, targetRoles);
 
         //삭제
-//        deliveryAgentRepository.deleteById(id);
+        deliveryAgentRepository.deleteById(id);
 
         return DeliveryAgentDeleteResponseDto
                 .builder()

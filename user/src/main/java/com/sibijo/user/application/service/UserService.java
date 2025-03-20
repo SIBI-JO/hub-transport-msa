@@ -12,6 +12,8 @@ import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
 import com.sibijo.user.infrastructure.client.company.CompanyClient;
 import com.sibijo.user.infrastructure.client.company.CompanyResponseDto;
+import com.sibijo.user.infrastructure.client.hub.HubClient;
+import com.sibijo.user.application.dto.HubResponseDto;
 import com.sibijo.user.presentation.dto.user.SignUpRequestDto;
 import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
 import com.sibijo.user.presentation.dto.user.UserCreateRequestDto;
@@ -48,6 +50,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthUtil authUtil;
     private final CompanyClient companyClient;
+    private final HubClient hubClient;
 
     @Value("${admin.token}")
     private String ADMIN_TOKEN;
@@ -280,13 +283,31 @@ public class UserService {
      **/
 
     // Company Feign Client Fetch Test
-    public void TestFeignClient() {
-        ApiResponse<CompanyResponseDto> company = companyClient.getCompanyById(
-                UUID.fromString("3bd1d8c1-1e5d-48d8-9374-f86861dd048d"));
+    public void TestFeignClient(UUID companyId) {
+        ApiResponse<CompanyResponseDto> company = companyClient.getCompanyHubByCompanyId(
+                companyId);
 
-        log.info("feign client test: {}, {}, {}", company.getData().getCompanyId(),
-                company.getData().getCompanyName(), company.getData().getHubId());
+        log.info("feign client test: {}, {}", company.getMessage(), company.getData().getHubId());
     }
+
+    public void TestCompanyFeignClient(UUID companyId) {
+        ApiResponse<CompanyResponseDto> company = companyClient.getCompanyHubByCompanyId(
+                companyId);
+
+        log.info("feign client test: {}, {}", company.getMessage(), company.getData().getHubId());
+    }
+
+    // Hub Feign Client Fetch Test
+    public HubResponseDto TestHubFeignClient(UUID hubId) {
+        ApiResponse hub = hubClient.hubExists(hubId);
+
+        log.info("feign client test: {}, {}, {}", hub.getMessage(), hub.getData());
+        return HubResponseDto.builder()
+                .hubId(hubId)
+                .hubStatus((Boolean) hub.getData())
+                .build();
+    }
+
 
 
 }

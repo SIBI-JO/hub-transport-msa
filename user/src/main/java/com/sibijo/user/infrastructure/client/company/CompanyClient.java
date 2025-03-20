@@ -12,4 +12,7 @@ public interface CompanyClient {
     @GetMapping("/api/companies/{companyId}")
     ApiResponse<CompanyResponseDto> getCompanyById(@PathVariable("companyId") UUID companyId);
 
+    @GetMapping("/internal/companies/{companyId}")
+    ApiResponse<CompanyResponseDto> getCompanyHubByCompanyId(@PathVariable("companyId") UUID companyId);
+
 }

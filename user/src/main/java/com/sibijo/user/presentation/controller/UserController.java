@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -35,9 +36,11 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/health-check")
-    private ResponseEntity<String> healthCheck() {
-        userService.TestFeignClient();
+    @GetMapping("/health-check/{hubId}")
+    private ResponseEntity<String> healthCheck(@PathVariable UUID companyId) {
+        userService.TestFeignClient(companyId);
+        userService.TestCompanyFeignClient(companyId);
+//        userService.TestHubFeignClient(hubId);
         return ResponseEntity.ok().body("OK");
     }
 
