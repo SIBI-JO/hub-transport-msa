@@ -36,11 +36,8 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/health-check/{hubId}")
-    private ResponseEntity<String> healthCheck(@PathVariable UUID companyId) {
-        userService.TestFeignClient(companyId);
-        userService.TestCompanyFeignClient(companyId);
-//        userService.TestHubFeignClient(hubId);
+    @GetMapping("/health-check")
+    private ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok().body("OK");
     }
 
