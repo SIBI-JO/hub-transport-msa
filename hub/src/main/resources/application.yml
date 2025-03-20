@@ -26,10 +26,14 @@ spring:
       org.hibernate.SQL: debug
       org.hibernate.type.descriptor.sql.BasicBinder: trace
 
-
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/
     register-with-eureka: true   # 클라이언트가 Eureka에 자기 자신을 등록
     fetch-registry: true         # 다른 서비스 정보(Eureka 레지스트리)도 가져옴
+
+kakao:
+  api:
+    key: 9177b1d8e0e9ad5c8d3ad7ac72a869b7
+
