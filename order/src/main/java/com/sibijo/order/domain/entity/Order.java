@@ -84,8 +84,11 @@ public class Order extends BaseEntity {
 
     public void updateOrder(OrderUpdateRequestDto requestDto) {
         this.supplierId = requestDto.getSupplierId();
+        this.supplierHubId = requestDto.getSupplierHubId();
         this.recipientsId = requestDto.getRecipientsId();
+        this.recipientHubId = requestDto.getRecipientHubId();
         this.productId = requestDto.getProductId();
+        this.deliveryId = requestDto.getDeliveryId();
         this.amount = requestDto.getAmount();
         this.request = requestDto.getRequest();
     }
