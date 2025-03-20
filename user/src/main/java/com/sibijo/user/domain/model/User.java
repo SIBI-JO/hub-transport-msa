@@ -77,4 +77,20 @@ public class User extends BaseEntity {
         this.slackId = StringUtils.hasText(slackId) ? slackId : this.slackId;
         this.password = StringUtils.hasText(password) ? password : this.password;
     }
+
+    public void updateHubUser(Role role, UUID hubId) {
+        this.role = role;
+        this.hubId = hubId;
+    }
+
+    public void updateCompanyUser(Role role, UUID hubId, UUID companyId) {
+        this.role = role;
+        this.hubId = hubId;
+        this.companyId = companyId;
+    }
+
+    public void updateDeliveryUser(Role role, UUID hubId) {
+        this.role = role;
+        this.hubId = hubId;
+    }
 }

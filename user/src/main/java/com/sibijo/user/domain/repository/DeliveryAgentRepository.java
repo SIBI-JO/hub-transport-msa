@@ -4,6 +4,7 @@ import com.sibijo.user.domain.enums.DeliveryType;
 import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -26,4 +27,11 @@ public interface DeliveryAgentRepository extends JpaRepository<DeliveryAgent, Lo
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT d FROM DeliveryAgent d WHERE d.id = :id")
     Optional<DeliveryAgent> findByIdForUpdate(Long id);
+
+    @Query("SELECT d FROM DeliveryAgent d WHERE d.deliveryType = 'HUB' ORDER BY d.deliveryOrder ASC LIMIT 1")
+    Optional<DeliveryAgent> findNextHubDeliveryAgent();
+
+    List<DeliveryAgent> findAllByDeliveryType(DeliveryType deliveryType);
+
+    List<DeliveryAgent> findAllByDeliveryTypeAndHubId(DeliveryType deliveryType, UUID hubId);
 }

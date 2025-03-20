@@ -12,6 +12,8 @@ import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
 import com.sibijo.user.infrastructure.client.company.CompanyClient;
 import com.sibijo.user.infrastructure.client.company.CompanyResponseDto;
+import com.sibijo.user.infrastructure.client.hub.HubClient;
+import com.sibijo.user.application.dto.HubResponseDto;
 import com.sibijo.user.presentation.dto.user.SignUpRequestDto;
 import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
 import com.sibijo.user.presentation.dto.user.UserCreateRequestDto;
@@ -44,63 +46,11 @@ import org.springframework.util.StringUtils;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final DeliveryAgentRepository deliveryAgentRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthUtil authUtil;
-    private final CompanyClient companyClient;
 
-    @Value("${admin.token}")
-    private String ADMIN_TOKEN;
 
-    public SignUpResponseDto signup(SignUpRequestDto requestDto) {
-        String username = requestDto.getUsername();
-        String password = passwordEncoder.encode(requestDto.getPassword());
-        UUID hubId = requestDto.getHubId();
-        UUID companyId = requestDto.getCompanyId();
-
-        // 회원 중복 확인
-        Optional<User> checkUsername = userRepository.findByUsername(username);
-        if (checkUsername.isPresent()) {
-            throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
-        }
-
-        // slackId 중복확인
-        String slackId = requestDto.getSlackId();
-        Optional<User> checkEmail = userRepository.findBySlackId(slackId);
-        if (checkEmail.isPresent()) {
-            throw new IllegalArgumentException("중복된 Email 입니다.");
-        }
-
-        // 사용자 ROLE 확인 ( master관리자 권한은 Token으로 확인 )
-        Role role = requestDto.getRole();
-        if (role.equals(Role.MASTER)) { //관리자 권한
-            System.out.print(ADMIN_TOKEN);
-            System.out.print(requestDto.getAdminToken());
-            if (!ADMIN_TOKEN.equals(requestDto.getAdminToken())) {
-                throw new IllegalArgumentException("관리자 암호가 틀려 등록이 불가능합니다.");
-            }
-        }
-
-        /*
-        사용자 등록
-
-        MASTER - hubId, companyId 없음
-        HUB - hubId 필수, companyId 없음
-        COMPANY - hubId, companyId 필수
-        DELIVERY - hubId 필수, companyId 없음
-        */
-
-        User user = User.of(username, password, slackId, role, hubId, companyId);
-        userRepository.save(user);
-
-        return SignUpResponseDto
-                .builder()
-                .userId(user.getId())
-                .build();
-    }
-
-    public UserCreateResponseDto createUser(UserCreateRequestDto requestDto,
-            HttpServletRequest request) {
+    public UserCreateResponseDto createUser(UserCreateRequestDto requestDto) {
         String username = requestDto.getUsername();
         UUID hubId = requestDto.getHubId();
         UUID companyId = requestDto.getCompanyId();
@@ -153,8 +103,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto,
-            HttpServletRequest request) {
+    public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto) {
 
         log.info(requestDto.toString());
         User user = userRepository.findById(id).orElseThrow(
@@ -208,7 +157,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDeleteResponseDto deleteUser(Long id, HttpServletRequest request) {
+    public UserDeleteResponseDto deleteUser(Long id) {
 
         // 유저 존재 여부 확인
         User user = userRepository.findById(id).orElseThrow(
@@ -274,19 +223,6 @@ public class UserService {
                 .build();
     }
 
-
-    /**
-     * FeignClient Test
-     **/
-
-    // Company Feign Client Fetch Test
-    public void TestFeignClient() {
-        ApiResponse<CompanyResponseDto> company = companyClient.getCompanyById(
-                UUID.fromString("3bd1d8c1-1e5d-48d8-9374-f86861dd048d"));
-
-        log.info("feign client test: {}, {}, {}", company.getData().getCompanyId(),
-                company.getData().getCompanyName(), company.getData().getHubId());
-    }
 
 
 }

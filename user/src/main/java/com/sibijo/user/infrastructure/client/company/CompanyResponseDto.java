@@ -9,10 +9,5 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class CompanyResponseDto {
-
-    private UUID companyId;
-    private String companyName;
-    private CompanyType companyType;
     private UUID hubId; //필수
-    private String address;
 }

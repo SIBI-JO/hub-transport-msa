@@ -2,6 +2,8 @@ package com.sibijo.user.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.user.application.service.AuthService;
+import com.sibijo.user.presentation.dto.auth.AssignRoleRequestDto;
+import com.sibijo.user.presentation.dto.auth.AssignRoleResponseDto;
 import com.sibijo.user.presentation.dto.auth.CommonSignUpRequestDto;
 import com.sibijo.user.presentation.dto.auth.MasterSignUpRequestDto;
 import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
@@ -14,6 +16,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,7 +55,24 @@ public class AuthController {
                 .body(ApiResponse.success("성공", signUpResponseDto));
     }
 
-    // Master 유저 Role 부여
+    /**
+     * master 유저가 일반 유저에게 역할 부여
+     */
+    @PostMapping("/assign-role")
+    public ResponseEntity<ApiResponse<AssignRoleResponseDto>> assignRole(
+            @RequestBody @Valid AssignRoleRequestDto requestDto,
+            BindingResult bindingResult) {
+
+        // 입력 값 검증
+        raiseValidationException(bindingResult);
+
+        // 역할 부여 처리
+        AssignRoleResponseDto responseDto = authService.assignUserRole(requestDto);
+
+        return ResponseEntity
+                .ok(ApiResponse.success("역할 부여 성공", responseDto));
+    }
+
 
 
     private static void raiseValidationException(BindingResult bindingResult) {
