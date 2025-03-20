@@ -3,6 +3,7 @@ package com.sibijo.hub.domain.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sibijo.common.exception.CustomException;
+import com.sibijo.hub.application.dto.HubKakaoMapResponseDto;
 import com.sibijo.hub.domain.model.HubEntity;
 import com.sibijo.hub.domain.model.HubType;
 import com.sibijo.hub.domain.repository.HubRepository;
@@ -10,24 +11,10 @@ import com.sibijo.hub.exception.domain.HubDomainExceptionCode;
 import com.sibijo.hub.presentation.dto.HubRequestDto;
 import com.sibijo.hub.presentation.dto.HubUpdateRequestDto;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
@@ -36,14 +23,7 @@ public class HubDomainServiceImpl implements HubDomainService {
 
     private final HubRepository hubRepository;
 
-    private final RestTemplate restTemplate;
-
-    private final WebClient webClient;
-
-    @Value("${google.api.key}")
-    private String apiKey;
-
-    private static final String GOOGLE_MAPS_API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
+    private final HubKakaoMapService hubKakaoMapService;
 
     /**
      * @param hubRequestDto
@@ -61,13 +41,14 @@ public class HubDomainServiceImpl implements HubDomainService {
             throw new CustomException(HubDomainExceptionCode.HUB_IS_DUPLICATED);
         }
 
-        //허브 좌표 생성 -> domainService
-        BigDecimal latitude = new BigDecimal("37.5665");  // 서울 위도 예시
-        BigDecimal longitude = new BigDecimal("126.9780"); // 서울 경도 예시
+        HubKakaoMapResponseDto hubKakaoMapResponseDto = hubKakaoMapService.getCoordinats(
+                hubRequestDto.hubLocation());
+        log.info("Kakao API Headers: {}", hubKakaoMapResponseDto.getDocuments());
 
-//        BigDecimal[] corrdinates = getCoordinatesGooglePlaces(hubRequestDto.hubLocation());
-//        BigDecimal latitude = corrdinates[0];
-//        BigDecimal longitude = corrdinates[1];
+        String lat = hubKakaoMapResponseDto.getDocuments().get(0).getY();
+        String lon = hubKakaoMapResponseDto.getDocuments().get(0).getX();
+        BigDecimal latitude = new BigDecimal(lat);
+        BigDecimal longitude = new BigDecimal(lon);
 
         return HubEntity.builder()
                 .hubName(hubRequestDto.hubName())
@@ -102,70 +83,6 @@ public class HubDomainServiceImpl implements HubDomainService {
         }
 
         return hubRepository.save(originHub);
-    }
-
-    private BigDecimal[] getCoordinatesGooglePlaces(String location) {
-        String encodedAddress = URLEncoder.encode(location, StandardCharsets.UTF_8);
-
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/maps/api/geocode/json")
-                        .queryParam("address", encodedAddress)
-                        .queryParam("key", apiKey)
-                        .queryParam("language", "ko")
-                        .build())
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, response -> {
-                    log.error("Client error: {}", response.statusCode());
-                    return Mono.error(new CustomException(HubDomainExceptionCode.INVALID_REQUEST));
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, response -> {
-                    log.error("Server error: {}", response.statusCode());
-                    return Mono.error(new CustomException(HubDomainExceptionCode.API_SERVER_ERROR));
-                })
-                .bodyToMono(String.class)
-                .map(this::parseResponseToJson)
-                .block(Duration.ofSeconds(5));
-
-    }
-
-    //좌표 가져오기 구글 맵 api
-    private BigDecimal[] getCoordinatesGooglePlacesRest(String location) {
-        location = location.replace(" ", "+").trim();
-        String url = UriComponentsBuilder.fromHttpUrl(GOOGLE_MAPS_API_URL)
-                .queryParam("address", location)
-                .queryParam("key", apiKey)
-                .queryParam("language", "ko")
-                .encode(StandardCharsets.UTF_8)
-                .build().toUriString();
-
-        log.info("before address : " + location);
-        log.info("before url : " + url);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//        String response = restTemplate.getForObject(url, String.class);
-
-        log.info("current address : " + location);
-        log.info("current url : " + url);
-        // log.info("API response : " + response);
-
-        // RestTemplate을 사용하여 API 요청 및 응답
-        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET,
-                new HttpEntity<>(headers), String.class);
-
-        // 응답 상태 코드 확인
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            String response = responseEntity.getBody();
-            log.info("API response: {}", response);
-
-            // 응답에서 좌표를 추출
-            return parseResponseToJson(response);
-        } else {
-            log.error("Google Maps API 요청 실패: {}", responseEntity.getStatusCode());
-            throw new CustomException(HubDomainExceptionCode.API_RESPONSE_ERROR);
-        }
     }
 
     private BigDecimal[] parseResponseToJson(String response) {
