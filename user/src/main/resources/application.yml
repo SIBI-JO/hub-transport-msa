@@ -14,6 +14,7 @@ spring:
     database-platform: ${SPRING_JPA_DATABASE_PLATFORM}
     hibernate:
       ddl-auto: update
+    show-sql: true
 
 server:
   port: 19092
@@ -29,3 +30,17 @@ jwt:
 
 admin:
   token: ${ADMIN_TOKEN}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:  # 기본 구성 이름
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 5
+        slowCallRateThreshold: 100
+        slowCallDurationThreshold: 60000
+        failureRateThreshold: 50
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 20s
