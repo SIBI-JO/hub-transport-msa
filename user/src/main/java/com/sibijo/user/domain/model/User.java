@@ -10,15 +10,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.util.StringUtils;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "p_users")
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE p_users SET is_deleted = true WHERE id = ?")
 public class User extends BaseEntity {
 
     @Id
@@ -34,18 +40,18 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String slackId;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
     private Role role;
 
     @Column
-    private String hubId;
+    private UUID hubId;
 
     @Column
-    private String companyId;
+    private UUID companyId;
 
-    private User(String username, String password, String slackId, Role role, String hubId,
-            String companyId) {
+    private User(String username, String password, String slackId, Role role, UUID hubId,
+            UUID companyId) {
         this.username = username;
         this.slackId = slackId;
         this.password = password;
@@ -54,12 +60,20 @@ public class User extends BaseEntity {
         this.companyId = companyId;
     }
 
-    public static User of(String username, String password, String slackId, Role role, String hubId,
-            String companyId) {
-        return new User(username, password, slackId, role, hubId, companyId);
+    public static User of(String username, String password, String slackId, Role role, UUID hubId,
+            UUID companyId) {
+        return new User(
+                username,
+                password,
+                slackId,
+                role,
+                hubId,
+                companyId
+        );
     }
 
-    public void updateUser(String slackId, String password) {
+    public void updateUser(String username, String slackId, String password) {
+        this.username = StringUtils.hasText(username) ? username : this.username;
         this.slackId = StringUtils.hasText(slackId) ? slackId : this.slackId;
         this.password = StringUtils.hasText(password) ? password : this.password;
     }

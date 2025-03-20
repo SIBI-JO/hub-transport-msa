@@ -1,7 +1,6 @@
-package com.sibijo.user.presentation.dto;
+package com.sibijo.user.presentation.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
@@ -17,8 +16,7 @@ public class UserUpdateRequestDto {
     @Pattern(regexp = "^[a-z0-9]+$")
     private String username;
 
-    @Email
-    private String email;
+    private String slackId;
 
     @Size(min = 8, max = 20)
     @Pattern(regexp = "^[A-Za-z0-9_!#$%&'*+/=?`{|}~^.-]+$")

@@ -1,16 +1,14 @@
-package com.sibijo.user.presentation.dto;
+package com.sibijo.user.presentation.dto.user;
 
 import com.sibijo.user.domain.enums.Role;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class UserCreateRequestDto {
+public class SignUpRequestDto {
     @NotBlank(message = "username은 필수 입력값입니다.")
     @Size(min = 4, max = 10)
     @Pattern(regexp = "^[a-z0-9]+$")
@@ -27,6 +25,7 @@ public class UserCreateRequestDto {
     @NotNull(message = "role는 필수 입력값입니다.")
     private Role role;
 
-    private String hubId;
-    private String companyId;
+    private UUID hubId;
+    private UUID companyId;
+    private String adminToken;
 }

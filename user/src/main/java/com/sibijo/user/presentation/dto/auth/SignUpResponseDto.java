@@ -1,4 +1,4 @@
-package com.sibijo.user.presentation.dto;
+package com.sibijo.user.presentation.dto.auth;
 
 import lombok.Builder;
 import lombok.Getter;
