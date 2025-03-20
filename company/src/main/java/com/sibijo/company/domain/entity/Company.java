@@ -5,10 +5,14 @@ import com.sibijo.company.domain.enums.CompanyType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import java.util.UUID;
 
 @Entity
 @Table(name = "p_company")
+@SQLDelete(sql = "UPDATE p_company SET is_deleted = true WHERE company_id = ?")
+@Where(clause = "is_deleted = false")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,6 +39,8 @@ public class Company extends BaseEntity {
     @Column(name = "address", length = 100)
     private String address;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
     public Company(String companyName, CompanyType companyType, UUID hubId, String address) {
         this.companyName = companyName;

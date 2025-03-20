@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductResponseDto {
 
-    private UUID hubId;
-    private Integer amount;
+    private Long amount;
 
 }

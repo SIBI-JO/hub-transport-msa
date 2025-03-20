@@ -27,7 +27,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
-@Table(catalog = "sibijo", name = "p_order")
+@Table(name = "p_order")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE p_order SET is_deleted = true WHERE order_id = ?")
 public class Order extends BaseEntity {
@@ -84,8 +84,11 @@ public class Order extends BaseEntity {
 
     public void updateOrder(OrderUpdateRequestDto requestDto) {
         this.supplierId = requestDto.getSupplierId();
+        this.supplierHubId = requestDto.getSupplierHubId();
         this.recipientsId = requestDto.getRecipientsId();
+        this.recipientHubId = requestDto.getRecipientHubId();
         this.productId = requestDto.getProductId();
+        this.deliveryId = requestDto.getDeliveryId();
         this.amount = requestDto.getAmount();
         this.request = requestDto.getRequest();
     }

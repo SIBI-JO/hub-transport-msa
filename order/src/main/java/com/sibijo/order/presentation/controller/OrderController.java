@@ -80,7 +80,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponseDto>> getOrderById(@PathVariable UUID orderId,
             HttpServletRequest request) {
         String token = jwtUtil.extractToken(request);
-        return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orderService.getOrderById(orderId, token)));
+        return ResponseEntity.ok(ApiResponse.success("주문 상세 조회 성공", orderService.getOrderById(orderId, token)));
     }
 
 

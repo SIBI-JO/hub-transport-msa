@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "hub-service")
 public interface HubClient {
 
-    @GetMapping("/api/hubs/hub-routes/order")
+    @GetMapping("/api/hub-routes/order")
     HubResponseDto getHubRouteForOrder(@RequestParam UUID startHubId, @RequestParam UUID endHubId);
 
 }

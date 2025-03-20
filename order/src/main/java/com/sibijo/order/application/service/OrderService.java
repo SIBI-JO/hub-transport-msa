@@ -16,14 +16,18 @@ import com.sibijo.order.infrastructure.client.Product.ProductResponseDto;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 
@@ -36,11 +40,11 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final DeliveryClient deliveryClient;
     private final ProductClient productClient;
+    private final PlatformTransactionManager transactionManager;
 
     /**
      *   주문 생성
      */
-    @Transactional
     public OrderResponseDto createOrder(OrderRequestDto requestDto, String token) {
 
         String role = jwtUtil.extractRole(token);
@@ -52,17 +56,23 @@ public class OrderService {
         }
 
         // 상품 서버에서 재고 확인
-        ProductResponseDto product = productClient.getProductStock(requestDto.getProductId());
+//        Long amount = productClient.getProductStock(requestDto.getProductId()).getData().getAmount();
+        Long amount = 2L;
 
-        if (product.getAmount() < requestDto.getAmount()) {
+        if (amount < requestDto.getAmount().longValue()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "재고 부족하여 주문을 진행할 수 없습니다.");
         }
 
-        // 주문 생성 및 저장
-        Order order = Order.createOrder(requestDto);
-        orderRepository.save(order);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-        // 배송 생성에 필요한 데이터를 묶음
+        // 3. 주문 저장
+        Order order = transactionTemplate.execute(status -> {
+            Order newOrder = Order.createOrder(requestDto);
+            orderRepository.save(newOrder);
+            System.out.println("✅ 주문 생성 완료! 주문 ID: " + newOrder.getOrderId());
+            return newOrder;
+        });
+
         DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
                 order.getOrderId(),
                 requestDto.getSupplierId(),
@@ -71,10 +81,11 @@ public class OrderService {
                 requestDto.getReceiverSlackId()
         );
 
-        // 배송 서버로 데이터를 보내서 배송 생성
+        // 배송 서버 호출
         deliveryClient.createDelivery(deliveryRequestDto);
 
         return new OrderResponseDto(order);
+
     }
 
     /**
@@ -83,12 +94,15 @@ public class OrderService {
     @Transactional
     public void updateOrderWithDelivery(UUID orderId, OrderCreateUpdateRequestDto requestDto) {
 
-        Order order = orderRepository.findById(orderId)
-                .filter(o -> o.getDeletedAt() == null)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found or has been deleted"));
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+
+        if (optionalOrder.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order 없음");
+        }
+
+        Order order = optionalOrder.get();
 
         order.updateDelivery(requestDto);
-
     }
 
     /**

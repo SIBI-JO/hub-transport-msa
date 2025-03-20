@@ -9,9 +9,15 @@ import com.sibijo.product.domain.entity.HubStock;
 import com.sibijo.product.domain.entity.Product;
 import com.sibijo.product.domain.repository.HubStockRepository;
 import com.sibijo.product.domain.repository.ProductRepository;
+import com.sibijo.common.exception.CustomException;
+import com.sibijo.common.exception.codes.CommonExceptionCode;
+import com.sibijo.common.utils.Auth.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -22,16 +28,17 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final HubStockRepository hubStockRepository;
     private final CompanyClient companyClient;
+    private final JwtUtil jwtUtil; // JWT 토큰을 통한 권한 체크
 
     /**
-     * 전체 상품 조회
+     * 전체 상품 조회 (읽기 권한 모두 허용)
      */
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
     /**
-     * 특정 상품 조회 (존재하지 않으면 null)
+     * 특정 상품 조회 (읽기 권한 모두 허용)
      */
     public Product getProductById(UUID productId) {
         return productRepository.findById(productId).orElse(null);
@@ -39,17 +46,28 @@ public class ProductService {
 
     /**
      * 신규 상품 등록
+     * 권한: MASTER, HUB_ADMIN만 가능
+     * - HUB_ADMIN의 경우 자신의 허브 소속 업체에 한정 (CompanyClient를 통해 검증)
      */
     @Transactional
-    public Product createProduct(ProductRequest request) {
-        // 회사 서비스에서 ApiResponse로 감싼 응답을 받아 data 필드를 추출합니다.
-        ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
-        CompanyResponseDto companyResponse = response.getData();
-        if (companyResponse == null || companyResponse.getHubId() == null) {
-            throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
+    public Product createProduct(ProductRequest request, String token) {
+        String role = jwtUtil.extractRole(token);
+        UUID tokenHubId = jwtUtil.extractHubId(token);
+
+        if ("MASTER".equals(role)) {
+            // 허용
+        } else if ("HUB".equals(role) || "HUB_ADMIN".equals(role)) {
+            ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
+            CompanyResponseDto companyResponse = response.getData();
+            if (companyResponse == null || companyResponse.getHubId() == null ||
+                    !companyResponse.getHubId().equals(tokenHubId)) {
+                throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+            }
+        } else {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
-        // 상품 생성 및 저장
+        // 상품 생성
         Product product = new Product(
                 request.getProductName(),
                 request.getPrice(),
@@ -58,6 +76,8 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         // 허브 재고 생성
+        ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
+        CompanyResponseDto companyResponse = response.getData();
         HubStock hubStock = new HubStock(
                 companyResponse.getHubId(),
                 request.getCompanyId(),
@@ -71,38 +91,75 @@ public class ProductService {
 
     /**
      * 기존 상품 정보 수정
+     * 권한:
+     * - MASTER, HUB_ADMIN: 수정 가능 (단, HUB_ADMIN은 자신의 허브 소속 업체만)
+     * - COMPANY: 본인의 상품만 수정 가능
      */
     @Transactional
-    public Product updateProduct(UUID productId, ProductRequest request) {
+    public Product updateProduct(UUID productId, ProductRequest request, String token) {
         Product existingProduct = getProductById(productId);
         if (existingProduct == null) {
             throw new IllegalArgumentException("Product not found: " + productId);
         }
 
-        // 회사 서비스에서 ApiResponse로 감싼 응답을 받아 data 필드를 추출합니다.
-        ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
-        CompanyResponseDto companyResponse = response.getData();
-        if (companyResponse == null || companyResponse.getHubId() == null) {
-            throw new IllegalArgumentException("Company not found or hub info missing for companyId: " + request.getCompanyId());
+        String role = jwtUtil.extractRole(token);
+        UUID tokenHubId = jwtUtil.extractHubId(token);
+        UUID tokenCompanyId = jwtUtil.extractCompanyId(token);
+
+        if ("MASTER".equals(role)) {
+            // 허용
+        } else if ("HUB".equals(role) || "HUB_ADMIN".equals(role)) {
+            ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
+            CompanyResponseDto companyResponse = response.getData();
+            if (companyResponse == null || companyResponse.getHubId() == null ||
+                    !companyResponse.getHubId().equals(tokenHubId)) {
+                throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+            }
+        } else if ("COMPANY".equals(role)) {
+            if (!existingProduct.getCompanyId().equals(tokenCompanyId)) {
+                throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+            }
+        } else {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
         existingProduct.setProductName(request.getProductName());
         existingProduct.setPrice(request.getPrice());
         existingProduct.setCompanyId(request.getCompanyId());
-        // (허브 재고 테이블에 대한 별도 수정 로직이 필요하다면 추가)
 
         return productRepository.save(existingProduct);
     }
 
     /**
-     * 상품 삭제
+     * 상품 삭제 (Soft Delete)
+     * 권한: MASTER, HUB_ADMIN만 가능
      */
-    public void deleteProduct(UUID productId) {
-        productRepository.deleteById(productId);
+    @Transactional
+    public Product deleteProduct(UUID productId, String token) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+        String role = jwtUtil.extractRole(token);
+        UUID tokenHubId = jwtUtil.extractHubId(token);
+
+        if ("MASTER".equals(role)) {
+            // 허용
+        } else if ("HUB".equals(role) || "HUB_ADMIN".equals(role)) {
+            ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(product.getCompanyId());
+            CompanyResponseDto companyResponse = response.getData();
+            if (companyResponse == null || companyResponse.getHubId() == null ||
+                    !companyResponse.getHubId().equals(tokenHubId)) {
+                throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+            }
+        } else {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+
+        productRepository.delete(product);
+        return product;
     }
 
     /**
-     * 주문 서비스가 호출할 API – 상품의 재고와 연결된 허브 정보를 반환
+     * 주문 서비스가 호출할 API – 상품의 재고와 연결된 허브 정보를 반환 (읽기 권한 모두 허용)
      */
     public ProductResponseDto getProductOrderInfo(UUID productId) {
         Product product = getProductById(productId);
@@ -116,5 +173,10 @@ public class ProductService {
                 .hubId(hubStock.getHubId())
                 .amount(hubStock.getAmount())
                 .build();
+    }
+
+    // 검색 기능: 상품명, 가격 기준 (읽기 허용)
+    public Page<Product> searchProducts(String productName, Integer price, Pageable pageable) {
+        return productRepository.searchProducts(productName, price, pageable);
     }
 }

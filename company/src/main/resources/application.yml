@@ -7,7 +7,7 @@ spring:
       enabled: false
   config:
     import:
-      - optional:file:./company/env/db.env[.properties]
+      - optional:file:./company/.env[.properties]
   application:
     name: company-service
   datasource:
