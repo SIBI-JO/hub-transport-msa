@@ -106,8 +106,6 @@ public class UserService {
         UUID companyId = requestDto.getCompanyId();
         String slackId = requestDto.getSlackId();
 
-        // TODO: 권한 체크 ( Header에서 가져온 값 기반으로 Role, 본인 여부 판단)
-
         // 회원 중복 확인
         Optional<User> checkUsername = userRepository.findByUsername(username);
         if (checkUsername.isPresent()) {
@@ -157,8 +155,6 @@ public class UserService {
     @Transactional
     public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto,
             HttpServletRequest request) {
-
-        // TODO: 권한 체크
 
         log.info(requestDto.toString());
         User user = userRepository.findById(id).orElseThrow(
@@ -213,7 +209,6 @@ public class UserService {
 
     @Transactional
     public UserDeleteResponseDto deleteUser(Long id, HttpServletRequest request) {
-        // TODO: 권한 체크
 
         // 유저 존재 여부 확인
         User user = userRepository.findById(id).orElseThrow(

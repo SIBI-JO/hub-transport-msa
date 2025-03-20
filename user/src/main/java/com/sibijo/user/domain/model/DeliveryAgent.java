@@ -2,7 +2,6 @@ package com.sibijo.user.domain.model;
 
 import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.user.domain.enums.DeliveryType;
-import com.sibijo.user.domain.enums.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -66,5 +65,4 @@ public class DeliveryAgent extends BaseEntity {
         this.deliveryType = deliveryType;
         this.deliveryOrder = deliveryOrder;
     }
-
 }
