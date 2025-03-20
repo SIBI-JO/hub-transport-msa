@@ -41,27 +41,12 @@ public class UserController {
         return ResponseEntity.ok().body("OK");
     }
 
-    @PostMapping("/signup") //회원가입
-    private ResponseEntity<ApiResponse<SignUpResponseDto>> signUp(
-            @RequestBody @Valid SignUpRequestDto requestDto, BindingResult bindingResult) {
-
-        // TODO: validation => global exception handler에서 자동 예외처리?
-        raiseValidationException(bindingResult);
-
-        SignUpResponseDto signUpResponseDto = userService.signup(requestDto);
-
-        return ResponseEntity
-                .created(URI.create("/users" + signUpResponseDto.getUserId()))
-                .body(ApiResponse.success("성공", signUpResponseDto));
-    }
-
     //CRUDS
     @PostMapping("")
     private ResponseEntity<ApiResponse<UserCreateResponseDto>> createUser(
-            @RequestBody UserCreateRequestDto requestDto,
-            HttpServletRequest request) {
+            @RequestBody UserCreateRequestDto requestDto) {
 
-        UserCreateResponseDto createUserResponseDto = userService.createUser(requestDto, request);
+        UserCreateResponseDto createUserResponseDto = userService.createUser(requestDto);
 
         return ResponseEntity
                 .created(URI.create("/users" + createUserResponseDto.getUserId()))
@@ -82,24 +67,21 @@ public class UserController {
     private ResponseEntity<ApiResponse<UserDetailsResponseDto>> updateUser(
             @PathVariable("id") Long id,
             @Valid @RequestBody UserUpdateRequestDto requestDto,
-            BindingResult bindingResult,
-            HttpServletRequest request
+            BindingResult bindingResult
     ) {
         // validation 예외처리
         raiseValidationException(bindingResult);
 
-        UserDetailsResponseDto userDetailsResponseDto = userService.updateUser(id, requestDto,
-                request);
+        UserDetailsResponseDto userDetailsResponseDto = userService.updateUser(id, requestDto);
         return ResponseEntity
                 .ok(ApiResponse.success("수정 성공", userDetailsResponseDto));
     }
 
     @DeleteMapping("/{id}")
     private ResponseEntity<ApiResponse<UserDeleteResponseDto>> deleteUser(
-            @PathVariable("id") Long id,
-            HttpServletRequest request
+            @PathVariable("id") Long id
     ) {
-        UserDeleteResponseDto userDeleteResponseDto = userService.deleteUser(id, request);
+        UserDeleteResponseDto userDeleteResponseDto = userService.deleteUser(id);
         return ResponseEntity
                 .ok(ApiResponse.success("삭제 성공", userDeleteResponseDto));
     }
