@@ -17,7 +17,8 @@ public class DeliveryResponseDto {
     private String deliveryAddress;
     private String receiver;
     private String receiverSlackId;
-    private UUID deliveryManagerId;
+    private UUID recipientsId;
+    private Long deliveryManagerId;
 
     public DeliveryResponseDto(Delivery delivery) {
         this.deliveryId = delivery.getDeliveryId();
@@ -26,6 +27,7 @@ public class DeliveryResponseDto {
         this.deliveryAddress = delivery.getDeliveryAddress();
         this.receiver = delivery.getReceiver();
         this.receiverSlackId = delivery.getReceiverSlackId();
+        this.recipientsId = delivery.getRecipientsId();
         this.deliveryManagerId = delivery.getDeliveryManagerId();
     }
 

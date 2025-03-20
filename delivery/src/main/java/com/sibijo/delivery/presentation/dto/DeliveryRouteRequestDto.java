@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DeliveryRouteRequestDto {
 
-    private Long sequence;
+    private Integer sequence;
     private UUID startHubId;
     private UUID endHubId;
     private String expectedDistance;

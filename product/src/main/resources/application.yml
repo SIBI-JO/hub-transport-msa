@@ -7,7 +7,7 @@ spring:
       enabled: false
   config:
     import:
-      - optional:file:./product/env/db.env[.properties]
+      - optional:file:./product/.env[.properties]
   application:
     name: product-service  # Eureka에 등록될 서비스 이름
   datasource:
@@ -30,3 +30,7 @@ eureka:
 company:
   service:
     url: http://company-service
+
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}

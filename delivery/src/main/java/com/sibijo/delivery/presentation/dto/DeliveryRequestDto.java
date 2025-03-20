@@ -14,5 +14,6 @@ public class DeliveryRequestDto {
     private String deliveryAddress;
     private String receiver;
     private String receiverSlackId;
+    private UUID recipientsId;
 
 }
