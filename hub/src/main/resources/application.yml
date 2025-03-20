@@ -37,3 +37,7 @@ kakao:
   api:
     key: 9177b1d8e0e9ad5c8d3ad7ac72a869b7
 
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}
+
