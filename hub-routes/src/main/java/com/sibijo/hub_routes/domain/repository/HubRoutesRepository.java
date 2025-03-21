@@ -18,4 +18,6 @@ public interface HubRoutesRepository {
     Page<HubRoutesResponseDto> searchHubRoutes(Pageable validatedPageable);
 
     void deleteHubRoute(HubRoutesEntity hubRoutesEntity);
+
+    Optional<HubRoutesEntity> findByDepartureIdAndDestinationId(UUID startHubId, UUID endHubId);
 }

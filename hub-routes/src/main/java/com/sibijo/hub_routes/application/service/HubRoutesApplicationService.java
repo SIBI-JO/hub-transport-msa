@@ -1,5 +1,6 @@
 package com.sibijo.hub_routes.application.service;
 
+import com.sibijo.hub_routes.presentation.controller.HubRouteToDeliveryDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesRequestDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesResponseDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesUpdateRequestDto;
@@ -18,4 +19,6 @@ public interface HubRoutesApplicationService {
     HubRoutesResponseDto updateHubRoutes(UUID hubRoutesId, HubRoutesUpdateRequestDto hubRoutesUpdateRequestDto);
 
     void deleteHubRoute(UUID hubRoutesId);
+
+    HubRouteToDeliveryDto getHubRouteForOrder(UUID startHubId, UUID endHubId);
 }

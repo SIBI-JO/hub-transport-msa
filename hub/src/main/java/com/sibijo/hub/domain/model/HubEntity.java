@@ -108,6 +108,15 @@ public class HubEntity extends BaseEntity {
         }
     }
 
+    public void updateHubLatAndLon(String hubLocation, BigDecimal latitude, BigDecimal longitude) {
+        if (hubLocation != null && !hubLocation.trim().isEmpty() && latitude != null && longitude != null) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        } else {
+            throw new CustomException(HubDomainExceptionCode.INVALID_HUB_LOCATION);
+        }
+    }
+
     public void updateHubType(HubType hubType) {
         if (hubType != null) {
             this.hubType = hubType;
