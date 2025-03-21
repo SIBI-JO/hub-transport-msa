@@ -37,7 +37,7 @@ public class HubRoutesEntity extends BaseEntity {
     @Column(name = "destination_id", nullable = false)
     private UUID destinationId;
 
-    @Column(name = "central_id", nullable = false)
+    @Column(name = "central_id")
     private UUID centralId;
 
     @Column(name = "distance", precision = 10, scale = 2, nullable = false)

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,6 +30,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class HubRoutesController {
 
     private final HubRoutesApplicationService hubRoutesApplicationService;
+
+    @GetMapping("/order")
+    public HubRouteToDeliveryDto getHubRouteForOrder(
+            @RequestParam UUID startHubId,
+            @RequestParam UUID endHubId) {
+        HubRouteToDeliveryDto hubRouteToDeliveryDto = hubRoutesApplicationService.getHubRouteForOrder(
+                startHubId, endHubId);
+        return hubRouteToDeliveryDto;
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<HubRoutesResponseDto>> createHubRoutes(
@@ -67,6 +77,12 @@ public class HubRoutesController {
         return ResponseEntity.ok(ApiResponse.success("허브 경로 단일 조회 성공", hubRoutesResponseDto));
     }
 
+    /**
+     * update시
+     * @param hubRoutesId
+     * @param hubRoutesUpdateRequestDto
+     * @return
+     */
     @PatchMapping("/{hubRoutesId}")
     public ResponseEntity<ApiResponse<HubRoutesResponseDto>> updateHubRoute(
             @PathVariable("hubRoutesId") UUID hubRoutesId,

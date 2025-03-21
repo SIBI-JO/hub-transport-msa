@@ -1,14 +1,18 @@
 package com.sibijo.hub.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
+import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageableUtils;
+import com.sibijo.hub.application.service.HubApplicationService;
 import com.sibijo.hub.presentation.dto.HubRequestDto;
 import com.sibijo.hub.presentation.dto.HubResponseDto;
+import com.sibijo.hub.presentation.dto.HubToRouteDto;
 import com.sibijo.hub.presentation.dto.HubUpdateRequestDto;
-import com.sibijo.hub.application.service.HubApplicationService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -24,24 +28,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/hubs")
 @RequiredArgsConstructor
 public class HubController {
 
     private final HubApplicationService hubApplicationService;
+    private final JwtUtil jwtUtil;
 
     //회원가입 시 허브 아이디 존재 확인
     @GetMapping("/{hubId}/exists")
-    public ResponseEntity<ApiResponse> hubExists(@PathVariable("hubId") UUID hubId) {
+    public ResponseEntity<ApiResponse<Boolean>> hubExists(@PathVariable("hubId") UUID hubId) {
         boolean exists = hubApplicationService.isHubExists(hubId);
         return ResponseEntity.ok(ApiResponse.success("허브 존재 확인 성공", exists));
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<HubResponseDto>> createHub(
-            @Valid @RequestBody HubRequestDto hubRequestDto
+            @Valid @RequestBody HubRequestDto hubRequestDto,
+            HttpServletRequest request
     ) {
+        String token = jwtUtil.extractToken(request);
+        log.info("token: {}", token);
 
         HubResponseDto hubResponseDto = hubApplicationService.createHub(
                 hubRequestDto
@@ -93,6 +102,13 @@ public class HubController {
         HubResponseDto hubResponseDto = hubApplicationService.getHub(hubId);
 
         return ResponseEntity.ok(ApiResponse.success("허브 단일 조회 성공", hubResponseDto));
+    }
+
+    @GetMapping("/hub-routes/{hubId}")
+    public HubToRouteDto getHubForHubRoutes(@PathVariable("hubId") UUID hubId) {
+        HubToRouteDto hubToRouteDto = hubApplicationService.getHubForHubRoutes(hubId);
+        log.info("hubToRouteDto: " + hubToRouteDto);
+        return hubToRouteDto;
     }
 
     @PatchMapping("/{hubId}")

@@ -63,4 +63,15 @@ public class HubRoutesRepositoryHandler implements HubRoutesRepository {
         jpaHubRoutesRepository.delete(hubRoutesEntity);
     }
 
+    /**
+     * delivery 서버
+     * @param startHubId
+     * @param endHubId
+     * @return
+     */
+    @Override
+    public Optional<HubRoutesEntity> findByDepartureIdAndDestinationId(UUID startHubId, UUID endHubId) {
+        return jpaHubRoutesRepository.findByDepartureIdAndDestinationId(startHubId, endHubId);
+    }
+
 }
