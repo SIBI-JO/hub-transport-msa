@@ -4,6 +4,7 @@ import com.sibijo.common.exception.CustomException;
 import com.sibijo.hub.domain.model.HubType;
 import com.sibijo.hub.presentation.dto.HubRequestDto;
 import com.sibijo.hub.presentation.dto.HubResponseDto;
+import com.sibijo.hub.presentation.dto.HubToRouteDto;
 import com.sibijo.hub.presentation.dto.HubUpdateRequestDto;
 import com.sibijo.hub.domain.model.HubEntity;
 import com.sibijo.hub.domain.repository.HubRepository;
@@ -19,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class HubApplicationApplicationServiceImpl implements HubApplicationService {
+public class HubApplicationServiceImpl implements HubApplicationService {
 
     private final HubRepository hubRepository;
     private final HubDomainService hubDomainService;
@@ -32,6 +33,23 @@ public class HubApplicationApplicationServiceImpl implements HubApplicationServi
     @Override
     public boolean isHubExists(UUID hubId) {
         return hubRepository.existsByHubId(hubId);
+    }
+
+    /**허브 경로서비스 에서
+     * @param hubId
+     * @return
+     */
+    @Override
+    public HubToRouteDto getHubForHubRoutes(UUID hubId) {
+        HubEntity foundHub = findHubEntityOrElseThrow(hubId);
+        return new HubToRouteDto(
+                foundHub.getId(),
+                foundHub.getHubName(),
+                foundHub.getHubLocation(),
+                foundHub.getLatitude(),
+                foundHub.getLongitude(),
+                foundHub.getHubType().getHubTypeName()
+        );
     }
 
     /**

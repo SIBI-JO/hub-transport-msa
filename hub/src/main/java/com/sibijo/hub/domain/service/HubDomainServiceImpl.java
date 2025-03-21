@@ -74,6 +74,18 @@ public class HubDomainServiceImpl implements HubDomainService {
         }
         if (hubUpdateRequestDto.hubLocation() != null) {
             originHub.updateHubLocation(hubUpdateRequestDto.hubLocation());
+            //좌표 업데이트
+            HubKakaoMapResponseDto hubCoordUpdate = hubKakaoMapService.getCoordinats(
+                    hubUpdateRequestDto.hubLocation());
+            log.info("Kakao API Headers: {}", hubCoordUpdate.getDocuments());
+
+            String lat = hubCoordUpdate.getDocuments().get(0).getY();
+            String lon = hubCoordUpdate.getDocuments().get(0).getX();
+            BigDecimal latitude = new BigDecimal(lat);
+            BigDecimal longitude = new BigDecimal(lon);
+
+            originHub.updateHubLatAndLon(hubUpdateRequestDto.hubLocation(), latitude, longitude);
+
         }
         if (hubUpdateRequestDto.hubTypeName() != null) {
             //허브타입 검증

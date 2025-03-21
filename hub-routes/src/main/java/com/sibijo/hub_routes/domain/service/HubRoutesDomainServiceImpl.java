@@ -1,12 +1,14 @@
 package com.sibijo.hub_routes.domain.service;
 
 import com.sibijo.common.exception.CustomException;
+import com.sibijo.hub_routes.application.dto.HubRoutesCommand;
+import com.sibijo.hub_routes.application.dto.RouteCoordRequestDto;
+import com.sibijo.hub_routes.application.dto.RouteTimeResponseDto;
 import com.sibijo.hub_routes.domain.exception.HubRoutesDomainExceptionCode;
 import com.sibijo.hub_routes.domain.model.HubRoutesEntity;
 import com.sibijo.hub_routes.domain.repository.HubRoutesRepository;
-import com.sibijo.hub_routes.presentation.dto.HubRoutesRequestDto;
-import com.sibijo.hub_routes.presentation.dto.HubRoutesUpdateRequestDto;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,33 +20,58 @@ import org.springframework.stereotype.Service;
 public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
 
     private final HubRoutesRepository hubRoutesRepository;
+    private final HubRoutesKakaoMapService hubRoutesKakaoMapService;
 
     /**
-     * @param hubRoutesRequestDto
+     * @param hubRoutesCommand
      * @return
      */
     @Override
-    public HubRoutesEntity createHubRoutes(HubRoutesRequestDto hubRoutesRequestDto) {
-        //중복 체크
-        if (hubRoutesRepository.existsByDepartureAndDestinationID(hubRoutesRequestDto.departureId(),
-                hubRoutesRequestDto.destinationId())) {
-            throw new CustomException(HubRoutesDomainExceptionCode.HUB_ROUTES_IS_DUPLICATED);
-        }
+    public HubRoutesEntity createHubRoutes(HubRoutesCommand hubRoutesCommand) {
+
         /**
          * 경로 만들기
          * 출발 -> 중앙 -> 도착 : 무조건 중앙 거쳐야됨
-         *
+         * 1. 주문의 출발 ID -> 허브의 출발 ID의 주소
+         * 2. 출발 주소 와 가장 가까운 중앙허브 찾기
+         * 3. 중앙허브와 도착 허브와 배송도착지 가장 가까운 경로 찾기
+         * 4.
          */
-        UUID centralId = UUID.randomUUID();
-        BigDecimal distance = new BigDecimal("100");
-        Integer estimatedTime = 5;
+        log.info("createHubRoutesCommand={}", hubRoutesCommand);
+
+        //출발과 가까운 중앙허브 찾기
+//        CentralHubDto centralHubDto = hubRoutesKakaoMapService.getCentralHub(
+//                createHubRoutesCommand);
+
+
+        //출발 , 도착, 경유 좌표 넘기기 -> p2p
+        UUID centralId = null;
+        RouteCoordRequestDto routeCoordRequestDto = RouteCoordRequestDto.builder()
+                .departure(RouteCoordRequestDto.Location.builder()
+                        .x(String.valueOf(hubRoutesCommand.departure().getLongitude()))
+                        .y(String.valueOf(hubRoutesCommand.departure().getLatitude()))
+                        .angle(0)
+                        .build())
+                .destination(RouteCoordRequestDto.Location.builder()
+                        .x(String.valueOf(hubRoutesCommand.destination().getLongitude()))
+                        .y(String.valueOf(hubRoutesCommand.destination().getLatitude()))
+                        .build())
+                .wayPoints(List.of())
+                .build();
+
+        RouteTimeResponseDto routeTimeResponseDto = hubRoutesKakaoMapService.getDirections(
+                routeCoordRequestDto);
+        RouteTimeResponseDto.RouteSummary summary = routeTimeResponseDto.getRoutes().get(0)
+                .getSummary();
+        BigDecimal distance = summary.getDistanceToKm();
+        Integer duration = Integer.valueOf(summary.getDurationToMinutes());
 
         return HubRoutesEntity.builder()
-                .departureId(hubRoutesRequestDto.departureId())
-                .destinationId(hubRoutesRequestDto.destinationId())
-                .centralId(centralId)
+                .departureId(hubRoutesCommand.departure().getHubId())
+                .destinationId(hubRoutesCommand.destination().getHubId())
+                .centralId(centralId) //null
                 .distance(distance)
-                .estimatedTime(estimatedTime)
+                .estimatedTime(duration)
                 .build();
     }
 
@@ -58,40 +85,15 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
     }
 
     /**
+     * update 고민 -> 안해도 될 것 같음
      * @param hubRoutesId
-     * @param hubRoutesUpdateRequestDto
+     * @param hubRoutesCommand
      * @return
      */
     @Override
     public HubRoutesEntity updateHubRoutes(UUID hubRoutesId,
-            HubRoutesUpdateRequestDto hubRoutesUpdateRequestDto) {
+            HubRoutesCommand hubRoutesCommand) {
         HubRoutesEntity originalHubRoutesEntity = findHubRoutesById(hubRoutesId);
-
-        // 오리지널이랑 똑같은 입력 -> 에러처리 -> 컨트롤러 or 애플리케이션단에서
-
-        if (hubRoutesUpdateRequestDto.departureId() != null) {
-            originalHubRoutesEntity.updateDepartureId(hubRoutesUpdateRequestDto.departureId());
-            /**
-             * 경로 생성하기
-             * 기존 도착지, 중앙, 거리, 시간
-             */
-            UUID centralId = UUID.randomUUID();
-            BigDecimal distance = new BigDecimal("100");
-            Integer estimatedTime = 5;
-            originalHubRoutesEntity.updateRoutes(centralId, distance, estimatedTime);
-        }
-        if (hubRoutesUpdateRequestDto.destinationId() != null) {
-            originalHubRoutesEntity.updateDestinationId(hubRoutesUpdateRequestDto.destinationId());
-            /**
-             * 경로 생성하기
-             * 기존 출발지, 중앙, 거리, 시간
-             */
-            UUID centralId = UUID.randomUUID();
-            BigDecimal distance = new BigDecimal("100");
-            Integer estimatedTime = 5;
-            originalHubRoutesEntity.updateRoutes(centralId, distance, estimatedTime);
-        }
-
         return hubRoutesRepository.save(originalHubRoutesEntity);
     }
 
@@ -102,6 +104,20 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
     @Override
     public HubRoutesEntity deleteHubRoute(UUID hubRoutesId) {
         return findHubRoutesById(hubRoutesId);
+    }
+
+    /**
+     * delivery 서버에게
+     *
+     * @param startHubId
+     * @param endHubId
+     * @return
+     */
+    @Override
+    public HubRoutesEntity getHubRouteForOrder(UUID startHubId, UUID endHubId) {
+        return hubRoutesRepository.findByDepartureIdAndDestinationId(startHubId, endHubId)
+                .orElseThrow(() -> new CustomException(
+                        HubRoutesDomainExceptionCode.HUB_ROUTES_NOT_FOUND));
     }
 
     private HubRoutesEntity findHubRoutesById(UUID hubRoutesId) {

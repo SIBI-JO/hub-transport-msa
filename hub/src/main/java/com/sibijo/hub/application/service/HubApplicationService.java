@@ -2,6 +2,7 @@ package com.sibijo.hub.application.service;
 
 import com.sibijo.hub.presentation.dto.HubRequestDto;
 import com.sibijo.hub.presentation.dto.HubResponseDto;
+import com.sibijo.hub.presentation.dto.HubToRouteDto;
 import com.sibijo.hub.presentation.dto.HubUpdateRequestDto;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -25,4 +26,6 @@ public interface HubApplicationService {
     void deleteHub(UUID hubId);
 
     boolean isHubExists(UUID hubId);
+
+    HubToRouteDto getHubForHubRoutes(UUID hubId);
 }
