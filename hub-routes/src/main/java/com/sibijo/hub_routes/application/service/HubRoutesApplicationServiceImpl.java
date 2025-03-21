@@ -8,7 +8,7 @@ import com.sibijo.hub_routes.domain.repository.HubRoutesRepository;
 import com.sibijo.hub_routes.domain.service.HubRoutesDomainService;
 import com.sibijo.hub_routes.infrastructure.client.HubServiceClient;
 import com.sibijo.hub_routes.infrastructure.dto.HubServiceClientDto;
-import com.sibijo.hub_routes.presentation.controller.HubRouteToDeliveryDto;
+import com.sibijo.hub_routes.presentation.dto.HubRouteToDeliveryDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesRequestDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesResponseDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesUpdateRequestDto;
@@ -88,7 +88,7 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
         return convertToHubRoutesResponseDto(hubRoutesDomainService.getHubRoute(hubRoutesId));
     }
 
-    /**
+    /** 단순 업데이트
      * @param hubRoutesId
      * @param hubRoutesUpdateRequestDto
      * @return
@@ -99,31 +99,9 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
             HubRoutesUpdateRequestDto hubRoutesUpdateRequestDto) {
 
         log.info("HubRoutesUpdateRequestDto ={}", hubRoutesUpdateRequestDto);
-        // 허브서비스에 허브아이디로 좌표 조회
-        HubServiceClientDto departure = null;
-        if (hubRoutesUpdateRequestDto.departureId() != null) {
-            departure = hubServiceClient.getHubForHubRoutes(
-                    hubRoutesUpdateRequestDto.departureId());
-        }
-        HubServiceClientDto destination = null;
-        if (hubRoutesUpdateRequestDto.destinationId() != null) {
-            destination = hubServiceClient.getHubForHubRoutes(
-                    hubRoutesUpdateRequestDto.destinationId());
-        }
-        log.info("HubServiceClientDto ={}", departure);
-        log.info("HubServiceClientDto ={}", destination);
-        // 허브서비스에 중앙허브 데이터 전부 조회
-//        List<HubServiceResponseDto> centralHubList = hubServiceClient.getCentralHub();
-
-        // 출발, 도착 좌표, 중앙허브 데이터 -> command로 바꿈
-        HubRoutesCommand hubRoutesCommand = new HubRoutesCommand(
-                departure,
-                destination,
-                null
-        );
 
         HubRoutesEntity hubRoutesEntity = hubRoutesDomainService.updateHubRoutes(hubRoutesId,
-                hubRoutesCommand);
+                hubRoutesUpdateRequestDto);
         return convertToHubRoutesResponseDto(hubRoutesEntity);
     }
 

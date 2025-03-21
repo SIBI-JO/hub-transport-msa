@@ -4,7 +4,9 @@ import java.util.UUID;
 
 public record HubRoutesUpdateRequestDto(
         UUID departureId,
-        UUID destinationId
+        UUID destinationId,
+        String distance,
+        String estimatedTime
 ) {
 
 }

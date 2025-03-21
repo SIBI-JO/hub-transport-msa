@@ -7,6 +7,7 @@ import com.sibijo.hub_routes.application.dto.RouteTimeResponseDto;
 import com.sibijo.hub_routes.domain.exception.HubRoutesDomainExceptionCode;
 import com.sibijo.hub_routes.domain.model.HubRoutesEntity;
 import com.sibijo.hub_routes.domain.repository.HubRoutesRepository;
+import com.sibijo.hub_routes.presentation.dto.HubRoutesUpdateRequestDto;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +43,6 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
         //출발과 가까운 중앙허브 찾기
 //        CentralHubDto centralHubDto = hubRoutesKakaoMapService.getCentralHub(
 //                createHubRoutesCommand);
-
 
         //출발 , 도착, 경유 좌표 넘기기 -> p2p
         UUID centralId = null;
@@ -85,15 +85,32 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
     }
 
     /**
-     * update 고민 -> 안해도 될 것 같음
+     * 단순 update
+     *
      * @param hubRoutesId
-     * @param hubRoutesCommand
+     * @param hubRoutesUpdateRequestDto
      * @return
      */
     @Override
     public HubRoutesEntity updateHubRoutes(UUID hubRoutesId,
-            HubRoutesCommand hubRoutesCommand) {
+            HubRoutesUpdateRequestDto hubRoutesUpdateRequestDto) {
         HubRoutesEntity originalHubRoutesEntity = findHubRoutesById(hubRoutesId);
+
+        if (hubRoutesUpdateRequestDto.departureId() != null) {
+            originalHubRoutesEntity.updateDepartureId(hubRoutesUpdateRequestDto.departureId());
+        }
+        if (hubRoutesUpdateRequestDto.destinationId() != null) {
+            originalHubRoutesEntity.updateDestinationId(hubRoutesUpdateRequestDto.destinationId());
+        }
+        if (hubRoutesUpdateRequestDto.distance() != null) {
+            originalHubRoutesEntity.updateDistance(
+                    new BigDecimal(hubRoutesUpdateRequestDto.distance()));
+        }
+        if (hubRoutesUpdateRequestDto.estimatedTime() != null) {
+            originalHubRoutesEntity.updateEstimatedTime(
+                    Integer.valueOf(hubRoutesUpdateRequestDto.estimatedTime()));
+        }
+
         return hubRoutesRepository.save(originalHubRoutesEntity);
     }
 

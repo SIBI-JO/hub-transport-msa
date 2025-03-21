@@ -1,6 +1,6 @@
 package com.sibijo.hub_routes.application.service;
 
-import com.sibijo.hub_routes.presentation.controller.HubRouteToDeliveryDto;
+import com.sibijo.hub_routes.presentation.dto.HubRouteToDeliveryDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesRequestDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesResponseDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesUpdateRequestDto;

@@ -75,6 +75,28 @@ public class HubRoutesEntity extends BaseEntity {
         throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
     }
 
+    public void updateDistance(BigDecimal distance) {
+        if (distance != null) {
+            this.distance = distance;
+        }
+        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ROUTE_DISTANCE);
+    }
+
+    public void updateEstimatedTime(Integer estimatedTime) {
+        if (estimatedTime != null) {
+            this.estimatedTime = estimatedTime;
+        }
+        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ROUTE_TIME);
+    }
+
+    public void updateCentralId(UUID centralId) {
+        if (centralId != null) {
+            this.centralId = centralId;
+        }
+        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
+    }
+
+
     public void updateRoutes(UUID centralId, BigDecimal distance, Integer estimatedTime) {
         this.centralId = centralId;
         this.distance = distance;

@@ -1,4 +1,4 @@
-package com.sibijo.hub_routes.presentation.controller;
+package com.sibijo.hub_routes.presentation.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
