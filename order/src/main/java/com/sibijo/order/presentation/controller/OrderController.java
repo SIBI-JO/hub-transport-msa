@@ -10,6 +10,7 @@ import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,7 @@ public class OrderController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponseDto>> createOrder(HttpServletRequest request,
-            @RequestBody OrderRequestDto requestDto
+            @Valid @RequestBody OrderRequestDto requestDto
             ) {
         String token = jwtUtil.extractToken(request);
         return ResponseEntity.ok(ApiResponse.success("주문 생성 성공", orderService.createOrder(requestDto, token)));
