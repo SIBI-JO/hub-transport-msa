@@ -32,7 +32,7 @@ public class RoleAuthorizationFilter extends AbstractGatewayFilterFactory<RoleAu
 
             // token 필요 없는 요청 처리
             if (path.equals("/api/users/signin") || path.startsWith("/api/users/signup") || path.startsWith(
-                    "/api/users/health-check")) {
+                    "/api/users/health-check") || path.startsWith("/swagger") || path.startsWith("/swagger-ui")) {
                 log.info("JWT Authorization Filter: {}", path);
                 return chain.filter(exchange);  // /signin/sign-up 경로는 필터를 적용하지 않음
             }
