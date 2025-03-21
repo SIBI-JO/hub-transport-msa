@@ -78,4 +78,19 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    /**
+     *   주문 배송 서버에서 쓸 커스터마이징한 UUID 추출 코드
+     */
+    public UUID extractHubIdForOrder(String token) {
+        Claims claims = parseToken(token);
+        String hubIdStr = claims.get("hubId", String.class); // 먼저 String으로 꺼냄
+        return hubIdStr != null ? UUID.fromString(hubIdStr) : null;
+    }
+
+    public UUID extractCompanyIdForOrder(String token) {
+        Claims claims = parseToken(token);
+        String companyIdStr = claims.get("companyId", String.class);
+        return companyIdStr != null ? UUID.fromString(companyIdStr) : null;
+    }
 }

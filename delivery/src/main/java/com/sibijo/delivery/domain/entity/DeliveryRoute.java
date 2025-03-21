@@ -1,6 +1,7 @@
 package com.sibijo.delivery.domain.entity;
 
 import com.sibijo.common.entity.BaseEntity;
+import com.sibijo.delivery.application.dto.DeliveryResponseDto;
 import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
@@ -52,6 +53,9 @@ public class DeliveryRoute extends BaseEntity {
     private UUID endHubId; // 도착 허브 ID
 
     @Column(nullable = false)
+    private UUID recipientsId;
+
+    @Column(nullable = false)
     private String expectedDistance; // 예상 거리
 
     @Column(nullable = false)
@@ -74,9 +78,11 @@ public class DeliveryRoute extends BaseEntity {
                 .sequence(requestDto.getSequence())
                 .startHubId(requestDto.getStartHubId())
                 .endHubId(requestDto.getEndHubId())
+                .recipientsId(requestDto.getRecipientsId())
                 .expectedDistance(requestDto.getExpectedDistance())
                 .expectedDuration(requestDto.getExpectedTime())
                 .deliveryStatus(DeliveryStatusEnum.HUB_WAITING) // 기본값 : 허브 이동 대기 중
+                .deliveryManagerId(requestDto.getDeliveryManagerId())
                 .build();
     }
 
@@ -85,11 +91,12 @@ public class DeliveryRoute extends BaseEntity {
         this.realDuration = realDuration;
     }
 
-    public void updateRoute(DeliveryRouteUpdateRequestDto requestDto) {
-        this.delivery = requestDto.getDelivery();
+    public void updateRoute(DeliveryRouteUpdateRequestDto requestDto, Delivery delivery) {
+        this.delivery = delivery;
         this.sequence = requestDto.getSequence();
         this.startHubId = requestDto.getStartHubId();
         this.endHubId = requestDto.getEndHubId();
+        this.recipientsId = requestDto.getRecipientsId();
         this.expectedDistance = requestDto.getExpectedDistance();
         this.expectedDuration = requestDto.getExpectedDuration();
         this.realDistance = requestDto.getRealDistance();

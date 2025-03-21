@@ -109,4 +109,11 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("주문 삭제 성공", orderService.deleteOrder(orderId, token)));
     }
 
+    /**
+     *  배송 생성 실패 시, 임시 생성된 주문을 취소
+     */
+    @DeleteMapping("/internal/{orderId}")
+    public void deleteOrderInternal(@PathVariable UUID orderId) {
+        orderService.deleteOrderInternal(orderId);
+    }
 }

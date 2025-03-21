@@ -62,8 +62,11 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private OrderStatusEnum orderStatus;
 
+    @Column(nullable = false)
+    private Long ordererId;
 
-    public static Order createOrder(OrderRequestDto requestDto) {
+
+    public static Order createOrder(OrderRequestDto requestDto, Long ordererId) {
         return Order.builder()
                 .supplierId(requestDto.getSupplierId())
                 .recipientsId(requestDto.getRecipientsId())
@@ -71,6 +74,7 @@ public class Order extends BaseEntity {
                 .amount(requestDto.getAmount())
                 .request(requestDto.getRequest())
                 .orderStatus(OrderStatusEnum.PENDING)
+                .ordererId(ordererId)
                 .build();
     }
 

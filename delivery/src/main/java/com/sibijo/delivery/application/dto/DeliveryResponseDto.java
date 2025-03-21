@@ -1,6 +1,7 @@
 package com.sibijo.delivery.application.dto;
 
 import com.sibijo.delivery.domain.entity.Delivery;
+import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class DeliveryResponseDto {
 
     private UUID deliveryId;
+    private DeliveryStatusEnum deliveryStatus;
     private UUID startHubId;
     private UUID endHubId;
     private String deliveryAddress;
@@ -22,6 +24,7 @@ public class DeliveryResponseDto {
 
     public DeliveryResponseDto(Delivery delivery) {
         this.deliveryId = delivery.getDeliveryId();
+        this.deliveryStatus = delivery.getDeliveryStatus();
         this.startHubId = delivery.getStartHubId();
         this.endHubId = delivery.getEndHubId();
         this.deliveryAddress = delivery.getDeliveryAddress();

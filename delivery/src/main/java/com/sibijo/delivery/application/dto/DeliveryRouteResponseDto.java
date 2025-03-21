@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DeliveryRouteResponseDto {
     private UUID routeId;
-    private Delivery delivery;
+    private UUID deliveryId;
     private Integer sequence;
     private UUID startHubId;
     private UUID endHubId;
@@ -26,7 +26,7 @@ public class DeliveryRouteResponseDto {
     public DeliveryRouteResponseDto(DeliveryRoute deliveryRoute) {
 
         this.routeId = deliveryRoute.getRouteId();
-        this.delivery = deliveryRoute.getDelivery();
+        this.deliveryId = deliveryRoute.getDelivery().getDeliveryId();
         this.sequence = deliveryRoute.getSequence();
         this.startHubId = deliveryRoute.getStartHubId();
         this.endHubId = deliveryRoute.getEndHubId();
