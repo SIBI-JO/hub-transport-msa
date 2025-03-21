@@ -12,10 +12,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DeliveryRouteUpdateRequestDto {
 
-    private Delivery delivery;
+    private UUID deliveryId;
     private Integer sequence;
     private UUID startHubId;
     private UUID endHubId;
+    private UUID recipientsId;
     private String expectedDistance;
     private String expectedDuration;
     private String realDistance;
