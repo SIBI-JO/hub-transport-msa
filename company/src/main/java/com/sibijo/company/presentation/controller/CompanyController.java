@@ -34,6 +34,13 @@ public class CompanyController {
         return ResponseEntity.ok(ApiResponse.success("업체 전체 조회 성공", companies));
     }
 
+    // 업체 존재 여부 확인 엔드포인트
+    @GetMapping("/{companyId}/exists")
+    public ResponseEntity<ApiResponse<Boolean>> companyExists(@PathVariable UUID companyId) {
+        boolean exists = companyService.exists(companyId);
+        return ResponseEntity.ok(ApiResponse.success("업체 존재 확인 성공", exists));
+    }
+
     @GetMapping("/{companyId}")
     public ResponseEntity<ApiResponse<Company>> getCompany(@PathVariable UUID companyId) {
         Company company = companyService.getCompanyById(companyId);
