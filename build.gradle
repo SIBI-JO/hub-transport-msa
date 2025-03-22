@@ -113,10 +113,31 @@ project(':product') {
     }
 }
 
+project(':ai') {
+    dependencies {
+        implementation project(':common')
+    }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
+
 project(':delivery') {
     dependencies {
         implementation project(':common')
     }
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
+
+project(':gateway') {
+    tasks.named('bootJar') {
+        enabled = true
+    }
+}
+
+project(':eureka') {
     tasks.named('bootJar') {
         enabled = true
     }
