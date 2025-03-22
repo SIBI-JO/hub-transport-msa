@@ -54,7 +54,7 @@ public class ProductService {
     @Transactional
     public Product createProduct(ProductRequest request, String token) {
         String role = jwtUtil.extractRole(token);
-        UUID tokenHubId = jwtUtil.extractHubId(token);
+        UUID tokenHubId = jwtUtil.extractHubIdForOrder(token);
 
         // 업체 존재 여부 검증 (신규 엔드포인트 사용)
         ApiResponse<Boolean> existsResponse = companyClient.companyExists(request.getCompanyId());

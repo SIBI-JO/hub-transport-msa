@@ -147,7 +147,8 @@ public class OrderService {
 
         switch (role) {
             case "HUB":
-                if (hubId != order.getSupplierHubId() && hubId != order.getRecipientHubId()) {
+                System.out.println(hubId);
+                if (!hubId.equals(order.getSupplierHubId()) && !hubId.equals(order.getRecipientHubId())) {
                     // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
