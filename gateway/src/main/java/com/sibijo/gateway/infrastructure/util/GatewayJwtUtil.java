@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import java.util.Date;
 import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,4 +56,20 @@ public class GatewayJwtUtil {
             return null;
         }
     }
+
+    // 토큰에서 expiration 추출하는 메서드
+    public Date extractExpiration(String token) {
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getExpiration();  // JWT의 'auth(role)' 클레임 추출
+        } catch (Exception e) {
+            log.error("Failed to extract expiration from token: {}", e.getMessage());
+            return null;
+        }
+    }
+
+
 }

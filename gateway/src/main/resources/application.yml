@@ -8,6 +8,10 @@ spring:
       discovery:
         locator:
           enabled: true  # 서비스 디스커버리를 통해 동적으로 라우트를 생성하도록 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 server:
   port: 19091
@@ -27,4 +31,6 @@ springdoc:
     urls:
       - name: user-service
         url: /swagger/user-service/v3/api-docs
+
+
 
