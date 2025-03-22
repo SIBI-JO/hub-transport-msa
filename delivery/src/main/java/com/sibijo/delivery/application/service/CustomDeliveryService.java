@@ -55,30 +55,37 @@ public class CustomDeliveryService {
         HubResponseDto hubRoute = null;
         Long deliveryManagerId = null;
 
+
         try {
             // 1. 공급업체 & 수령업체 정보를 통해 출발/도착 허브 조회
             startHub = companyClient.getCompanyOrderInfo(requestDto.getSupplierId()).getData();
             endHub = companyClient.getCompanyOrderInfo(requestDto.getRecipientsId()).getData();
+        } catch (Exception e) {
+            System.out.println("업체 조회 에러");
+        }
+
 //            CompanyResponseDto startHub = new CompanyResponseDto(UUID.fromString("45c4d201-1655-4716-8a7d-66b1d31a0684"), "서울특별시 광진구 12번지");
 //            CompanyResponseDto endHub = new CompanyResponseDto(UUID.fromString("46c4d201-1655-4716-8a7d-66b1d31a0685"), "서울특별시 광진구 29번지");
-
+        try {
             // 2. 허브 서버에서 허브 간 경로 조회 (시작 허브와 도착허브가 같으면? )
-//            hubRoute = hubClient.getHubRouteForOrder(startHub.getHubId(), endHub.getHubId());
-            hubRoute = new HubResponseDto("400km", "4시간 50분");
+            hubRoute = hubClient.getHubRouteForOrder(startHub.getHubId(), endHub.getHubId());
+//            hubRoute = new HubResponseDto("400km", "4시간 50분");
+            System.out.println("허브간 배송 경로 거리:  "+hubRoute.getDistance());
+        } catch (Exception e) {
+            System.out.println("배송 에러");
+        }
 
+
+        try {
             // 2.5 배송 담당자 정보 가져오기 (시작 허브와 도착허브가 같으면? )
             deliveryManagerId = userClient.getDeliveryAgent().getData();
 //            deliveryManagerId = 2L;
-
         } catch (Exception e) {
-            try {
-                orderClient.deleteOrderInternal(requestDto.getOrderId());
-                System.out.println("임시 주문 삭제 완료");
-            } catch (Exception ex) {
-                System.err.println("임시 주문 삭제 실패: " + ex.getMessage());
-            }
-            throw new CustomException(CommonExceptionCode.INTERNAL_SERVER_ERROR);
+//            orderClient.deleteOrderInternal(requestDto.getOrderId());
+            System.out.println("배송 에러");
         }
+
+
 
 
         // 3. 배송 생성에 필요한 정보 생성
@@ -111,8 +118,8 @@ public class CustomDeliveryService {
                 startHub.getHubId(),
                 endHub.getHubId(),
                 requestDto.getRecipientsId(),
-                hubRoute.getExpectedDistance(),
-                hubRoute.getExpectedTime(),
+                hubRoute.getDistance(),
+                hubRoute.getEstimatedTime(),
                 deliveryManagerId
         );
 

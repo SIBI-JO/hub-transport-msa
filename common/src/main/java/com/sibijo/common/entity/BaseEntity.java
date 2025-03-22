@@ -37,7 +37,7 @@ public abstract class BaseEntity {
 
     @CreatedBy
     @Column(name = "created_by")
-    private Integer createdBy;
+    private Long createdBy;
 
     @LastModifiedDate
     @Column(name = "updated_at")
@@ -45,13 +45,13 @@ public abstract class BaseEntity {
 
     @LastModifiedBy
     @Column(name = "updated_by")
-    private Integer updatedBy;
+    private Long updatedBy;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     @Column(name = "deleted_by")
-    private Integer deletedBy;
+    private Long deletedBy;
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;

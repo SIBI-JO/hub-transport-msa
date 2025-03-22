@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class HubResponseDto {
 
-    private String expectedDistance;
+    private String distance;
 
-    private String expectedTime;
+    private String estimatedTime;
 
 }
