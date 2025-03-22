@@ -10,6 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductResponseDto {
 
+    private UUID hubStockId;
+    private UUID hubId;
+    private UUID companyId;
+    private UUID productId;
     private Long amount;
 
 }

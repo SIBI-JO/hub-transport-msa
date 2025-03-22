@@ -1,11 +1,14 @@
 package com.sibijo.delivery.domain.entity;
 
 import com.sibijo.common.entity.BaseEntity;
+import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -33,6 +36,10 @@ public class Delivery extends BaseEntity {
     @Column(nullable = false)
     private UUID deliveryId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DeliveryStatusEnum deliveryStatus;
+
     @Column(nullable = false)
     private UUID startHubId;
 
@@ -58,6 +65,7 @@ public class Delivery extends BaseEntity {
 
     public static Delivery createDelivery(DeliveryRequestDto requestDto) {
         return Delivery.builder()
+                .deliveryStatus(DeliveryStatusEnum.HUB_WAITING)
                 .startHubId(requestDto.getStartHubId())
                 .endHubId(requestDto.getEndHubId())
                 .deliveryAddress(requestDto.getDeliveryAddress())

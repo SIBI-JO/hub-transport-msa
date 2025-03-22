@@ -49,13 +49,14 @@ public class DeliveryService {
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
+        UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
 
         Page<Delivery> deliveryList = switch (role) {
             case "MASTER" -> deliveryRepository.findAllByDeletedAtIsNull(pageable);
             case "HUB" -> deliveryRepository.findDeliveriesByHubId(hubId, pageable);
             case "DELIVERY" -> deliveryRepository.findByDeliveryManagerIdAndDeletedAtIsNull(userId, pageable);
-            case "COMPANY" -> deliveryRepository.findByEndHubIdAndDeletedAtIsNull(hubId, pageable);
+            case "COMPANY" -> deliveryRepository.findByRecipientsIdAndDeletedAtIsNull(companyId, pageable);
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 
@@ -71,8 +72,8 @@ public class DeliveryService {
     public DeliveryResponseDto getDeliveryDetails(UUID deliveryId, String token) {
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
-        UUID companyId = jwtUtil.extractCompanyId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
+        UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
 
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .filter(o -> o.getDeletedAt() == null)
@@ -80,7 +81,7 @@ public class DeliveryService {
 
         switch (role) {
             case "HUB":
-                if (hubId != delivery.getStartHubId() && hubId != delivery.getEndHubId()) {
+                if (!hubId.equals(delivery.getStartHubId()) && !hubId.equals(delivery.getEndHubId())) {
                     // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
@@ -92,7 +93,7 @@ public class DeliveryService {
                 }
                 break;
             case "COMPANY":
-                if (companyId != delivery.getRecipientsId()) {
+                if (!companyId.equals(delivery.getRecipientsId())) {
                     // 업체 담당자인데 수령업체가 자신의 업체가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
@@ -112,8 +113,11 @@ public class DeliveryService {
         // JWT에서 Role 추출
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
+        if (role.equals("COMPANY")) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
 
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .filter(o -> o.getDeletedAt() == null)
@@ -122,7 +126,7 @@ public class DeliveryService {
         // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
         switch (role) {
             case "HUB":
-                if (hubId != delivery.getStartHubId() && hubId != delivery.getEndHubId()) {
+                if (!hubId.equals(delivery.getStartHubId()) && !hubId.equals(delivery.getEndHubId())) {
                     // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
@@ -149,7 +153,7 @@ public class DeliveryService {
     public DeliveryResponseDto deleteDelivery(UUID deliveryId, String token) {
 
         String role = jwtUtil.extractRole(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
         if (!role.equals("HUB") && !role.equals("MASTER")) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
@@ -160,11 +164,25 @@ public class DeliveryService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "배송이 삭제 되었거나 없습니다."));
 
         // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
-        if (role.equals("HUB") && (hubId != delivery.getStartHubId() && hubId != delivery.getEndHubId())) {
+        if (role.equals("HUB") && (!hubId.equals(delivery.getStartHubId()) && !hubId.equals(delivery.getEndHubId()))) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
         deliveryRepository.deleteById(deliveryId);
         return new DeliveryResponseDto(delivery);
     }
+
+    /**
+     *  배송 경로 수정 용 배송 조회
+     */
+    @Transactional(readOnly = true)
+    public Delivery getDeliveryDetailsForUpdate(UUID deliveryId) {
+
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .filter(o -> o.getDeletedAt() == null)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "배송이 삭제 되었거나 없습니다."));
+
+        return delivery;
+    }
+
 }

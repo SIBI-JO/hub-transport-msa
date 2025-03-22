@@ -7,6 +7,7 @@ import com.sibijo.company.infrastructure.repository.CompanyRepository;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.JwtUtil;
+import com.sibijo.company.infrastructure.client.HubClient;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final JwtUtil jwtUtil; // JWT 토큰에서 권한 정보를 추출
+    private final HubClient hubClient; // 허브 존재 여부를 확인하기 위한 클라이언트
 
     /**
      * 업체 전체 조회 (읽기 및 검색은 모든 역할에 대해 허용)
@@ -40,7 +42,7 @@ public class CompanyService {
     }
 
     /**
-     * 신규 업체 생성
+     * 신규 업체 등록
      * 권한: MASTER, HUB_ADMIN만 가능 (HUB_ADMIN은 자신의 허브에 한정)
      */
     public Company createCompany(CompanyRequest request, String token) {
@@ -57,7 +59,11 @@ public class CompanyService {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
-        // (추가적으로 관리 허브 존재 여부 검증 로직 추가 가능)
+        // 허브 존재 여부 검증
+        var hubExistsResponse = hubClient.hubExists(request.getHubId());
+        if (hubExistsResponse.getData() == null || !hubExistsResponse.getData()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "존재하지 않는 허브 ID입니다.");
+        }
 
         Company newCompany = new Company(
                 request.getCompanyName(),
@@ -100,6 +106,14 @@ public class CompanyService {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
+        // 만약 수정 시 새로운 허브 ID가 전달되었다면 허브 존재 여부 검증
+        if (!existingCompany.getHubId().equals(request.getHubId())) {
+            var hubExistsResponse = hubClient.hubExists(request.getHubId());
+            if (hubExistsResponse.getData() == null || !hubExistsResponse.getData()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "존재하지 않는 허브 ID입니다.");
+            }
+        }
+
         existingCompany.setCompanyName(request.getCompanyName());
         existingCompany.setCompanyType(request.getCompanyType());
         existingCompany.setHubId(request.getHubId());
@@ -136,5 +150,10 @@ public class CompanyService {
     // 검색 기능: 읽기 권한은 모두 허용 (권한 체크 생략)
     public Page<Company> searchCompanies(String companyName, CompanyType companyType, UUID hubId, Pageable pageable) {
         return companyRepository.searchCompanies(companyName, companyType, hubId, pageable);
+    }
+
+    // 업체 존재 여부를 확인하는 메서드 추가
+    public boolean exists(UUID companyId) {
+        return companyRepository.existsById(companyId);
     }
 }
