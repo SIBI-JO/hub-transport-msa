@@ -12,18 +12,19 @@ import org.springframework.data.domain.Pageable;
 public interface HubApplicationService {
 
     Page<HubResponseDto> searchHubs(
+            String token,
             String hubName,
             String hubLocation,
             String hubTypeName,
             Pageable pageable);
 
-    HubResponseDto createHub(@Valid HubRequestDto hubRequestDto);
+    HubResponseDto createHub(String token, @Valid HubRequestDto hubRequestDto);
 
-    HubResponseDto getHub(UUID hubId);
+    HubResponseDto getHub(String token, UUID hubId);
 
-    HubResponseDto updateHub(UUID hubId, HubUpdateRequestDto hubUpdateRequestDto);
+    HubResponseDto updateHub(String token, UUID hubId, HubUpdateRequestDto hubUpdateRequestDto);
 
-    void deleteHub(UUID hubId);
+    void deleteHub(String token, UUID hubId);
 
     boolean isHubExists(UUID hubId);
 
