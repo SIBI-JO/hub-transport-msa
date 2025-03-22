@@ -43,7 +43,7 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
     @Override
     @Transactional
     public HubRoutesResponseDto createHubRoutes(String token, HubRoutesRequestDto hubRoutesRequestDto) {
-        checkUserAuth(token);
+        checkUserAuth(token, "MASTER");
         //중복 체크
         if (hubRoutesRepository.existsByDepartureAndDestinationID(hubRoutesRequestDto.departureId(),
                 hubRoutesRequestDto.destinationId())) {
@@ -81,7 +81,7 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
      */
     @Override
     public Page<HubRoutesResponseDto> searchHubRoutes(String token, Pageable validatedPageable) {
-        checkUserAuth(token);
+        checkUserAuth(token, null);
         return hubRoutesRepository.searchHubRoutes(validatedPageable);
     }
 
@@ -91,7 +91,7 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
      */
     @Override
     public HubRoutesResponseDto getHubRoute(String token, UUID hubRoutesId) {
-        checkUserAuth(token);
+        checkUserAuth(token, null);
         return convertToHubRoutesResponseDto(hubRoutesDomainService.getHubRoute(hubRoutesId));
     }
 
@@ -106,7 +106,7 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
     @Transactional
     public HubRoutesResponseDto updateHubRoutes(String token, UUID hubRoutesId,
                                                 HubRoutesUpdateRequestDto hubRoutesUpdateRequestDto) {
-        checkUserAuth(token);
+        checkUserAuth(token, "MASTER");
         HubRoutesEntity hubRoutesEntity = hubRoutesDomainService.updateHubRoutes(hubRoutesId,
                 hubRoutesUpdateRequestDto);
         return convertToHubRoutesResponseDto(hubRoutesEntity);
@@ -118,7 +118,7 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
     @Override
     @Transactional
     public void deleteHubRoute(String token, UUID hubRoutesId) {
-        checkUserAuth(token);
+        checkUserAuth(token, "MASTER");
         hubRoutesRepository.deleteHubRoute(hubRoutesDomainService.deleteHubRoute(hubRoutesId));
     }
 
@@ -151,11 +151,15 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
         );
     }
 
-    private void checkUserAuth(String token) {
+    private void checkUserAuth(String token, String requiredRole) {
         // 유저 체크
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
         if (role == null || userId == null) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+        // 역할 체크
+        if (requiredRole != null && !requiredRole.equals(role)) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
     }

@@ -70,7 +70,7 @@ public class HubApplicationServiceImpl implements HubApplicationService {
     public HubResponseDto createHub(String token, HubRequestDto hubRequestDto) {
 
         // 유저 체크
-        checkUserAuth(token);
+        checkUserAuth(token, "MASTER");
 
         HubEntity hub = hubDomainService.createHubEntity(hubRequestDto);
 
@@ -87,7 +87,7 @@ public class HubApplicationServiceImpl implements HubApplicationService {
             String hubTypeName,
             Pageable pageable) {
 
-        checkUserAuth(token);
+        checkUserAuth(token, null);
         //허브 타입 체크
         HubType hubType = HubType.fromHubTypeName(hubTypeName);
         System.out.println("hubType: " + hubType);
@@ -102,7 +102,7 @@ public class HubApplicationServiceImpl implements HubApplicationService {
      */
     @Override
     public HubResponseDto getHub(String token, UUID hubId) {
-        checkUserAuth(token);
+        checkUserAuth(token, null);
         return convertHubResponseDto(findHubEntityOrElseThrow(hubId));
     }
 
@@ -115,7 +115,7 @@ public class HubApplicationServiceImpl implements HubApplicationService {
     @Override
     @Transactional
     public HubResponseDto updateHub(String token, UUID hubId, HubUpdateRequestDto hubUpdateRequestDto) {
-        checkUserAuth(token);
+        checkUserAuth(token, "MASTER");
         HubEntity updatedHub = hubDomainService.updateHubEntity(hubId, hubUpdateRequestDto);
         return convertHubResponseDto(updatedHub);
     }
@@ -126,7 +126,7 @@ public class HubApplicationServiceImpl implements HubApplicationService {
     @Override
     @Transactional
     public void deleteHub(String token, UUID hubId) {
-        checkUserAuth(token);
+        checkUserAuth(token, "MASTER");
         HubEntity hub = findHubEntityOrElseThrow(hubId);
         hubRepository.delete(hub);
     }
@@ -148,11 +148,15 @@ public class HubApplicationServiceImpl implements HubApplicationService {
                 .orElseThrow(() -> new CustomException(HubDomainExceptionCode.HUB_NOT_FOUND));
     }
 
-    private void checkUserAuth(String token) {
+    private void checkUserAuth(String token, String requiredRole) {
         // 유저 체크
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
         if (role == null || userId == null) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
+        // 역할 체크
+        if (requiredRole != null && !requiredRole.equals(role)) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
     }
