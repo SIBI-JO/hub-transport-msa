@@ -1,6 +1,7 @@
 package com.sibijo.gateway.infrastructure.filter;
 
 import com.sibijo.gateway.infrastructure.util.GatewayJwtUtil;
+import com.sibijo.gateway.infrastructure.util.GatewayUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -19,14 +20,14 @@ public class BlacklistCheckFilter implements GlobalFilter, Ordered {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final GatewayJwtUtil jwtUtil;
+    private final GatewayUtil gatewayUtil;
 
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
         // token 필요 없는 요청 처리
-        if (path.equals("/api/users/signin") || path.startsWith("/api/users/signup") || path.startsWith(
-                "/api/users/health-check") || path.startsWith("/swagger") || path.startsWith("/swagger-ui")) {
+        if (gatewayUtil.isExemtedPath(path)) {
             log.info("JWT Authorization Filter: {}", path);
             return chain.filter(exchange);  // /signin/sign-up 경로는 필터를 적용하지 않음
         }

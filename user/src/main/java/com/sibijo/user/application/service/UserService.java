@@ -3,6 +3,7 @@ package com.sibijo.user.application.service;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
+import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageSize;
 import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.user.domain.enums.Role;
@@ -16,20 +17,27 @@ import com.sibijo.user.presentation.dto.user.UserPageResponseDto;
 import com.sibijo.user.presentation.dto.user.UserSearchDetailsReponseDto;
 import com.sibijo.user.presentation.dto.user.UserUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
@@ -39,6 +47,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthUtil authUtil;
+    private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, Object> redisTemplate;
 
 
     public UserCreateResponseDto createUser(UserCreateRequestDto requestDto) {
@@ -94,14 +104,12 @@ public class UserService {
     }
 
     @Transactional
-    public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto) {
+    public UserDetailsResponseDto updateUser(Long id, UserUpdateRequestDto requestDto, HttpServletRequest request) {
 
         log.info(requestDto.toString());
         User user = userRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
         );
-
-        //TODO: username 변경 시, Jwt 를 새로 발급해 주던지, 로그아웃 시키고, 로그인하도록 해야함. => 지금은 client가 없으므로, Jwt를 새로 발급해줘야 할 듯.
 
         // username, slackId 중복 확인
         if (StringUtils.hasText(requestDto.getUsername()) && !user.getUsername()
@@ -138,6 +146,16 @@ public class UserService {
                 newPassword
         );
 
+        //blacklist 처리
+        boolean usernameChanged = StringUtils.hasText(requestDto.getUsername()) &&
+                !user.getUsername().equals(requestDto.getUsername());
+        boolean passwordChanged = StringUtils.hasText(requestDto.getNewPassword());
+        String targetUserToken = (String) redisTemplate.opsForValue().get("jwt:user:" + id);
+        if (targetUserToken != null && (usernameChanged || passwordChanged)) {
+            saveBlacklist(targetUserToken); // 수정된 사용자의 token blacklist 처리
+            redisTemplate.delete("jwt:user:" + id); // 기존 토큰 삭제
+        }
+
         log.info(user.toString());
         return UserDetailsResponseDto
                 .builder()
@@ -148,7 +166,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDeleteResponseDto deleteUser(Long id) {
+    public UserDeleteResponseDto deleteUser(Long id, HttpServletRequest request) {
 
         // 유저 존재 여부 확인
         User user = userRepository.findById(id).orElseThrow(
@@ -162,6 +180,11 @@ public class UserService {
 
         //삭제
         userRepository.deleteById(id);
+        //blacklist 처리
+        String targetUserToken = (String) redisTemplate.opsForValue().get("jwt:user:" + id);
+        if (targetUserToken != null) {
+            saveBlacklist(targetUserToken); // 삭제된 사용자의 token blacklist 처리
+        }
 
         return UserDeleteResponseDto
                 .builder()
@@ -227,5 +250,42 @@ public class UserService {
                 .username(user.getUsername())
                 .slackId(user.getSlackId())
                 .build();
+    }
+
+    private void saveBlacklist(HttpServletRequest request) {
+
+        String token = jwtUtil.extractToken(request);
+        Date expiration = jwtUtil.extractExpiration(token);
+        long now = System.currentTimeMillis();
+        long ttl = expiration.getTime() - now;
+
+        if (ttl > 0) {
+            redisTemplate.opsForValue().set(
+                    "blacklist:" + token,
+                    "logout",
+                    ttl,
+                    TimeUnit.MILLISECONDS
+            );
+            log.info("Token blacklisted successfully");
+        }
+    }
+
+    private void saveBlacklist(String token) {
+        log.info("blacklist 저장할 token: {}", token);
+        token = token.substring(7);
+
+        Date expiration = jwtUtil.extractExpiration(token);
+        long now = System.currentTimeMillis();
+        long ttl = expiration.getTime() - now;
+
+        if (ttl > 0) {
+            redisTemplate.opsForValue().set(
+                    "blacklist:" + token,
+                    "logout",
+                    ttl,
+                    TimeUnit.MILLISECONDS
+            );
+            log.info("Token blacklisted successfully");
+        }
     }
 }

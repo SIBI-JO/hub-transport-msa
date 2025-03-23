@@ -5,6 +5,7 @@ import com.sibijo.user.infrastructure.util.UserJwtUtil;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -23,11 +24,14 @@ public class SecurityConfig {
 
     private final UserJwtUtil jwtUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public SecurityConfig(UserJwtUtil jwtUtil,
-            AuthenticationConfiguration authenticationConfiguration) {
+            AuthenticationConfiguration authenticationConfiguration,
+            RedisTemplate<String, Object> redisTemplate) {
         this.jwtUtil = jwtUtil;
         this.authenticationConfiguration = authenticationConfiguration;
+        this.redisTemplate = redisTemplate;
     }
 
     @Bean
@@ -38,7 +42,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil, redisTemplate);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         return filter;
     }

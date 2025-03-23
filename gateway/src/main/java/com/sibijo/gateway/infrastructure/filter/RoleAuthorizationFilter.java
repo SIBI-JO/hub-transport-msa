@@ -2,9 +2,11 @@ package com.sibijo.gateway.infrastructure.filter;
 
 
 import com.sibijo.gateway.infrastructure.util.GatewayJwtUtil;
+import com.sibijo.gateway.infrastructure.util.GatewayUtil;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -14,14 +16,11 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class RoleAuthorizationFilter extends AbstractGatewayFilterFactory<RoleAuthorizationFilter.Config> {
 
     private final GatewayJwtUtil jwtUtil;
-
-    public RoleAuthorizationFilter(GatewayJwtUtil jwtUtil) {
-        super(Config.class);
-        this.jwtUtil = jwtUtil;
-    }
+    private final GatewayUtil gatewayUtil;
 
     @Override
     public GatewayFilter apply(Config config) {
@@ -31,8 +30,7 @@ public class RoleAuthorizationFilter extends AbstractGatewayFilterFactory<RoleAu
             String token = jwtUtil.extractToken(exchange);
 
             // token 필요 없는 요청 처리
-            if (path.equals("/api/users/signin") || path.startsWith("/api/users/signup") || path.startsWith(
-                    "/api/users/health-check") || path.startsWith("/swagger") || path.startsWith("/swagger-ui")) {
+            if (gatewayUtil.isExemtedPath(path)) {
                 log.info("JWT Authorization Filter: {}", path);
                 return chain.filter(exchange);  // /signin/sign-up 경로는 필터를 적용하지 않음
             }
