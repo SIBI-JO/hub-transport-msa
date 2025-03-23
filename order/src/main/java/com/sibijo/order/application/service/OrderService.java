@@ -13,6 +13,8 @@ import com.sibijo.order.infrastructure.client.Delivery.DeliveryClient;
 import com.sibijo.order.infrastructure.client.Delivery.DeliveryRequestDto;
 import com.sibijo.order.infrastructure.client.Product.ProductClient;
 import com.sibijo.order.infrastructure.client.Product.ProductResponseDto;
+import com.sibijo.order.infrastructure.client.ai.AiClient;
+import com.sibijo.order.infrastructure.client.ai.AiNotificationRequestDto;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
@@ -41,6 +43,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final DeliveryClient deliveryClient;
     private final ProductClient productClient;
+    private final AiClient aiClient;
     private final PlatformTransactionManager transactionManager;
 
     /**
@@ -66,7 +69,7 @@ public class OrderService {
 
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-        // 3. 주문 저장
+        //  주문 저장
         Order order = transactionTemplate.execute(status -> {
             Order newOrder = Order.createOrder(requestDto, userId);
             orderRepository.save(newOrder);
@@ -85,9 +88,27 @@ public class OrderService {
         // 배송 서버 호출
         deliveryClient.createDelivery(deliveryRequestDto);
 
+
+        //  AI 서비스에 알림 전송
+        try {
+            AiNotificationRequestDto aiDto = new AiNotificationRequestDto();
+            aiDto.setOrderId(order.getOrderId());
+            aiDto.setUserSlackId(requestDto.getReceiverSlackId());
+            // 수령자의 slackID 로 일단 했는데, 발송 허브 담당자? 에게 보내야한다고함. 누구지?
+
+
+
+            // token을 헤더로 넘기기 위해 Feign 인터셉터나 메서드 파라미터로 전달
+            aiClient.notifyOrderCreated(aiDto, token);
+        } catch (Exception e) {
+            log.error("[AI 알림 실패] {}", e.getMessage());
+            // 주문 생성 자체는 성공했으므로, 여기서는 예외 삼키고 넘어감
+        }
+
         return new OrderResponseDto(order);
 
     }
+
 
     /**
      *   주문에 배송 정보 업데이트
@@ -142,7 +163,7 @@ public class OrderService {
 
 
         Order order = orderRepository.findById(orderId)
-                .filter(o -> o.getDeletedAt() == null && o.getOrderStatus() == OrderStatusEnum.COMPLETED)
+                .filter(o -> o.getDeletedAt() == null )
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "주문이 없거나 삭제된 주문입니다."));
 
         switch (role) {

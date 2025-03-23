@@ -2,16 +2,19 @@ package com.sibijo.ai.presentation.dto;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 /**
- * Order 마이크로서비스의 주문 상세조회 응답 중 "data" 필드에 해당하는 구조를 매핑하는 DTO
- * (추후 실제 응답에 맞춰서 수정)
+ * Order 마이크로서비스 /api/orders/{orderId} 조회 시, data 필드 매핑
+ * (OrderResponseDto와 동일 구조)
  */
 @Data
 public class OrderServiceResponseDto {
-    private Long orderId;
-    private String supplierName;
-    private String recipientsName;
-    private String productName;
-    private int amount;
+    private UUID orderId;
+    private UUID supplierId;
+    private UUID recipientsId;
+    private UUID productId;
+    private UUID deliveryId;
+    private Integer amount;
     private String request;
 }
