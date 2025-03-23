@@ -97,7 +97,6 @@ public class HubController {
             ) String hubLocation,
             @RequestParam(
                     name = "hubTypeName",
-                    defaultValue = "중앙허브",
                     required = false
             ) String hubTypeName,
             @PageableDefault(

@@ -89,9 +89,8 @@ public class HubApplicationServiceImpl implements HubApplicationService {
 
         checkUserAuth(token, null);
         //허브 타입 체크
-        HubType hubType = HubType.fromHubTypeName(hubTypeName);
-        System.out.println("hubType: " + hubType);
-        return hubRepository.searchHubs(hubName, hubLocation, hubType, pageable);
+        HubType checkHubType = hubTypeName != null ? HubType.fromHubTypeName(hubTypeName) : null;
+        return hubRepository.searchHubs(hubName, hubLocation, checkHubType, pageable);
     }
 
 

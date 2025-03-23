@@ -38,10 +38,6 @@ public class QueryDslHubRepositoryImpl implements QueryDslHubRepository {
             Pageable pageable) {
 
         List<OrderSpecifier<?>> orders = getAllOrderSpecifiers(pageable);
-        System.out.println("hubName: " + hubName);
-        System.out.println("hubLocation: " + hubLocation);
-        System.out.println("hubType: " + hubType.getHubTypeName());
-        System.out.println("hubEntity: " + hubEntity);
         QueryResults<HubEntity> results = jpaQueryFactory
                 .selectFrom(hubEntity)
                 .where(
@@ -53,7 +49,7 @@ public class QueryDslHubRepositoryImpl implements QueryDslHubRepository {
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        System.out.println("results: " + results.getResults());
+
         List<HubResponseDto> content = results.getResults().stream()
                 .map(hubEntity -> new HubResponseDto(
                         hubEntity.getId(),
@@ -65,7 +61,6 @@ public class QueryDslHubRepositoryImpl implements QueryDslHubRepository {
                 ))
                 .collect(Collectors.toList());
         long total = results.getTotal();
-        System.out.println("content: " + content);
         return new PageImpl<>(content, pageable, total);
     }
 
@@ -84,7 +79,8 @@ public class QueryDslHubRepositoryImpl implements QueryDslHubRepository {
     }
 
     private BooleanExpression hubTypeContains(HubType hubType) {
-        return hubEntity.hubType.eq(hubType);
+
+        return hubType != null ? hubEntity.hubType.eq(hubType) : null;
     }
 
     private List<OrderSpecifier<?>> getAllOrderSpecifiers(Pageable pageable) {
