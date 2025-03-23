@@ -108,7 +108,9 @@ public class CustomDeliveryService {
         OrderCreateUpdateRequestDto updateRequestDto = new OrderCreateUpdateRequestDto(
                 delivery.getDeliveryId(),
                 startHub.getHubId(),
-                endHub.getHubId()
+                endHub.getHubId(),
+                requestDto.getReceiverSlackId(),
+                requestDto.getToken()
         );
 
         System.out.println("주문의 Id  :   " + requestDto.getOrderId());

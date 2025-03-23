@@ -21,4 +21,5 @@ public class DeliveryRequestDto {
 
     private String receiverSlackId;
 
+    private String token;
 }
