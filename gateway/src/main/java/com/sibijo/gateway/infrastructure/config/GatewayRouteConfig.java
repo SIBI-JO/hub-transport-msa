@@ -46,6 +46,12 @@ public class GatewayRouteConfig {
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
                                 new RoleAuthorizationFilter.Config(productRolePermissions))))
                         .uri("lb://product-service"))
+                // Product-stocks
+                .route("hub-stocks-service", r -> r.path("/api/hub-stocks/**")
+                        .filters(f -> f.filter(roleAuthorizationFilter.apply(
+                                new RoleAuthorizationFilter.Config(productRolePermissions))))
+                        .uri("lb://product-service"))
+
                 // Hub
                 .route("hub-service", r -> r.path("/api/hubs/**")
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
@@ -55,7 +61,7 @@ public class GatewayRouteConfig {
                 .route("hub-route-service", r -> r.path("/api/hub-routes/**")
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
                                 new RoleAuthorizationFilter.Config(hubRouteRolePermissions))))
-                        .uri("lb://hub-service"))
+                        .uri("lb://hub-routes-service"))
 
                 // Order
                 .route("order-service", r -> r.path("/api/orders/**")

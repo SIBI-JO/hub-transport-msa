@@ -7,6 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface HubStockRepository extends JpaRepository<HubStock, UUID> {
-    Optional<HubStock> findByProductAndHubId(Product product, UUID hubId);
+
     Optional<HubStock> findByProduct(Product product);
 }

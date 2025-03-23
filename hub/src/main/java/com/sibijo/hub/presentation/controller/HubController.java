@@ -44,15 +44,28 @@ public class HubController {
         return ResponseEntity.ok(ApiResponse.success("허브 존재 확인 성공", exists));
     }
 
+    @GetMapping("/hub-routes/{hubId}")
+    public HubToRouteDto getHubForHubRoutes(@PathVariable("hubId") UUID hubId) {
+        return hubApplicationService.getHubForHubRoutes(hubId);
+    }
+
+    /**
+     *
+     * @param hubRequestDto
+     * @param request
+     * @return
+     *
+     * auth : master
+     */
     @PostMapping
     public ResponseEntity<ApiResponse<HubResponseDto>> createHub(
             @Valid @RequestBody HubRequestDto hubRequestDto,
             HttpServletRequest request
     ) {
         String token = jwtUtil.extractToken(request);
-        log.info("token: {}", token);
 
         HubResponseDto hubResponseDto = hubApplicationService.createHub(
+                token,
                 hubRequestDto
         );
 
@@ -60,6 +73,16 @@ public class HubController {
 
     }
 
+    /**
+     *
+     * @param hubName
+     * @param hubLocation
+     * @param hubTypeName
+     * @param pageable
+     * @return
+     *
+     * auth : all
+     */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<HubResponseDto>>> searchHubs(
             @RequestParam(
@@ -74,7 +97,6 @@ public class HubController {
             ) String hubLocation,
             @RequestParam(
                     name = "hubTypeName",
-                    defaultValue = "중앙허브",
                     required = false
             ) String hubTypeName,
             @PageableDefault(
@@ -82,12 +104,13 @@ public class HubController {
                     page = 1,
                     sort = {"createdAt", "updatedAt"},
                     direction = Direction.ASC
-            ) Pageable pageable
+            ) Pageable pageable,
+            HttpServletRequest request
     ) {
-        System.out.println("page: " + pageable);
+        String token = jwtUtil.extractToken(request);
         Pageable validatedPageable = PageableUtils.validatePageable(pageable);
-        System.out.println("pageable: " + validatedPageable);
         Page<HubResponseDto> searchHubs = hubApplicationService.searchHubs(
+                token,
                 hubName,
                 hubLocation,
                 hubTypeName,
@@ -97,31 +120,53 @@ public class HubController {
         return ResponseEntity.ok(ApiResponse.success("허브 검색 성공", searchHubs));
     }
 
+    /**
+     *
+     * @param hubId
+     * @param request
+     * @return
+     *
+     * auth : all
+     */
     @GetMapping("/{hubId}")
-    public ResponseEntity<ApiResponse<HubResponseDto>> getHub(@PathVariable("hubId") UUID hubId) {
-        HubResponseDto hubResponseDto = hubApplicationService.getHub(hubId);
-
+    public ResponseEntity<ApiResponse<HubResponseDto>> getHub(
+            @PathVariable("hubId") UUID hubId,
+            HttpServletRequest request ) {
+        String token = jwtUtil.extractToken(request);
+        HubResponseDto hubResponseDto = hubApplicationService.getHub(token, hubId);
         return ResponseEntity.ok(ApiResponse.success("허브 단일 조회 성공", hubResponseDto));
     }
 
-    @GetMapping("/hub-routes/{hubId}")
-    public HubToRouteDto getHubForHubRoutes(@PathVariable("hubId") UUID hubId) {
-        HubToRouteDto hubToRouteDto = hubApplicationService.getHubForHubRoutes(hubId);
-        log.info("hubToRouteDto: " + hubToRouteDto);
-        return hubToRouteDto;
-    }
 
+    /**
+     *
+     * @param hubId
+     * @param hubUpdateRequestDto
+     * @return
+     *
+     * auth : master
+     */
     @PatchMapping("/{hubId}")
     public ResponseEntity<ApiResponse<HubResponseDto>> updateHub(
             @PathVariable UUID hubId,
-            @RequestBody HubUpdateRequestDto hubUpdateRequestDto) {
-        HubResponseDto hubResponseDto = hubApplicationService.updateHub(hubId, hubUpdateRequestDto);
+            @RequestBody HubUpdateRequestDto hubUpdateRequestDto,
+            HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        HubResponseDto hubResponseDto = hubApplicationService.updateHub(token, hubId, hubUpdateRequestDto);
         return ResponseEntity.ok(ApiResponse.success("허브 수정 성공", hubResponseDto));
     }
 
+    /**
+     *
+     * @param hubId
+     * @return
+     *
+     * auth : master
+     */
     @DeleteMapping("/{hubId}")
-    public ResponseEntity<ApiResponse<?>> deleteHub(@PathVariable("hubId") UUID hubId) {
-        hubApplicationService.deleteHub(hubId);
+    public ResponseEntity<ApiResponse<?>> deleteHub(@PathVariable("hubId") UUID hubId, HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        hubApplicationService.deleteHub(token, hubId);
         return ResponseEntity.ok(ApiResponse.success("허브 삭제 성공"));
     }
 }

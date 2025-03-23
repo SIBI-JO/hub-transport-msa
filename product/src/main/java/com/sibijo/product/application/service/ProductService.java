@@ -12,11 +12,13 @@ import com.sibijo.product.domain.repository.ProductRepository;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.JwtUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -52,13 +54,19 @@ public class ProductService {
     @Transactional
     public Product createProduct(ProductRequest request, String token) {
         String role = jwtUtil.extractRole(token);
-        UUID tokenHubId = jwtUtil.extractHubId(token);
+        UUID tokenHubId = jwtUtil.extractHubIdForOrder(token);
+
+        // 업체 존재 여부 검증 (신규 엔드포인트 사용)
+        ApiResponse<Boolean> existsResponse = companyClient.companyExists(request.getCompanyId());
+        if (existsResponse.getData() == null || !existsResponse.getData()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "존재하지 않는 업체ID 입니다.");
+        }
 
         if ("MASTER".equals(role)) {
             // 허용
         } else if ("HUB".equals(role) || "HUB_ADMIN".equals(role)) {
-            ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
-            CompanyResponseDto companyResponse = response.getData();
+            ApiResponse<CompanyResponseDto> hubResponse = companyClient.getHubByCompanyId(request.getCompanyId());
+            CompanyResponseDto companyResponse = hubResponse.getData();
             if (companyResponse == null || companyResponse.getHubId() == null ||
                     !companyResponse.getHubId().equals(tokenHubId)) {
                 throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
@@ -76,8 +84,8 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         // 허브 재고 생성
-        ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
-        CompanyResponseDto companyResponse = response.getData();
+        ApiResponse<CompanyResponseDto> hubResponse = companyClient.getHubByCompanyId(request.getCompanyId());
+        CompanyResponseDto companyResponse = hubResponse.getData();
         HubStock hubStock = new HubStock(
                 companyResponse.getHubId(),
                 request.getCompanyId(),
@@ -99,7 +107,15 @@ public class ProductService {
     public Product updateProduct(UUID productId, ProductRequest request, String token) {
         Product existingProduct = getProductById(productId);
         if (existingProduct == null) {
-            throw new IllegalArgumentException("Product not found: " + productId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + productId);
+        }
+
+        // 업체 존재 여부 검증 (수정 시 변경된 업체 ID에 대해)
+        if (!existingProduct.getCompanyId().equals(request.getCompanyId())) {
+            ApiResponse<Boolean> existsResponse = companyClient.companyExists(request.getCompanyId());
+            if (existsResponse.getData() == null || !existsResponse.getData()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "존재하지 않는 업체ID 입니다.");
+            }
         }
 
         String role = jwtUtil.extractRole(token);
@@ -109,8 +125,8 @@ public class ProductService {
         if ("MASTER".equals(role)) {
             // 허용
         } else if ("HUB".equals(role) || "HUB_ADMIN".equals(role)) {
-            ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(request.getCompanyId());
-            CompanyResponseDto companyResponse = response.getData();
+            ApiResponse<CompanyResponseDto> hubResponse = companyClient.getHubByCompanyId(request.getCompanyId());
+            CompanyResponseDto companyResponse = hubResponse.getData();
             if (companyResponse == null || companyResponse.getHubId() == null ||
                     !companyResponse.getHubId().equals(tokenHubId)) {
                 throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
@@ -144,8 +160,8 @@ public class ProductService {
         if ("MASTER".equals(role)) {
             // 허용
         } else if ("HUB".equals(role) || "HUB_ADMIN".equals(role)) {
-            ApiResponse<CompanyResponseDto> response = companyClient.getHubByCompanyId(product.getCompanyId());
-            CompanyResponseDto companyResponse = response.getData();
+            ApiResponse<CompanyResponseDto> hubResponse = companyClient.getHubByCompanyId(product.getCompanyId());
+            CompanyResponseDto companyResponse = hubResponse.getData();
             if (companyResponse == null || companyResponse.getHubId() == null ||
                     !companyResponse.getHubId().equals(tokenHubId)) {
                 throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);

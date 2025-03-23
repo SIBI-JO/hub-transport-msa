@@ -26,7 +26,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID>,
     Page<Delivery> findByDeliveryManagerIdAndDeletedAtIsNull(Long deliveryManagerId, Pageable pageable);
 
     // 업체 담당자(COMPANY) - 본인의 업체가 포함된 주문 중 COMPLETED 상태인 것만 조회
-    Page<Delivery> findByEndHubIdAndDeletedAtIsNull(UUID hubId, Pageable pageable);
+    Page<Delivery> findByRecipientsIdAndDeletedAtIsNull(UUID companyId, Pageable pageable);
 
 
 }

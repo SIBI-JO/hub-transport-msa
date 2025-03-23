@@ -9,6 +9,10 @@ import java.util.UUID;
 @FeignClient(name = "company-service")
 public interface CompanyClient {
 
+
+    @GetMapping("/api/companies/{companyId}/exists")
+    ApiResponse<Boolean> companyExists(@PathVariable("companyId") UUID companyId);
+
     @GetMapping("/api/companies/{companyId}/order")
     ApiResponse<CompanyResponseDto> getHubByCompanyId(@PathVariable("companyId") UUID companyId);
 }

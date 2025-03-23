@@ -13,9 +13,13 @@ import com.sibijo.order.infrastructure.client.Delivery.DeliveryClient;
 import com.sibijo.order.infrastructure.client.Delivery.DeliveryRequestDto;
 import com.sibijo.order.infrastructure.client.Product.ProductClient;
 import com.sibijo.order.infrastructure.client.Product.ProductResponseDto;
+import com.sibijo.order.infrastructure.client.Product.UpdateStockRequestDto;
+import com.sibijo.order.infrastructure.client.ai.AiClient;
+import com.sibijo.order.infrastructure.client.ai.AiNotificationRequestDto;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -40,6 +44,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final DeliveryClient deliveryClient;
     private final ProductClient productClient;
+    private final AiClient aiClient;
     private final PlatformTransactionManager transactionManager;
 
     /**
@@ -56,8 +61,8 @@ public class OrderService {
         }
 
         // 상품 서버에서 재고 확인
-//        Long amount = productClient.getProductStock(requestDto.getProductId()).getData().getAmount();
-        Long amount = 2L;
+        Long amount = productClient.getProductOrderInfo(requestDto.getProductId()).getData().getAmount();
+//        Long amount = 2L;
 
         if (amount < requestDto.getAmount().longValue()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "재고 부족하여 주문을 진행할 수 없습니다.");
@@ -65,28 +70,61 @@ public class OrderService {
 
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-        // 3. 주문 저장
+        //  주문 저장
         Order order = transactionTemplate.execute(status -> {
-            Order newOrder = Order.createOrder(requestDto);
+            Order newOrder = Order.createOrder(requestDto, userId);
             orderRepository.save(newOrder);
             System.out.println("✅ 주문 생성 완료! 주문 ID: " + newOrder.getOrderId());
             return newOrder;
         });
 
-        DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
-                order.getOrderId(),
-                requestDto.getSupplierId(),
-                requestDto.getRecipientsId(),
-                requestDto.getReceiver(),
-                requestDto.getReceiverSlackId()
-        );
+        // 재고 차감: 현재 재고에서 주문 수량 만큼 차감
+        Long newStock = amount - requestDto.getAmount();
+        productClient.updateStock(requestDto.getProductId(), new UpdateStockRequestDto(newStock));
 
-        // 배송 서버 호출
-        deliveryClient.createDelivery(deliveryRequestDto);
+        try {
+            // 배송 생성 호출
+            DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
+                    order.getOrderId(),
+                    requestDto.getSupplierId(),
+                    requestDto.getRecipientsId(),
+                    requestDto.getReceiver(),
+                    requestDto.getReceiverSlackId()
+            );
+            deliveryClient.createDelivery(deliveryRequestDto);
+        } catch (Exception e) {
+            // 배송 생성 실패 시 보상 트랜잭션 수행 : 재고 복구 및 주문 취소
+            // 재고 복구: 원래 재고로 복원 (혹은 주문 수량 만큼 추가)
+            productClient.updateStock(requestDto.getProductId(), new UpdateStockRequestDto(amount));
+
+            // 주문 취소 처리 (내부 주문 삭제 등)
+            deleteOrderInternal(order.getOrderId());
+
+            // 이후 적절한 예외 전달
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "배송 생성 실패로 주문이 취소되었습니다.", e);
+        }
+
+
+        //  AI 서비스에 알림 전송
+        try {
+            AiNotificationRequestDto aiDto = new AiNotificationRequestDto();
+            aiDto.setOrderId(order.getOrderId());
+            aiDto.setUserSlackId(requestDto.getReceiverSlackId());
+            // 수령자의 slackID 로 일단 했는데, 발송 허브 담당자? 에게 보내야한다고함. 누구지?
+
+
+
+            // token을 헤더로 넘기기 위해 Feign 인터셉터나 메서드 파라미터로 전달
+            aiClient.notifyOrderCreated(aiDto, token);
+        } catch (Exception e) {
+            log.error("[AI 알림 실패] {}", e.getMessage());
+            // 주문 생성 자체는 성공했으므로, 여기서는 예외 삼키고 넘어감
+        }
 
         return new OrderResponseDto(order);
 
     }
+
 
     /**
      *   주문에 배송 정보 업데이트
@@ -116,19 +154,12 @@ public class OrderService {
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
-        UUID companyId = jwtUtil.extractCompanyId(token);
-
-        // 권한 및 사용자 ID 검증
-        if (userId == null || role == null) {
-            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
-        }
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
         Page<Order> orderList = switch (role) {
             case "MASTER" -> orderRepository.findAllByDeletedAtIsNull(validatedPageable);
             case "HUB" -> orderRepository.findOrdersByHubId(hubId, validatedPageable);
-            case "DELIVERY" -> orderRepository.findByRecipientHubIdAndDeletedAtIsNullAndOrderStatus(hubId, OrderStatusEnum.COMPLETED, validatedPageable);
-            case "COMPANY" -> orderRepository.findBySupplierIdOrRecipientsIdAndDeletedAtIsNullAndOrderStatus(companyId, companyId, OrderStatusEnum.COMPLETED, validatedPageable);
+            case "DELIVERY", "COMPANY" -> orderRepository.findByOrdererIdAndDeletedAtIsNullAndOrderStatus(userId, OrderStatusEnum.COMPLETED, validatedPageable);
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 
@@ -143,35 +174,32 @@ public class OrderService {
     public OrderResponseDto getOrderById(UUID orderId, String token) {
 
         String role = jwtUtil.extractRole(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
-        UUID companyId = jwtUtil.extractCompanyId(token);
 
-        // 권한 및 사용자 ID 검증
-        if (role == null || userId == null) {
-            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
-        }
 
         Order order = orderRepository.findById(orderId)
-                .filter(o -> o.getDeletedAt() == null && o.getOrderStatus() == OrderStatusEnum.COMPLETED)
+                .filter(o -> o.getDeletedAt() == null )
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "주문이 없거나 삭제된 주문입니다."));
 
         switch (role) {
             case "HUB":
-                if (hubId != order.getSupplierHubId() && hubId != order.getRecipientHubId()) {
+                System.out.println(hubId);
+                if (!hubId.equals(order.getSupplierHubId()) && !hubId.equals(order.getRecipientHubId())) {
                     // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
                 break;
             case "DELIVERY":
-                if (hubId != null && hubId != order.getRecipientHubId()) {
+                System.out.println("사용자 ID :   "+userId);
+                System.out.println("주문자 ID :   "+order.getOrdererId());
+                if (!Objects.equals(userId, order.getOrdererId())) {
                     // 배송담당자 -> 만약 업체 배송 담당자라면 -> 본인이 담당 업체 배송 담당자인지 확인
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
                 break;
             case "COMPANY":
-                if (companyId != order.getRecipientsId() && companyId != order.getSupplierId()) {
-                    // 업체 담당자인데 공급/수령업체가 자신의 업체가 아닐 때
+                if (!Objects.equals(userId, order.getOrdererId())) {
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
         }
@@ -186,20 +214,21 @@ public class OrderService {
      */
     @Transactional
     public OrderResponseDto updateOrder(UUID orderId, OrderUpdateRequestDto requestDto, String token) {
-        // JWT에서 Role 추출
+//        // JWT에서 Role 추출
         String role = jwtUtil.extractRole(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
         if (!role.equals("HUB") && !role.equals("MASTER")) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
+
         Order order = orderRepository.findById(orderId)
                 .filter(o -> o.getDeletedAt() == null)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found or has been deleted"));
 
-        // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
-        if (role.equals("HUB") && (hubId != order.getSupplierHubId() && hubId != order.getRecipientHubId())) {
+
+        if ((role.equals("HUB")) && !authUtil.isMyHubForOrder(hubId, order.getSupplierHubId(), order.getRecipientHubId())) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
@@ -217,7 +246,7 @@ public class OrderService {
     public OrderResponseDto deleteOrder(UUID orderId, String token) {
 
         String role = jwtUtil.extractRole(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
         if (!role.equals("HUB") && !role.equals("MASTER")) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
@@ -228,11 +257,24 @@ public class OrderService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found or has been deleted"));
 
         // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
-        if (role.equals("HUB") && (hubId != order.getSupplierHubId() && hubId != order.getRecipientHubId())) {
+        if ((role.equals("HUB")) && !authUtil.isMyHubForOrder(hubId, order.getSupplierHubId(), order.getRecipientHubId())) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
         orderRepository.deleteById(orderId);
         return new OrderResponseDto(order);
+    }
+
+
+    /**
+     *  배송 생성 실패 시, 임시 생성된 주문을 취소
+     */
+    @Transactional
+    public void deleteOrderInternal(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NullPointerException("임시 생성된 주문이 없습니다."));
+
+        orderRepository.deleteById(order.getOrderId());
+        log.info("[System] 주문 내부 삭제 처리됨 - ID: {}", orderId);
     }
 }

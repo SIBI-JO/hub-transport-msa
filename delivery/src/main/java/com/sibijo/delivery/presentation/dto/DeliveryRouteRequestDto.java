@@ -13,6 +13,7 @@ public class DeliveryRouteRequestDto {
     private Integer sequence;
     private UUID startHubId;
     private UUID endHubId;
+    private UUID recipientsId;
     private String expectedDistance;
     private String expectedTime;
     private Long deliveryManagerId;

@@ -1,5 +1,6 @@
 package com.sibijo.delivery.infrastructure.client.user;
 
+import com.sibijo.common.dto.ApiResponse;
 import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,9 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface UserClient {
 
     @GetMapping("/api/delivery-agents/hub")
-    Long getDeliveryAgent();
+    ApiResponse<Long> getDeliveryAgent();
 
     @GetMapping("/api/delivery-agents/hub/{hubId}")
-    Long getCompanyDeliveryAgent(@PathVariable UUID hubId);
+    ApiResponse<Long> getCompanyDeliveryAgent(@PathVariable UUID hubId);
 
 }

@@ -9,7 +9,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
 
 server:
@@ -27,3 +27,6 @@ eureka:
     register-with-eureka: true   # 클라이언트가 Eureka에 자기 자신을 등록
     fetch-registry: true         # 다른 서비스 정보(Eureka 레지스트리)도 가져옴
 
+feign:
+  httpclient:
+    enabled: true

@@ -11,8 +11,9 @@ public enum HubRoutesDomainExceptionCode implements ExceptionCode {
 
     INVALID_HUB_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 허브 경로 아이디 입니다."),
     HUB_ROUTES_IS_DUPLICATED(HttpStatus.BAD_REQUEST, "이미 존재하는 허브 경로 아이디 입니다."),
-    HUB_ROUTES_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 허브 경로 입니다.")
-    ;
+    HUB_ROUTES_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 허브 경로 입니다."),
+    INVALID_HUB_ROUTE_DISTANCE(HttpStatus.BAD_REQUEST, "유효하지 않은 허브 경로 거리값 입니다."),
+    INVALID_HUB_ROUTE_TIME(HttpStatus.BAD_REQUEST, "유효하지 않은 허브 경로 시간값 입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

@@ -35,7 +35,7 @@ public class HubDomainServiceImpl implements HubDomainService {
         //허브 타입 체크
         HubType hubType = HubType.fromHubTypeName(hubRequestDto.hubTypeName());
 
-        //허브 중복 체크 -> 좌표로 중복체크
+        //허브 중복 체크
         if (hubRepository.existsByHubNameAndHubLocation(hubRequestDto.hubName(),
                 hubRequestDto.hubLocation())) {
             throw new CustomException(HubDomainExceptionCode.HUB_IS_DUPLICATED);

@@ -53,13 +53,14 @@ public class DeliveryRouteService {
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
+        UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
 
         Page<DeliveryRoute> routeList = switch (role) {
             case "MASTER" -> routeRepository.findAllByDeletedAtIsNull(pageable);
             case "HUB" -> routeRepository.findDeliveriesByHubId(hubId, pageable);
             case "DELIVERY" -> routeRepository.findByDeliveryManagerIdAndDeletedAtIsNull(userId, pageable);
-            case "COMPANY" -> routeRepository.findByEndHubIdAndDeletedAtIsNull(hubId, pageable);
+            case "COMPANY" -> routeRepository.findByRecipientsIdAndDeletedAtIsNull(companyId, pageable);
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 
@@ -77,8 +78,8 @@ public class DeliveryRouteService {
     public DeliveryRouteResponseDto getDeliveryRouteDetails(UUID routeId, String token) {
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
-        UUID companyId = jwtUtil.extractCompanyId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
+        UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
 
         DeliveryRoute route = routeRepository.findById(routeId)
                 .filter(o -> o.getDeletedAt() == null)
@@ -86,7 +87,7 @@ public class DeliveryRouteService {
 
         switch (role) {
             case "HUB":
-                if (hubId != route.getStartHubId() && hubId != route.getEndHubId()) {
+                if (!hubId.equals(route.getStartHubId()) && !hubId.equals(route.getEndHubId())) {
                     // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
@@ -98,7 +99,7 @@ public class DeliveryRouteService {
                 }
                 break;
             case "COMPANY":
-                if (companyId != route.getDelivery().getRecipientsId()) {
+                if (!companyId.equals(route.getRecipientsId())) {
                     // 업체 담당자인데 수령업체가 자신의 업체가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
@@ -113,12 +114,15 @@ public class DeliveryRouteService {
      *  실제 거리 / 실제 소요 시간만 수정 가능? 아니면 다른 부분도 수정 가눙?
      */
     @Transactional
-    public DeliveryRouteResponseDto updateDeliveryRoute(UUID routeId, DeliveryRouteUpdateRequestDto requestDto, String token) {
+    public DeliveryRouteResponseDto updateDeliveryRoute(UUID routeId, DeliveryRouteUpdateRequestDto requestDto, Delivery delivery, String token) {
         // JWT에서 Role 추출
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
+        if (role.equals("COMPANY")) {
+            throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+        }
 
         DeliveryRoute route = routeRepository.findById(routeId)
                 .filter(o -> o.getDeletedAt() == null)
@@ -127,7 +131,7 @@ public class DeliveryRouteService {
         // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
         switch (role) {
             case "HUB":
-                if (hubId != route.getStartHubId() && hubId != route.getEndHubId()) {
+                if (!hubId.equals(route.getStartHubId()) && !hubId.equals(route.getEndHubId())) {
                     // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
                 }
@@ -139,7 +143,7 @@ public class DeliveryRouteService {
                 }
         }
 
-        route.updateRoute(requestDto);
+        route.updateRoute(requestDto, delivery);
         DeliveryRoute updateRoute = routeRepository.save(route);
         return new DeliveryRouteResponseDto(updateRoute);
     }
@@ -153,7 +157,7 @@ public class DeliveryRouteService {
     public DeliveryRouteResponseDto deleteDeliveryRoute(UUID routeId, String token) {
 
         String role = jwtUtil.extractRole(token);
-        UUID hubId = jwtUtil.extractHubId(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
         if (!role.equals("HUB") && !role.equals("MASTER")) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
@@ -164,7 +168,7 @@ public class DeliveryRouteService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "배송 경로가 삭제되었거나 없습니다."));
 
         // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
-        if (role.equals("HUB") && (hubId != route.getStartHubId() && hubId != route.getEndHubId())) {
+        if (role.equals("HUB") && (!hubId.equals(route.getStartHubId()) && !hubId.equals(route.getEndHubId()))) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 

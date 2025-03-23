@@ -72,4 +72,17 @@ public class AuthUtil {
 
     // 본인 업체인지
 
+
+
+    // 주문에 나와 있는 허브ID가 내 허브ID와 일치하는지?
+    public boolean isMyHubForOrder(UUID myHubId, UUID supplierHubId, UUID recipientHubId) {
+
+        if (myHubId == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "토큰에서 hubId를 추출할 수 없습니다.");
+        }
+
+        return myHubId.equals(supplierHubId) || myHubId.equals(recipientHubId);
+    }
+
+
 }
