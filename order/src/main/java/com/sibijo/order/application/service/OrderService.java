@@ -84,7 +84,8 @@ public class OrderService {
                 requestDto.getSupplierId(),
                 requestDto.getRecipientsId(),
                 requestDto.getReceiver(),
-                requestDto.getReceiverSlackId()
+                requestDto.getReceiverSlackId(),
+                token
         );
 
 //        StockInfomationDto stockInfomationDto = new StockInfomationDto(requestDto.getProductId(),amount);
@@ -92,20 +93,6 @@ public class OrderService {
         // 배송 서버 호출
         deliveryClient.createDelivery(deliveryRequestDto);
 
-        try {
-            AiNotificationRequestDto aiDto = new AiNotificationRequestDto();
-            aiDto.setOrderId(order.getOrderId());
-            aiDto.setUserSlackId(requestDto.getReceiverSlackId());
-            // 수령자의 slackID 로 일단 했는데, 발송 허브 담당자? 에게 보내야한다고함. 누구지?
-
-
-
-            // token을 헤더로 넘기기 위해 Feign 인터셉터나 메서드 파라미터로 전달
-            aiClient.notifyOrderCreated(aiDto, token);
-        } catch (Exception e) {
-            log.error("[AI 알림 실패] {}", e.getMessage());
-            // 주문 생성 자체는 성공했으므로, 여기서는 예외 삼키고 넘어감
-        }
         return new OrderResponseDto(order);
 
     }
@@ -113,18 +100,31 @@ public class OrderService {
     /**
      *   주문에 배송 정보 업데이트
      */
-    @Transactional
     public void updateOrderWithDelivery(UUID orderId, OrderCreateUpdateRequestDto requestDto) {
 
-        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-        if (optionalOrder.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order 없음");
+        Order updatedOrder = transactionTemplate.execute(status -> {
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order 없음"));
+
+            // 주문 수정
+            order.updateDelivery(requestDto);
+
+            return order;
+        });
+
+        try {
+            AiNotificationRequestDto aiDto = new AiNotificationRequestDto();
+            aiDto.setOrderId(updatedOrder.getOrderId());
+            aiDto.setUserSlackId(requestDto.getSlackId());
+
+            // token을 헤더로 넘기기 위해 Feign 인터셉터나 메서드 파라미터로 전달
+            aiClient.notifyOrderCreated(aiDto, requestDto.getToken());
+        } catch (Exception e) {
+            log.error("[AI 알림 실패] {}", e.getMessage());
+            // 주문 생성 자체는 성공했으므로, 여기서는 예외 삼키고 넘어감
         }
-
-        Order order = optionalOrder.get();
-        // 주문 수정
-        order.updateDelivery(requestDto);
     }
 
     /**

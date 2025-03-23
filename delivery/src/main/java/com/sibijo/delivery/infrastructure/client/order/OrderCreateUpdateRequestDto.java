@@ -16,5 +16,8 @@ public class OrderCreateUpdateRequestDto {
 
     private UUID recipientHubId;
 
+    private String slackId;
+
+    private String token;
 
 }
