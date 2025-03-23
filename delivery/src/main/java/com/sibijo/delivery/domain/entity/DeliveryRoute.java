@@ -91,6 +91,14 @@ public class DeliveryRoute extends BaseEntity {
         this.realDuration = realDuration;
     }
 
+    public void updateDeliveryManager(Long deliveryManagerId) {
+        this.deliveryManagerId = deliveryManagerId;
+    }
+
+    public void updateDeliveryStatus(DeliveryStatusEnum status) {
+        this.deliveryStatus = status;
+    }
+
     public void updateRoute(DeliveryRouteUpdateRequestDto requestDto, Delivery delivery) {
         this.delivery = delivery;
         this.sequence = requestDto.getSequence();

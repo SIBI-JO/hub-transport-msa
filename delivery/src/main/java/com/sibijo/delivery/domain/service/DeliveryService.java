@@ -5,7 +5,10 @@ import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.delivery.application.dto.DeliveryResponseDto;
 import com.sibijo.delivery.domain.entity.Delivery;
+import com.sibijo.delivery.domain.enums.DeliveryDomainExceptionCode;
+import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.domain.repository.DeliveryRepository;
+import com.sibijo.delivery.infrastructure.client.user.UserClient;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
@@ -27,6 +30,7 @@ public class DeliveryService {
 
     private final JwtUtil jwtUtil;
     private final DeliveryRepository deliveryRepository;
+    private final UserClient userClient;
 
     @Transactional
     public Delivery createDelivery(DeliveryRequestDto requestDto) {
@@ -185,4 +189,63 @@ public class DeliveryService {
         return delivery;
     }
 
+    /**
+     *  배송 상태 수정
+     */
+    @Transactional
+    public void updateDeliveryStatus(Delivery delivery) {
+        DeliveryStatusEnum currentStatus = delivery.getDeliveryStatus();
+
+        switch (currentStatus) {
+            case HUB_WAITING -> {
+                delivery.updateDeliveryStatus(DeliveryStatusEnum.HUB_MOVING);
+            }
+            case HUB_MOVING -> {
+                delivery.updateDeliveryStatus(DeliveryStatusEnum.HUB_ARRIVED);
+                // 업체 배송 담당자 ID 요청
+                Long companyDeliveryManagerId = userClient.getCompanyDeliveryAgent(delivery.getEndHubId()).getData();
+                delivery.updateDeliveryManager(companyDeliveryManagerId);
+            }
+            case HUB_ARRIVED -> {
+                delivery.updateDeliveryStatus(DeliveryStatusEnum.COMPANY_DELIVERING);
+            }
+            case COMPANY_DELIVERING -> {
+                delivery.updateDeliveryStatus(DeliveryStatusEnum.COMPLETED);
+            }
+            default -> throw new CustomException(DeliveryDomainExceptionCode.INVALID_DELIVERY_STATUS);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Delivery getDeliveryDetailsForUpdating(UUID deliveryId, String token) {
+        String role = jwtUtil.extractRole(token);
+        Long userId = jwtUtil.extractUserID(token);
+        UUID hubId = jwtUtil.extractHubIdForOrder(token);
+        UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
+
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .filter(o -> o.getDeletedAt() == null)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "배송이 삭제 되었거나 없습니다."));
+
+        switch (role) {
+            case "HUB":
+                if (!hubId.equals(delivery.getStartHubId()) && !hubId.equals(delivery.getEndHubId())) {
+                    // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
+                    throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+                }
+                break;
+            case "DELIVERY":
+                if (!Objects.equals(userId, delivery.getDeliveryManagerId())) {
+                    // 배송담당자 -> 만약 업체 배송 담당자라면 -> 본인이 담당 업체 배송 담당자인지 확인
+                    throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+                }
+                break;
+            case "COMPANY":
+                if (!companyId.equals(delivery.getRecipientsId())) {
+                    // 업체 담당자인데 수령업체가 자신의 업체가 아닐 때
+                    throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+                }
+        }
+        return delivery;
+    }
 }

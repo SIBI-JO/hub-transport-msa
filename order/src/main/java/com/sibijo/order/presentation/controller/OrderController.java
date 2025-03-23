@@ -21,6 +21,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -54,7 +55,7 @@ public class OrderController {
     /**
      *  생성 완료 전인 주문 수정
      */
-    @PutMapping("/{orderId}/update-delivery")
+    @PatchMapping("/{orderId}/update-delivery")
     public void updateOrderFromDelivery(@PathVariable UUID orderId, @RequestBody
             OrderCreateUpdateRequestDto requestDto) {
         orderService.updateOrderWithDelivery(orderId, requestDto);
@@ -68,7 +69,7 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> getOrders(
             HttpServletRequest request,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(page = 1, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
         return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orderService.getOrders(token, pageable)));
     }
