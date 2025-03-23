@@ -1,6 +1,5 @@
 package com.sibijo.user.application.service;
 
-import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
@@ -8,14 +7,7 @@ import com.sibijo.common.utils.page.PageSize;
 import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.domain.model.User;
-import com.sibijo.user.domain.repository.DeliveryAgentRepository;
 import com.sibijo.user.domain.repository.UserRepository;
-import com.sibijo.user.infrastructure.client.company.CompanyClient;
-import com.sibijo.user.infrastructure.client.company.CompanyResponseDto;
-import com.sibijo.user.infrastructure.client.hub.HubClient;
-import com.sibijo.user.application.dto.HubResponseDto;
-import com.sibijo.user.presentation.dto.user.SignUpRequestDto;
-import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
 import com.sibijo.user.presentation.dto.user.UserCreateRequestDto;
 import com.sibijo.user.presentation.dto.user.UserCreateResponseDto;
 import com.sibijo.user.presentation.dto.user.UserDeleteResponseDto;
@@ -30,7 +22,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -224,5 +215,17 @@ public class UserService {
     }
 
 
+    public UserDetailsResponseDto getUserByHubId(UUID hubId) {
+        // 존재 확인
+        User user = userRepository.findByHubId(hubId).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
+        );
 
+        return UserDetailsResponseDto
+                .builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .slackId(user.getSlackId())
+                .build();
+    }
 }
