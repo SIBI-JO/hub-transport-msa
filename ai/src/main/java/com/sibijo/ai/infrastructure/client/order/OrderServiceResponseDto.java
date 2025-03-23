@@ -1,4 +1,4 @@
-package com.sibijo.ai.presentation.dto;
+package com.sibijo.ai.infrastructure.client.order;
 
 import lombok.Data;
 

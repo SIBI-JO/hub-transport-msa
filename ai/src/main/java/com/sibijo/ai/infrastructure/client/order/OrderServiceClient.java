@@ -1,8 +1,7 @@
-package com.sibijo.ai.infrastructure.client;
+package com.sibijo.ai.infrastructure.client.order;
 
 import com.sibijo.ai.infrastructure.config.FeignClientConfig;
 import com.sibijo.common.dto.ApiResponse;
-import com.sibijo.ai.presentation.dto.OrderServiceResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
