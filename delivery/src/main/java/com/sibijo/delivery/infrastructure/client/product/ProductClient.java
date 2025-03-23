@@ -5,12 +5,13 @@ import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "product-service")
 public interface ProductClient {
 
-    @PatchMapping("/api/hub-stocks/{productId}")
+    @PutMapping("/api/hub-stocks/{productId}")
     ApiResponse<HubStockResponse> updateStock(@PathVariable("productId") UUID productId,
             @RequestBody UpdateStockRequest request);
 

@@ -53,7 +53,7 @@ public class CustomDeliveryService {
      *  미구현 : User 서버에서 delivery_manager_id 가져와서 넣기
      */
 
-    public void createDelivery(OrderToDeliveryRequestDto requestDto, StockInfomationDto stockInfomationDto) {
+    public void createDelivery(OrderToDeliveryRequestDto requestDto) {
 
         CompanyResponseDto startHub = null;
         CompanyResponseDto endHub = null;
@@ -80,8 +80,8 @@ public class CustomDeliveryService {
                 // 주문 삭제
                 orderClient.deleteOrderInternal(requestDto.getOrderId());
                 // 재고 수량 RollBack
-                productClient.updateStock(stockInfomationDto.getProductId(), new UpdateStockRequest(
-                        stockInfomationDto.getStockRollbackAmount()));
+//                productClient.updateStock(stockInfomationDto.getProductId(), new UpdateStockRequest(
+//                        stockInfomationDto.getStockRollbackAmount()));
                 System.out.println("임시 주문 삭제 완료");
             } catch (Exception ex) {
                 System.err.println("임시 주문 삭제 실패: " + ex.getMessage());

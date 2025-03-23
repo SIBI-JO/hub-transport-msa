@@ -46,9 +46,9 @@ public class DeliveryController {
      */
     @PostMapping
     public void createDelivery(
-            @RequestBody OrderToDeliveryRequestDto requestDto, @RequestBody StockInfomationDto stockInfomationDto) {
+            @RequestBody OrderToDeliveryRequestDto requestDto) {
 
-        deliveryService.createDelivery(requestDto, stockInfomationDto);
+        deliveryService.createDelivery(requestDto);
 //        return ResponseEntity.ok();
     }
 
@@ -61,7 +61,7 @@ public class DeliveryController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<DeliveryResponseDto>>> getDeliveries(
             HttpServletRequest request,
-            @PageableDefault(page = 1,size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, page = 1, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
         return ResponseEntity.ok(ApiResponse.success("배송 전체 조회 성공", deliveryService.getDeliveries(token, pageable)));
     }
@@ -132,7 +132,7 @@ public class DeliveryController {
     @GetMapping("/routes")
     public ResponseEntity<ApiResponse<Page<DeliveryRouteResponseDto>>> getDeliveryRoutes(
             HttpServletRequest request,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, page = 1, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
         return ResponseEntity.ok(ApiResponse.success("배송 경로 전체 조회 성공", deliveryService.getDeliveryRoutes(token, pageable)));
     }

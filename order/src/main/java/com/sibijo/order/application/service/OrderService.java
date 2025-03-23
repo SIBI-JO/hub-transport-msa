@@ -87,10 +87,10 @@ public class OrderService {
                 requestDto.getReceiverSlackId()
         );
 
-        StockInfomationDto stockInfomationDto = new StockInfomationDto(requestDto.getProductId(),amount);
+//        StockInfomationDto stockInfomationDto = new StockInfomationDto(requestDto.getProductId(),amount);
 
         // 배송 서버 호출
-        deliveryClient.createDelivery(deliveryRequestDto, stockInfomationDto);
+        deliveryClient.createDelivery(deliveryRequestDto);
 
         try {
             AiNotificationRequestDto aiDto = new AiNotificationRequestDto();

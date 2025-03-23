@@ -12,6 +12,6 @@ public interface DeliveryClient {
 //    DeliveryResponseDto createDelivery(@RequestBody DeliveryRequestDto requestDto);
 
     @PostMapping("/api/deliveries")
-    void createDelivery(@RequestBody DeliveryRequestDto requestDto, @RequestBody StockInfomationDto stockInfomationDto);
+    void createDelivery(@RequestBody DeliveryRequestDto requestDto);
 
 }
