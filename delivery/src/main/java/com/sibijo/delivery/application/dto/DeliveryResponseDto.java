@@ -15,12 +15,12 @@ public class DeliveryResponseDto {
     private UUID deliveryId;
     private DeliveryStatusEnum deliveryStatus;
     private UUID startHubId;
-    private UUID endHubId;
+    private UUID endHubId;  // 마지막 허브 ID
     private String deliveryAddress;
     private String receiver;
     private String receiverSlackId;
-    private UUID recipientsId;
-    private Long deliveryManagerId;
+    private UUID recipientsId; // 수령업체 ID
+    private Long deliveryManagerId; // userId
 
     public DeliveryResponseDto(Delivery delivery) {
         this.deliveryId = delivery.getDeliveryId();

@@ -1,6 +1,5 @@
 package com.sibijo.delivery.infrastructure.client.order;
 
-import com.sibijo.common.dto.ApiResponse;
 import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;

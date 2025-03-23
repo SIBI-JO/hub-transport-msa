@@ -8,6 +8,7 @@ import com.sibijo.delivery.application.dto.DeliveryResponseDto;
 import com.sibijo.delivery.application.dto.DeliveryRouteResponseDto;
 import com.sibijo.delivery.domain.entity.Delivery;
 import com.sibijo.delivery.domain.entity.DeliveryRoute;
+import com.sibijo.delivery.domain.enums.DeliveryDomainExceptionCode;
 import com.sibijo.delivery.domain.service.DeliveryRouteService;
 import com.sibijo.delivery.domain.service.DeliveryService;
 import com.sibijo.delivery.infrastructure.client.company.CompanyClient;
@@ -16,6 +17,8 @@ import com.sibijo.delivery.infrastructure.client.hub.HubClient;
 import com.sibijo.delivery.infrastructure.client.hub.HubResponseDto;
 import com.sibijo.delivery.infrastructure.client.order.OrderClient;
 import com.sibijo.delivery.infrastructure.client.order.OrderCreateUpdateRequestDto;
+import com.sibijo.delivery.infrastructure.client.product.ProductClient;
+import com.sibijo.delivery.infrastructure.client.product.UpdateStockRequest;
 import com.sibijo.delivery.infrastructure.client.user.UserClient;
 import com.sibijo.delivery.infrastructure.client.user.UserResponseDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
@@ -23,6 +26,7 @@ import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
+import com.sibijo.delivery.presentation.dto.StockInfomationDto;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +46,7 @@ public class CustomDeliveryService {
     private final HubClient hubClient;
     private final OrderClient orderClient;
     private final UserClient userClient;
+    private final ProductClient productClient;
 
     /**
      *  배송 & 배송 경로 생성
@@ -55,37 +60,34 @@ public class CustomDeliveryService {
         HubResponseDto hubRoute = null;
         Long deliveryManagerId = null;
 
-
         try {
             // 1. 공급업체 & 수령업체 정보를 통해 출발/도착 허브 조회
             startHub = companyClient.getCompanyOrderInfo(requestDto.getSupplierId()).getData();
             endHub = companyClient.getCompanyOrderInfo(requestDto.getRecipientsId()).getData();
-        } catch (Exception e) {
-            System.out.println("업체 조회 에러");
-        }
-
 //            CompanyResponseDto startHub = new CompanyResponseDto(UUID.fromString("45c4d201-1655-4716-8a7d-66b1d31a0684"), "서울특별시 광진구 12번지");
 //            CompanyResponseDto endHub = new CompanyResponseDto(UUID.fromString("46c4d201-1655-4716-8a7d-66b1d31a0685"), "서울특별시 광진구 29번지");
-        try {
+
             // 2. 허브 서버에서 허브 간 경로 조회 (시작 허브와 도착허브가 같으면? )
             hubRoute = hubClient.getHubRouteForOrder(startHub.getHubId(), endHub.getHubId());
 //            hubRoute = new HubResponseDto("400km", "4시간 50분");
-            System.out.println("허브간 배송 경로 거리:  "+hubRoute.getDistance());
-        } catch (Exception e) {
-            System.out.println("배송 에러");
-        }
 
-
-        try {
             // 2.5 배송 담당자 정보 가져오기 (시작 허브와 도착허브가 같으면? )
             deliveryManagerId = userClient.getDeliveryAgent().getData();
 //            deliveryManagerId = 2L;
+
         } catch (Exception e) {
-//            orderClient.deleteOrderInternal(requestDto.getOrderId());
-            System.out.println("배송 에러");
+            try {
+                // 주문 삭제
+                orderClient.deleteOrderInternal(requestDto.getOrderId());
+                // 재고 수량 RollBack
+//                productClient.updateStock(stockInfomationDto.getProductId(), new UpdateStockRequest(
+//                        stockInfomationDto.getStockRollbackAmount()));
+                System.out.println("임시 주문 삭제 완료");
+            } catch (Exception ex) {
+                System.err.println("임시 주문 삭제 실패: " + ex.getMessage());
+            }
+            throw new CustomException(CommonExceptionCode.INTERNAL_SERVER_ERROR);
         }
-
-
 
 
         // 3. 배송 생성에 필요한 정보 생성
@@ -187,13 +189,28 @@ public class CustomDeliveryService {
      */
     public DeliveryResponseDto deleteDelivery(UUID deliveryId, String token) {
         String role = jwtUtil.extractRole(token);
-        Long userId = jwtUtil.extractUserID(token);
 
         if (role.equals("COMPANY") || role.equals("DELIVERY")) {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
         return deliveryService.deleteDelivery(deliveryId, token);
     }
+
+    /**
+     *   배송 및 배송경로의 상태 수정과 배송 담당자 변경
+     *   권한 : 허브 관리자,  배송 담당자
+     */
+    public void updateDeliveryStatus(UUID deliveryId, String token) {
+        // 여기에서 역할 체크 끝
+        Delivery delivery = deliveryService.getDeliveryDetailsForUpdating(deliveryId, token);
+
+        DeliveryRoute route = deliveryRouteService.getDeliveryRouteByDeliveryId(deliveryId);
+
+
+        deliveryService.updateDeliveryStatus(delivery);
+        deliveryRouteService.updateDeliveryStatus(route);
+    }
+
 
 
 

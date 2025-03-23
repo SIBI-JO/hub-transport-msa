@@ -27,4 +27,6 @@ public interface DeliveryRouteRepository extends JpaRepository<DeliveryRoute, UU
     Page<DeliveryRoute> findByDeliveryManagerIdAndDeletedAtIsNull(Long userId, Pageable pageable);
 
     Page<DeliveryRoute> findByRecipientsIdAndDeletedAtIsNull(UUID hubId, Pageable pageable);
+
+    DeliveryRoute findByDelivery_DeliveryId(UUID deliveryId);
 }

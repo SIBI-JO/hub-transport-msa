@@ -1,6 +1,7 @@
 package com.sibijo.order.infrastructure.repository;
 
 import com.sibijo.order.domain.entity.Order;
+import com.sibijo.order.domain.enums.OrderStatusEnum;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

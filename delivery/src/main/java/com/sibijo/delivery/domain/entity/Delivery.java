@@ -1,6 +1,8 @@
 package com.sibijo.delivery.domain.entity;
 
 import com.sibijo.common.entity.BaseEntity;
+import com.sibijo.common.exception.CustomException;
+import com.sibijo.delivery.domain.enums.DeliveryDomainExceptionCode;
 import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
@@ -78,6 +80,10 @@ public class Delivery extends BaseEntity {
 
     public void updateDeliveryManager(Long deliveryManagerId) {
         this.deliveryManagerId = deliveryManagerId;
+    }
+
+    public void updateDeliveryStatus(DeliveryStatusEnum status) {
+        this.deliveryStatus = status;
     }
 
     public void updateDelivery(DeliveryUpdateRequestDto requestDto) {
