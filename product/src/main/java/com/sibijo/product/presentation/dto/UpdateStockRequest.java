@@ -1,4 +1,3 @@
-// UpdateStockRequest DTO
 package com.sibijo.product.presentation.dto;
 
 import lombok.*;

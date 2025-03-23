@@ -24,8 +24,8 @@ public class HubStockController {
         return ResponseEntity.ok(ApiResponse.success("허브 재고 조회 성공", response));
     }
 
-    // 상품 ID만으로 재고 업데이트 (JSON 바디를 사용)
-    @PatchMapping("/{productId}")
+    // 상품 ID만으로 재고 업데이트 (PATCH → PUT)
+    @PutMapping("/{productId}")
     public ResponseEntity<ApiResponse<HubStockResponse>> updateStock(@PathVariable UUID productId,
             @RequestBody UpdateStockRequest request) {
         HubStockResponse response = hubStockService.updateStock(productId, request.getNewAmount());

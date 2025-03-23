@@ -13,6 +13,7 @@ import com.sibijo.order.infrastructure.client.Delivery.DeliveryClient;
 import com.sibijo.order.infrastructure.client.Delivery.DeliveryRequestDto;
 import com.sibijo.order.infrastructure.client.Product.ProductClient;
 import com.sibijo.order.infrastructure.client.Product.ProductResponseDto;
+import com.sibijo.order.infrastructure.client.Product.UpdateStockRequestDto;
 import com.sibijo.order.infrastructure.client.ai.AiClient;
 import com.sibijo.order.infrastructure.client.ai.AiNotificationRequestDto;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
@@ -77,16 +78,31 @@ public class OrderService {
             return newOrder;
         });
 
-        DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
-                order.getOrderId(),
-                requestDto.getSupplierId(),
-                requestDto.getRecipientsId(),
-                requestDto.getReceiver(),
-                requestDto.getReceiverSlackId()
-        );
+        // 재고 차감: 현재 재고에서 주문 수량 만큼 차감
+        Long newStock = amount - requestDto.getAmount();
+        productClient.updateStock(requestDto.getProductId(), new UpdateStockRequestDto(newStock));
 
-        // 배송 서버 호출
-        deliveryClient.createDelivery(deliveryRequestDto);
+        try {
+            // 배송 생성 호출
+            DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
+                    order.getOrderId(),
+                    requestDto.getSupplierId(),
+                    requestDto.getRecipientsId(),
+                    requestDto.getReceiver(),
+                    requestDto.getReceiverSlackId()
+            );
+            deliveryClient.createDelivery(deliveryRequestDto);
+        } catch (Exception e) {
+            // 배송 생성 실패 시 보상 트랜잭션 수행 : 재고 복구 및 주문 취소
+            // 재고 복구: 원래 재고로 복원 (혹은 주문 수량 만큼 추가)
+            productClient.updateStock(requestDto.getProductId(), new UpdateStockRequestDto(amount));
+
+            // 주문 취소 처리 (내부 주문 삭제 등)
+            deleteOrderInternal(order.getOrderId());
+
+            // 이후 적절한 예외 전달
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "배송 생성 실패로 주문이 취소되었습니다.", e);
+        }
 
 
         //  AI 서비스에 알림 전송
