@@ -2,6 +2,7 @@ package com.sibijo.user.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.user.application.service.UserService;
+import com.sibijo.user.domain.model.User;
 import com.sibijo.user.presentation.dto.user.SignUpRequestDto;
 import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
 import com.sibijo.user.presentation.dto.user.UserCreateRequestDto;
@@ -102,6 +103,15 @@ public class UserController {
                 .ok(ApiResponse.success("검색 성공", userPageResponseDto));
     }
 
+    //internal
+    @GetMapping("/hub-manager/{hubId}")
+    private ResponseEntity<ApiResponse<UserDetailsResponseDto>> getUserBySlackId(@PathVariable UUID hubId) {
+        // 배송 담당자 배정
+        UserDetailsResponseDto user = userService.getUserByHubId(hubId);
+
+        return ResponseEntity
+                .ok(ApiResponse.success("허브 담당자 정보 조회", user));
+    }
 
     private static void raiseValidationException(BindingResult bindingResult) {
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
