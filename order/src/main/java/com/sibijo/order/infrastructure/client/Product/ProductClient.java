@@ -15,6 +15,6 @@ public interface ProductClient {
     ApiResponse<ProductResponseDto> getProductOrderInfo(@PathVariable("productId") UUID productId);
 
     @PutMapping("/api/hub-stocks/{productId}")
-    ApiResponse<HubStockResponse> updateStock(@PathVariable("productId") UUID productId,
-            @RequestBody UpdateStockRequest request);
+    ApiResponse<HubStockResponseDto> updateStock(@PathVariable("productId") UUID productId,
+            @RequestBody UpdateStockRequestDto request);
 }

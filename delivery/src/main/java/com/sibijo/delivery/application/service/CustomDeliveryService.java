@@ -120,8 +120,8 @@ public class CustomDeliveryService {
                 startHub.getHubId(),
                 endHub.getHubId(),
                 requestDto.getRecipientsId(),
-                hubRoute.getExpectedDistance(),
-                hubRoute.getExpectedTime(),
+                hubRoute.getDistance(),
+                hubRoute.getEstimatedTime(),
                 deliveryManagerId
         );
 
