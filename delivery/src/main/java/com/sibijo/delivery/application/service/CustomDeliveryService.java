@@ -80,8 +80,8 @@ public class CustomDeliveryService {
                 // 주문 삭제
                 orderClient.deleteOrderInternal(requestDto.getOrderId());
                 // 재고 수량 RollBack
-//                productClient.updateStock(stockInfomationDto.getProductId(), new UpdateStockRequest(
-//                        stockInfomationDto.getStockRollbackAmount()));
+                productClient.updateStock(requestDto.getProductId(), new UpdateStockRequest(
+                        requestDto.getProductAmount()));
                 System.out.println("임시 주문 삭제 완료");
             } catch (Exception ex) {
                 System.err.println("임시 주문 삭제 실패: " + ex.getMessage());

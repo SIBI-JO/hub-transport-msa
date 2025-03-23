@@ -23,4 +23,10 @@ public class OrderToDeliveryRequestDto {
 
     private String token;
 
+    private UUID productId;
+
+    private Long productAmount;
+
+    private Long orderAmount;
+
 }

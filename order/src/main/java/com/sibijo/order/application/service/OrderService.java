@@ -18,9 +18,7 @@ import com.sibijo.order.infrastructure.client.ai.AiNotificationRequestDto;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
-import com.sibijo.order.presentation.dto.StockInfomationDto;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,10 +83,12 @@ public class OrderService {
                 requestDto.getRecipientsId(),
                 requestDto.getReceiver(),
                 requestDto.getReceiverSlackId(),
-                token
+                token,
+                requestDto.getProductId(),
+                amount,
+                requestDto.getAmount().longValue()
         );
 
-//        StockInfomationDto stockInfomationDto = new StockInfomationDto(requestDto.getProductId(),amount);
 
         // 배송 서버 호출
         deliveryClient.createDelivery(deliveryRequestDto);
