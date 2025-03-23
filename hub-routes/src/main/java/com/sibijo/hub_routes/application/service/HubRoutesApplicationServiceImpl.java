@@ -33,8 +33,6 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
     private final HubRoutesRepository hubRoutesRepository;
     private final HubRoutesDomainService hubRoutesDomainService;
     private final HubServiceClient hubServiceClient;
-    //    private final OrderServiceClient orderServiceClient;
-    //    private final CompanyServiceClient companyServiceClient;
 
     /**
      * @param hubRoutesRequestDto

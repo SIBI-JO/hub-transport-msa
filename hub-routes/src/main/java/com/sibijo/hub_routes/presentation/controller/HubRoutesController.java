@@ -33,9 +33,7 @@ public class HubRoutesController {
     public HubRouteToDeliveryDto getHubRouteForOrder(
             @RequestParam UUID startHubId,
             @RequestParam UUID endHubId) {
-        HubRouteToDeliveryDto hubRouteToDeliveryDto = hubRoutesApplicationService.getHubRouteForOrder(
-                startHubId, endHubId);
-        return hubRouteToDeliveryDto;
+        return hubRoutesApplicationService.getHubRouteForOrder(startHubId, endHubId);
     }
 
     /**
