@@ -29,24 +29,29 @@ public class AiController {
     @PostMapping("/dm")
     public ResponseEntity<?> handleOrderCreated(@RequestBody AiNotificationRequestDto dto,
             @RequestHeader("Authorization") String bearerToken) {
+        System.out.println("Received bearerToken: " + bearerToken);
         try {
             // 1) Order 서비스로부터 주문 상세 조회
-            ApiResponse<OrderServiceResponseDto> response = orderServiceClient.getOrderById(dto.getOrderId(), bearerToken);
+            ApiResponse<OrderServiceResponseDto> response = orderServiceClient.getOrderById(dto.getOrderId(), "Bearer " + bearerToken);
             if (!response.getStatus().equalsIgnoreCase("SUCCESS") || response.getData() == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found or invalid response");
             }
+            System.out.println("1");
 
             OrderServiceResponseDto orderData = response.getData();
 
             // 2) AI 메시지 생성용 DTO 변환
             OrderDto orderDto = mapToOrderDto(orderData);
+            System.out.println("2");
 
             // 3) Gemini API 호출하여 AI 메시지 생성
             String aiMessage = geminiNotificationService.generateAiSlackMessage(orderDto);
 
+            System.out.println("3");
             // 4) Slack DM 전송
             slackNotificationService.sendDirectMessageToUser(dto.getUserSlackId(), aiMessage);
 
+            System.out.println("4");
             return ResponseEntity.ok(Collections.singletonMap("aiMessage", aiMessage));
         } catch (Exception e) {
             e.printStackTrace();
