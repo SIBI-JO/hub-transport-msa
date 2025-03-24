@@ -4,12 +4,14 @@ import com.sibijo.hub.domain.model.HubEntity;
 import com.sibijo.hub.domain.model.HubType;
 import com.sibijo.hub.domain.repository.HubRepository;
 import com.sibijo.hub.presentation.dto.HubResponseDto;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -39,12 +41,12 @@ public class HubRepositoryHandler implements HubRepository {
     }
 
     /**
-     * @param pageable
+     * @param
      * @return
      */
     @Override
-    public Page<HubEntity> findAll(Pageable pageable) {
-        return jpaHubRepository.findAll(pageable);
+    public List<HubEntity> findAll() {
+        return jpaHubRepository.findAll();
     }
 
     /**
@@ -73,7 +75,7 @@ public class HubRepositoryHandler implements HubRepository {
      */
     @Override
     public Page<HubResponseDto> searchHubs(String hubName, String hubLocation, HubType hubType,
-            Pageable pageable) {
+                                           Pageable pageable) {
         return queryDslHubRepository.searchHubs(hubName, hubLocation, hubType, pageable);
     }
 

@@ -1,22 +1,23 @@
 package com.sibijo.hub_routes.infrastructure.persistence;
 
-import static com.sibijo.hub_routes.domain.model.QHubRoutesEntity.hubRoutesEntity;
-
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sibijo.hub_routes.domain.model.HubRoutesEntity;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesResponseDto;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.sibijo.hub_routes.domain.model.QHubRoutesEntity.hubRoutesEntity;
 
 @Repository
 @RequiredArgsConstructor
@@ -47,9 +48,10 @@ public class QueryDslHubRoutesRepositoryImpl implements QueryDslHubRoutesReposit
                         hubRoutesEntity.getId(),
                         hubRoutesEntity.getDepartureId(),
                         hubRoutesEntity.getDestinationId(),
-                        hubRoutesEntity.getCentralId(),
                         hubRoutesEntity.getDistance(),
-                        hubRoutesEntity.getEstimatedTime()
+                        hubRoutesEntity.getEstimatedTime(),
+                        hubRoutesEntity.getSequence(),
+                        hubRoutesEntity.getHashSequence()
                 ))
                 .collect(Collectors.toList());
         long total = results.getTotal();

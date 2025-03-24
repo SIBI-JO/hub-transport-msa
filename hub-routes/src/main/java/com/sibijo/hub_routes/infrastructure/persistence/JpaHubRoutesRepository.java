@@ -12,4 +12,6 @@ public interface JpaHubRoutesRepository extends JpaRepository<HubRoutesEntity, U
     boolean existsByDepartureIdAndDestinationId(UUID departureId, UUID destinationId);
 
     Optional<HubRoutesEntity> findByDepartureIdAndDestinationId(UUID startHubId, UUID endHubId);
+
+    Optional<HubRoutesEntity> findByHashSequence(String hashSequence);
 }

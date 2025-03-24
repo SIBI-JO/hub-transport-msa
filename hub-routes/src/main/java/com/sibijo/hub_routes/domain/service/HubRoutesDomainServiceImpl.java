@@ -1,19 +1,26 @@
 package com.sibijo.hub_routes.domain.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sibijo.common.exception.CustomException;
+import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.hub_routes.application.dto.HubRoutesCommand;
-import com.sibijo.hub_routes.application.dto.RouteCoordRequestDto;
-import com.sibijo.hub_routes.application.dto.RouteTimeResponseDto;
 import com.sibijo.hub_routes.domain.exception.HubRoutesDomainExceptionCode;
 import com.sibijo.hub_routes.domain.model.HubRoutesEntity;
 import com.sibijo.hub_routes.domain.repository.HubRoutesRepository;
+import com.sibijo.hub_routes.infrastructure.dto.BestRouteResponseDto;
 import com.sibijo.hub_routes.presentation.dto.HubRoutesUpdateRequestDto;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -21,7 +28,7 @@ import org.springframework.stereotype.Service;
 public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
 
     private final HubRoutesRepository hubRoutesRepository;
-    private final HubRoutesKakaoMapService hubRoutesKakaoMapService;
+    private final DijkstraService dijkstraService;
 
     /**
      * @param hubRoutesCommand
@@ -32,47 +39,37 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
 
         /**
          * 경로 만들기
-         * 출발 -> 중앙 -> 도착 : 무조건 중앙 거쳐야됨
-         * 1. 주문의 출발 ID -> 허브의 출발 ID의 주소
-         * 2. 출발 주소 와 가장 가까운 중앙허브 찾기
-         * 3. 중앙허브와 도착 허브와 배송도착지 가장 가까운 경로 찾기
-         * 4.
+         *
          */
         log.info("createHubRoutesCommand={}", hubRoutesCommand);
 
-        //출발과 가까운 중앙허브 찾기
-//        CentralHubDto centralHubDto = hubRoutesKakaoMapService.getCentralHub(
-//                createHubRoutesCommand);
+        //출발, 도착, 전체 허브 리스트 -> hub to hub relay
+        //다익스트라 호출
+        BestRouteResponseDto bestRouteResponseDto = dijkstraService.findShortestPath(hubRoutesCommand);
 
-        //출발 , 도착, 경유 좌표 넘기기 -> p2p
-        UUID centralId = null;
-        RouteCoordRequestDto routeCoordRequestDto = RouteCoordRequestDto.builder()
-                .departure(RouteCoordRequestDto.Location.builder()
-                        .x(String.valueOf(hubRoutesCommand.departure().getLongitude()))
-                        .y(String.valueOf(hubRoutesCommand.departure().getLatitude()))
-                        .angle(0)
-                        .build())
-                .destination(RouteCoordRequestDto.Location.builder()
-                        .x(String.valueOf(hubRoutesCommand.destination().getLongitude()))
-                        .y(String.valueOf(hubRoutesCommand.destination().getLatitude()))
-                        .build())
-                .wayPoints(List.of())
-                .build();
+        Map<Integer, List<String>> bestPathMap = bestRouteResponseDto.getBestPathMap();
+        Map<Integer, String> sequenceMap = new HashMap<>();
+        for (Map.Entry<Integer, List<String>> entry : bestPathMap.entrySet()) {
+            List<String> hubs = entry.getValue();
+            for (int i = 0; i < hubs.size(); i++) {
+                sequenceMap.put(i, hubs.get(i));
+            }
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String sequenceJson = objectMapper.writeValueAsString(sequenceMap);
 
-        RouteTimeResponseDto routeTimeResponseDto = hubRoutesKakaoMapService.getDirections(
-                routeCoordRequestDto);
-        RouteTimeResponseDto.RouteSummary summary = routeTimeResponseDto.getRoutes().get(0)
-                .getSummary();
-        BigDecimal distance = summary.getDistanceToKm();
-        Integer duration = Integer.valueOf(summary.getDurationToMinutes());
-
-        return HubRoutesEntity.builder()
-                .departureId(hubRoutesCommand.departure().getHubId())
-                .destinationId(hubRoutesCommand.destination().getHubId())
-                .centralId(centralId) //null
-                .distance(distance)
-                .estimatedTime(duration)
-                .build();
+            return HubRoutesEntity.builder()
+                    .departureId(bestRouteResponseDto.getDepartureHubId())
+                    .destinationId(bestRouteResponseDto.getDestinationHubId())
+                    .distance(bestRouteResponseDto.getBestRouteDistance())
+                    .estimatedTime(bestRouteResponseDto.getBestRouteTime())
+                    .sequence(sequenceJson)
+                    .hashSequence(generateSha256Hash(sequenceJson))
+                    .build();
+        } catch (JsonProcessingException e) {
+            throw new CustomException(CommonExceptionCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -93,7 +90,7 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
      */
     @Override
     public HubRoutesEntity updateHubRoutes(UUID hubRoutesId,
-            HubRoutesUpdateRequestDto hubRoutesUpdateRequestDto) {
+                                           HubRoutesUpdateRequestDto hubRoutesUpdateRequestDto) {
         HubRoutesEntity originalHubRoutesEntity = findHubRoutesById(hubRoutesId);
 
         if (hubRoutesUpdateRequestDto.departureId() != null) {
@@ -142,5 +139,19 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
                 .orElseThrow(() -> new CustomException(
                         HubRoutesDomainExceptionCode.HUB_ROUTES_NOT_FOUND));
 
+    }
+
+    private String generateSha256Hash(String data) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] bytes = md.digest(data.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new CustomException(CommonExceptionCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }

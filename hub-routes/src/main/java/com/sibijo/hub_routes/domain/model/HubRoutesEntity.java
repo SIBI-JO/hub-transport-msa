@@ -1,22 +1,22 @@
 package com.sibijo.hub_routes.domain.model;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sibijo.common.entity.BaseEntity;
 import com.sibijo.common.exception.CustomException;
+import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.hub_routes.domain.exception.HubRoutesDomainExceptionCode;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import java.math.BigDecimal;
-import java.util.UUID;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "p_hub_routes")
@@ -37,28 +37,61 @@ public class HubRoutesEntity extends BaseEntity {
     @Column(name = "destination_id", nullable = false)
     private UUID destinationId;
 
-    @Column(name = "central_id")
-    private UUID centralId;
-
     @Column(name = "distance", precision = 10, scale = 2, nullable = false)
     private BigDecimal distance;
 
     @Column(name = "estimated_time", nullable = false)
     private Integer estimatedTime;
 
+    /**
+     * 허브 이동 경로 (Map<Integer, String> 형태를 JSON으로 저장)
+     */
+    @Column(name = "sequence", columnDefinition = "TEXT", nullable = false)
+    private String sequence;
+
+    @Column(name = "hash-sequence", nullable = false)
+    private String hashSequence;
+
     @Builder
     private HubRoutesEntity(
             UUID departureId,
             UUID destinationId,
-            UUID centralId,
             BigDecimal distance,
-            Integer estimatedTime
+            Integer estimatedTime,
+            String sequence,
+            String hashSequence
     ) {
         this.departureId = departureId;
         this.destinationId = destinationId;
-        this.centralId = centralId;
         this.distance = distance;
         this.estimatedTime = estimatedTime;
+        this.sequence = sequence;
+        this.hashSequence = hashSequence;
+    }
+
+    /**
+     * JSON을 Map<Integer, String>으로 변환
+     *
+     * @return
+     */
+    public Map<Integer, String> getRouteSequenceAsMap() {
+        return convertJsonToMap(this.sequence);
+    }
+
+    /**
+     * JSON 문자열 → Map<Integer, String> 변환
+     *
+     * @param json
+     * @return Map<Integer, String>
+     */
+    private Map<Integer, String> convertJsonToMap(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, new TypeReference<Map<Integer, String>>() {
+            });
+        } catch (Exception e) {
+            throw new CustomException(CommonExceptionCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public void updateDestinationId(UUID destinationId) {
@@ -89,16 +122,7 @@ public class HubRoutesEntity extends BaseEntity {
         throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ROUTE_TIME);
     }
 
-    public void updateCentralId(UUID centralId) {
-        if (centralId != null) {
-            this.centralId = centralId;
-        }
-        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
-    }
-
-
-    public void updateRoutes(UUID centralId, BigDecimal distance, Integer estimatedTime) {
-        this.centralId = centralId;
+    public void updateRoutes(BigDecimal distance, Integer estimatedTime) {
         this.distance = distance;
         this.estimatedTime = estimatedTime;
     }
