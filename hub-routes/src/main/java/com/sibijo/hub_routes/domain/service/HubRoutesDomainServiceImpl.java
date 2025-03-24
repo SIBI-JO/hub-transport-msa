@@ -123,15 +123,33 @@ public class HubRoutesDomainServiceImpl implements HubRoutesDomainService {
     /**
      * delivery 서버에게
      *
-     * @param startHubId
-     * @param endHubId
+     * @param hubRoutesCommand
      * @return
      */
     @Override
-    public HubRoutesEntity getHubRouteForOrder(UUID startHubId, UUID endHubId) {
-        return hubRoutesRepository.findByDepartureIdAndDestinationId(startHubId, endHubId)
-                .orElseThrow(() -> new CustomException(
-                        HubRoutesDomainExceptionCode.HUB_ROUTES_NOT_FOUND));
+    public HubRoutesEntity getHubRouteForOrder(HubRoutesCommand hubRoutesCommand) {
+        //다익스트라 호출
+        BestRouteResponseDto bestRouteResponseDto = dijkstraService.findShortestPath(hubRoutesCommand);
+
+        Map<Integer, List<String>> bestPathMap = bestRouteResponseDto.getBestPathMap();
+        Map<Integer, String> sequenceMap = new HashMap<>();
+        for (Map.Entry<Integer, List<String>> entry : bestPathMap.entrySet()) {
+            List<String> hubs = entry.getValue();
+            for (int i = 0; i < hubs.size(); i++) {
+                sequenceMap.put(i, hubs.get(i));
+            }
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String sequenceJson = objectMapper.writeValueAsString(sequenceMap);
+            String hashSequence = generateSha256Hash(sequenceJson);
+
+            //DB 조회
+            return hubRoutesRepository.findByHashSequence(hashSequence)
+                    .orElseThrow(() -> new CustomException(HubRoutesDomainExceptionCode.HUB_ROUTES_NOT_FOUND));
+        } catch (JsonProcessingException e) {
+            throw new CustomException(CommonExceptionCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private HubRoutesEntity findHubRoutesById(UUID hubRoutesId) {

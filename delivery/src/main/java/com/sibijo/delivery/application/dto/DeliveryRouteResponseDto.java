@@ -14,6 +14,7 @@ public class DeliveryRouteResponseDto {
     private UUID routeId;
     private UUID deliveryId;
     private Integer sequence;
+    private String routeSequence;
     private UUID startHubId;
     private UUID endHubId;
     private String expectedDistance;
@@ -28,6 +29,7 @@ public class DeliveryRouteResponseDto {
         this.routeId = deliveryRoute.getRouteId();
         this.deliveryId = deliveryRoute.getDelivery().getDeliveryId();
         this.sequence = deliveryRoute.getSequence();
+        this.routeSequence = deliveryRoute.getRouteSequence();
         this.startHubId = deliveryRoute.getStartHubId();
         this.endHubId = deliveryRoute.getEndHubId();
         this.expectedDistance = deliveryRoute.getExpectedDistance();

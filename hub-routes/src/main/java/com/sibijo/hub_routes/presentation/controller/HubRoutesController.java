@@ -31,8 +31,9 @@ public class HubRoutesController {
 
     @GetMapping("/order")
     public HubRouteToDeliveryDto getHubRouteForOrder(
-            @RequestParam UUID startHubId,
-            @RequestParam UUID endHubId) {
+            @RequestParam("startHubId") UUID startHubId,
+            @RequestParam("endHubId") UUID endHubId) {
+        HubRouteToDeliveryDto hubRouteToDeliveryDto = hubRoutesApplicationService.getHubRouteForOrder(startHubId, endHubId);
         return hubRoutesApplicationService.getHubRouteForOrder(startHubId, endHubId);
     }
 

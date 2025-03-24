@@ -125,8 +125,14 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
      */
     @Override
     public HubRouteToDeliveryDto getHubRouteForOrder(UUID startHubId, UUID endHubId) {
-        HubRoutesEntity hubRoutesEntity = hubRoutesDomainService.getHubRouteForOrder(startHubId,
-                endHubId);
+        //허브 테이블 전체 조회
+        HubServiceClientDto hubServiceClientDto = hubServiceClient.getHubForHubRoutes();
+        HubRoutesCommand hubRoutesCommand = new HubRoutesCommand(
+                startHubId,
+                endHubId,
+                hubServiceClientDto.getHubs()
+        );
+        HubRoutesEntity hubRoutesEntity = hubRoutesDomainService.getHubRouteForOrder(hubRoutesCommand);
         return new HubRouteToDeliveryDto(
                 String.valueOf(hubRoutesEntity.getDistance()),
                 String.valueOf(hubRoutesEntity.getEstimatedTime()),

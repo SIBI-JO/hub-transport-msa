@@ -44,7 +44,10 @@ public class DeliveryRoute extends BaseEntity {
     @JoinColumn(name = "delivery_id", nullable = false, unique = true)
     private Delivery delivery; // 1:1 관계 (배송 ID)
 
-    private Integer sequence;   // 배송 경로 상 허브의 순번
+    private Integer sequence;   // 배송 경로 상 허브의 순번 -> 배송담당자 배정 순번
+
+    @Column(name = "route_sequence")
+    private String routeSequence; //허브 총 경로 시퀀스
 
     @Column(nullable = false)
     private UUID startHubId; // 출발 허브 ID
@@ -76,6 +79,7 @@ public class DeliveryRoute extends BaseEntity {
         return DeliveryRoute.builder()
                 .delivery(delivery)
                 .sequence(requestDto.getSequence())
+                .routeSequence(requestDto.getRouteSequence())
                 .startHubId(requestDto.getStartHubId())
                 .endHubId(requestDto.getEndHubId())
                 .recipientsId(requestDto.getRecipientsId())
