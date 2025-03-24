@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Base64;
+import java.util.Date;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,5 +93,10 @@ public class JwtUtil {
         Claims claims = parseToken(token);
         String companyIdStr = claims.get("companyId", String.class);
         return companyIdStr != null ? UUID.fromString(companyIdStr) : null;
+    }
+
+    public Date extractExpiration(String token) {
+        Claims claims = parseToken(token);
+        return claims.getExpiration();
     }
 }

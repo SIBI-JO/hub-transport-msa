@@ -13,8 +13,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -24,9 +27,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final UserJwtUtil jwtUtil;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public JwtAuthenticationFilter(UserJwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(UserJwtUtil jwtUtil, RedisTemplate<String, Object> redisTemplate) {
         this.jwtUtil = jwtUtil;
+        this.redisTemplate = redisTemplate;
         setFilterProcessesUrl("/api/users/signin");
     }
 
@@ -63,6 +68,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         UUID companyId = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getCompanyId();
 
         String token = jwtUtil.createToken(username, userId, role, hubId, companyId);
+        long ttl = jwtUtil.getTOKEN_TIME();
+
+        //redis에 저장
+        redisTemplate.opsForValue().set("jwt:user:" + userId, token, ttl, TimeUnit.MILLISECONDS);
 
         //Jwt Token을 JSON 응답으로 반환
         ApiResponse<SignInResponseDto> responseBody = ApiResponse.success(

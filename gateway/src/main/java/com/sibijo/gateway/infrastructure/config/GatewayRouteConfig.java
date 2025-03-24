@@ -9,6 +9,7 @@ import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.orde
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.productRolePermissions;
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.userRolePermissions;
 
+import com.sibijo.gateway.infrastructure.filter.LogoutFilter;
 import com.sibijo.gateway.infrastructure.filter.RoleAuthorizationFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -20,7 +21,7 @@ public class GatewayRouteConfig {
 
     @Bean
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder,
-            RoleAuthorizationFilter roleAuthorizationFilter) {
+            RoleAuthorizationFilter roleAuthorizationFilter, LogoutFilter logoutFilter) {
         return builder.routes()
                 // User Service (일반 사용자 및 관리자)
                 .route("user-service", r -> r.path("/api/users/**")
@@ -72,6 +73,11 @@ public class GatewayRouteConfig {
                 .route("delivery-service", r -> r.path("/api/deliveries/**")
                         .filters(f -> f.filter(roleAuthorizationFilter.apply(
                                 new RoleAuthorizationFilter.Config(deliveryRolePermissions))))
+                        .uri("lb://delivery-service"))
+
+                // 로그아웃
+                .route("user-logout-service", r -> r.path("/api/logout")
+                        .filters(f -> f.filter(logoutFilter.apply(new Object())))
                         .uri("lb://delivery-service"))
 
                 //swagger

@@ -5,3 +5,10 @@ management:
   tracing:
     sampling:
       probability: 1.0
+
+spring:
+  data:
+    redis:
+      host: redis-stack-compose
+      port: 6379
+      password: ${REDIS_PASSWORD}

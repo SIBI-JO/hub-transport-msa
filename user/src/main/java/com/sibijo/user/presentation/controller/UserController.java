@@ -69,21 +69,23 @@ public class UserController {
     private ResponseEntity<ApiResponse<UserDetailsResponseDto>> updateUser(
             @PathVariable("id") Long id,
             @Valid @RequestBody UserUpdateRequestDto requestDto,
+            HttpServletRequest request,
             BindingResult bindingResult
     ) {
         // validation 예외처리
         raiseValidationException(bindingResult);
 
-        UserDetailsResponseDto userDetailsResponseDto = userService.updateUser(id, requestDto);
+        UserDetailsResponseDto userDetailsResponseDto = userService.updateUser(id, requestDto, request);
         return ResponseEntity
                 .ok(ApiResponse.success("수정 성공", userDetailsResponseDto));
     }
 
     @DeleteMapping("/{id}")
     private ResponseEntity<ApiResponse<UserDeleteResponseDto>> deleteUser(
-            @PathVariable("id") Long id
+            @PathVariable("id") Long id,
+            HttpServletRequest request
     ) {
-        UserDeleteResponseDto userDeleteResponseDto = userService.deleteUser(id);
+        UserDeleteResponseDto userDeleteResponseDto = userService.deleteUser(id, request);
         return ResponseEntity
                 .ok(ApiResponse.success("삭제 성공", userDeleteResponseDto));
     }

@@ -22,6 +22,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
       - SPRING_PROFILES_ACTIVE=docker
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - eureka
     networks:
@@ -42,10 +43,12 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - eureka
       - postgres
       - zipkin
+      - redis-stack-compose
     networks:
       - msa-network
 
@@ -221,6 +224,25 @@ services:
     container_name: zipkin
     ports:
       - "9411:9411"
+    networks:
+      - msa-network
+
+  redis-stack-compose:
+    image: redis/redis-stack
+    container_name: redis-stack-compose
+    restart: always
+    command: [ "redis-server", "--requirepass", "systempass" ]
+    ports:
+      - 6379:6379
+    networks:
+      - msa-network
+
+  redis-insight:
+    image: redislabs/redisinsight
+    container_name: redis-insight
+    restart: always
+    ports:
+      - 5540:5540
     networks:
       - msa-network
 
