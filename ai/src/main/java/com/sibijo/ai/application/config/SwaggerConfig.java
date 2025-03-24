@@ -1,12 +1,15 @@
-package com.sibijo.delivery.infrastructure.config;
+package com.sibijo.ai.application.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration
 public class SwaggerConfig {
+
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
@@ -16,8 +19,8 @@ public class SwaggerConfig {
     }
 
     private Info apiInfo() {
-        return new Info().title("Delivery REST API")
-                .description("Delivery 관련 API 문서입니다.")
+        return new Info().title("AI REST API")
+                .description("AI 관련 API 문서입니다.")
                 .version("1.0");
     }
 
@@ -26,4 +29,6 @@ public class SwaggerConfig {
                 .bearerFormat("JWT")
                 .scheme("bearer");
     }
+
+
 }
