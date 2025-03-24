@@ -166,13 +166,13 @@ services:
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-#      - gemini.api.key=${gemini.api.key}
-#      - gemini.api.url=${gemini.api.url}
-#      - order.service.url=${order.service.url}
-#      - order.service.useDummyData=${order.service.useDummyData}
-#      - slack.api.url=${slack.api.url}
-#      - slack.api.token=${slack.api.token}
-#      - slack.channel=${slack.channel}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_API_URL=${GEMINI_API_URL}
+      - order_service_url=${order_service_url}
+      - order_service_useDummyData=${order_service_useDummyData}
+      - slack_api_url=${slack_api_url}
+      - slack_api_token=${slack_api_token}
+      - slack_channel=${slack_channel}
     depends_on:
       - eureka
       - postgres
