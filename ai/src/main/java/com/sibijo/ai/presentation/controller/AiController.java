@@ -11,18 +11,19 @@ import com.sibijo.ai.infrastructure.client.delivery.DeliveryServiceClient;
 import com.sibijo.ai.infrastructure.client.delivery.DeliveryDetailsDto;
 import com.sibijo.ai.infrastructure.client.hub.HubServiceClient;
 import com.sibijo.ai.infrastructure.client.hub.HubInfoDto;
+import com.sibijo.ai.infrastructure.client.user.DeliveryAgentDetailsResponseDto;
+import com.sibijo.ai.infrastructure.client.user.HubManagerDto;
+import com.sibijo.ai.infrastructure.client.user.UserServiceClient;
+import com.sibijo.ai.infrastructure.client.user.DeliveryAgentServiceClient;
 import com.sibijo.ai.infrastructure.repository.SlackMessageRepository;
 import com.sibijo.ai.presentation.dto.AiNotificationRequestDto;
 import com.sibijo.ai.presentation.dto.OrderDto;
 import com.sibijo.common.dto.ApiResponse;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-
-
 import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -36,75 +37,78 @@ public class AiController {
     private final ProductServiceClient productServiceClient;
     private final DeliveryServiceClient deliveryServiceClient;
     private final HubServiceClient hubServiceClient;
+    private final UserServiceClient userServiceClient;
+    private final DeliveryAgentServiceClient deliveryAgentServiceClient; // 배송담당자 정보 조회용
     private final SlackMessageRepository slackMessageRepository;
 
     /**
-     * Order 서비스에서 주문 생성 알림을 받는 엔드포인트
+     * 주문 생성 알림: 주문 생성 시, 출발지 허브 담당자와 배송담당자 정보를 반영하여 AI 메시지를 생성하고 Slack DM 전송
      */
     @PostMapping("/orders/dm")
     public ResponseEntity<?> handleOrderCreated(@RequestBody AiNotificationRequestDto dto,
             @RequestHeader("Authorization") String bearerToken) {
-        System.out.println("Received bearerToken: " + bearerToken);
         try {
-            // 1) Order 서비스에서 주문 상세 조회 (Bearer 접두사 포함)
+            // 1) 주문 상세 조회
             ApiResponse<OrderServiceResponseDto> orderResponse = orderServiceClient.getOrderById(dto.getOrderId(), "Bearer " + bearerToken);
             if (!orderResponse.getStatus().equalsIgnoreCase("SUCCESS") || orderResponse.getData() == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found or invalid response");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Order not found or invalid response");
             }
             OrderServiceResponseDto orderData = orderResponse.getData();
-            System.out.println("Order 조회 완료");
 
-            // 2) 추가 정보 조회: 상품 상세 정보
+            // 2) 상품 상세 조회
             ApiResponse<ProductDetailsDto> productResponse = productServiceClient.getProductDetails(orderData.getProductId(), "Bearer " + bearerToken);
             ProductDetailsDto productDetails = productResponse.getData();
-            System.out.println("상품 정보 조회 완료");
 
-            // 3) 추가 정보 조회: 배송 상세 정보 (발송지/도착지, 경유지 등)
+            // 3) 배송 상세 정보 조회
             ApiResponse<DeliveryDetailsDto> deliveryResponse = deliveryServiceClient.getDeliveryDetails(orderData.getDeliveryId(), "Bearer " + bearerToken);
             DeliveryDetailsDto deliveryDetails = deliveryResponse.getData();
-            System.out.println("배송 정보 조회 완료");
-            System.out.println(orderData.getDeliveryId());
-
-            System.out.println(deliveryDetails.getDeliveryId());
-            System.out.println(deliveryDetails.getStartHubId());
-            System.out.println(deliveryDetails.getEndHubId());
-
             UUID departureHubId = deliveryDetails.getStartHubId();
-            UUID destinationHubId = deliveryDetails.getEndHubId();
-            if (departureHubId == null || destinationHubId == null) {
-                throw new IllegalStateException("배송 상세 정보에 허브 ID가 누락되었습니다.");
+            if (departureHubId == null) {
+                throw new IllegalStateException("배송 상세 정보에 출발 허브 ID가 누락되었습니다.");
             }
 
-            // 4) 허브 정보 조회: 발송지와 도착지 허브의 이름
-            ApiResponse<HubInfoDto> departureHubResponse = hubServiceClient.getHubInfo(departureHubId, "Bearer " + bearerToken);
-            HubInfoDto departureHub = departureHubResponse.getData();
+            // 4) 출발지 허브 정보 조회
+            ApiResponse<HubInfoDto> hubResponse = hubServiceClient.getHubInfo(departureHubId, "Bearer " + bearerToken);
+            HubInfoDto departureHub = hubResponse.getData();
 
-            ApiResponse<HubInfoDto> destinationHubResponse = hubServiceClient.getHubInfo(destinationHubId, "Bearer " + bearerToken);
-            HubInfoDto destinationHub = destinationHubResponse.getData();
-            System.out.println("허브 정보 조회 완료");
+            // 5) 출발지 허브 담당자 정보 조회 (User Service)
+            ApiResponse<HubManagerDto> hubManagerResponse = userServiceClient.getHubManagerByHubId(departureHubId, "Bearer " + bearerToken);
+            HubManagerDto hubManager = hubManagerResponse.getData();
+            if (hubManager == null) {
+                throw new IllegalStateException("허브 담당자 정보가 조회되지 않았습니다.");
+            }
 
+            // 6) 배송담당자 정보 조회 (Delivery 서비스의 DeliveryDetailsDto에서 deliveryManagerId 추출)
+            Long deliveryManagerId = deliveryDetails.getDeliveryManagerId();
+            ApiResponse<DeliveryAgentDetailsResponseDto> agentResponse =
+                    deliveryAgentServiceClient.getDeliveryAgentById(deliveryManagerId, "Bearer " + bearerToken);
+            DeliveryAgentDetailsResponseDto deliveryAgent = agentResponse.getData();
+            if (deliveryAgent == null) {
+                throw new IllegalStateException("배송담당자 정보가 조회되지 않았습니다.");
+            }
 
-            // 5) 모든 정보를 합쳐서 AI 메시지 생성에 사용할 DTO 구성
+            // 7) AI 메시지 생성을 위한 주문 정보 DTO 구성
             OrderDto orderDto = new OrderDto();
             orderDto.setOrderId(orderData.getOrderId().toString());
             orderDto.setOrdererName("공급사 ID: " + orderData.getSupplierId());
-            orderDto.setOrdererEmail("unknown@example.com"); // 실제 이메일은 별도 조회 필요
+            orderDto.setOrdererEmail("unknown@example.com");
             orderDto.setProductInfo("상품명: " + productDetails.getProductName() +
                     " / 수량: " + orderData.getAmount());
             orderDto.setRequestInfo(orderData.getRequest());
             orderDto.setDispatchCenter(departureHub.getHubName());
-            orderDto.setTransitCenters(null); // 경유지가 있다면 해당 리스트로 세팅
-            orderDto.setDestination(destinationHub.getHubName());
-            orderDto.setDeliveryPersonName("홍길동");
-            orderDto.setDeliveryPersonEmail("delivery@company.com");
-            System.out.println("모든 정보 구성 완료");
+            orderDto.setTransitCenters(null); // 경유지가 있을 경우 리스트 세팅
+            orderDto.setDestination("미정");  // 필요에 따라 도착지 정보 설정
 
-            // 6) Gemini API 호출하여 AI 메시지 생성 (최종 발송 시한 포함)
+            // 실제 배송담당자의 이름과 Slack ID 반영 (예: 이름은 name, Slack ID는 slackUserId 필드)
+            orderDto.setDeliveryPersonName(deliveryAgent.getName());
+            orderDto.setDeliveryPersonEmail(deliveryAgent.getSlackUserId());
+
+            // 8) Gemini API 호출하여 AI 메시지 생성
             String aiMessage = geminiNotificationService.generateAiSlackMessage(orderDto);
-            System.out.println("AI 메시지 생성 완료");
 
-            // 7) Slack DM 전송
-            slackNotificationService.sendDirectMessageToUser(dto.getUserSlackId(), aiMessage);
+            // 9) 출발지 허브 담당자의 Slack User ID를 사용하여 DM 전송
+            slackNotificationService.sendDirectMessageToUser(hubManager.getSlackUserId(), aiMessage);
             System.out.println("Slack DM 전송 완료");
 
             return ResponseEntity.ok(Collections.singletonMap("aiMessage", aiMessage));
@@ -129,8 +133,8 @@ public class AiController {
 
     // 전체 조회: GET /api/ai/messages
     @GetMapping("/messages")
-    public ResponseEntity<ApiResponse<List<SlackMessage>>> getAllMessages() {
-        List<SlackMessage> messages = slackMessageRepository.findAll();
+    public ResponseEntity<ApiResponse<java.util.List<SlackMessage>>> getAllMessages() {
+        java.util.List<SlackMessage> messages = slackMessageRepository.findAll();
         return ResponseEntity.ok(ApiResponse.success("전체 Slack 메시지 조회 성공", messages));
     }
 }
