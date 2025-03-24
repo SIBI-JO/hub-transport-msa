@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateStockRequest {
+public class UpdateStockRequestDto {
 
     private Long newAmount;
 

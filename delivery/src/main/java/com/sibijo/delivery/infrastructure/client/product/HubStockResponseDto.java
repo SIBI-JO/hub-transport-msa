@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class HubStockResponse {
+public class HubStockResponseDto {
     private UUID hubStockId;
     private UUID hubId;
     private UUID companyId;
