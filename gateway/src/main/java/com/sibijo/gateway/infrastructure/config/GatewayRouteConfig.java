@@ -86,6 +86,34 @@ public class GatewayRouteConfig {
                         .filters(f -> f.rewritePath("/swagger/user-service(?<segment>/?.*)",
                                 "/${segment}"))
                         .uri("lb://user-service"))
+                .route("ai-service-swagger", r -> r.path("/swagger/ai-service/**")
+                        .filters(f -> f.rewritePath("/swagger/ai-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://ai-service"))
+                .route("product-service-swagger", r -> r.path("/swagger/product-service/**")
+                        .filters(f -> f.rewritePath("/swagger/product-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://product-service"))
+                .route("company-service-swagger", r -> r.path("/swagger/company-service/**")
+                        .filters(f -> f.rewritePath("/swagger/company-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://company-service"))
+                .route("delivery-service-swagger", r -> r.path("/swagger/delivery-service/**")
+                        .filters(f -> f.rewritePath("/swagger/delivery-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://delivery-service"))
+                .route("order-service-swagger", r -> r.path("/swagger/order-service/**")
+                        .filters(f -> f.rewritePath("/swagger/order-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://order-service"))
+                .route("hub-service-swagger", r -> r.path("/swagger/hub-service/**")
+                        .filters(f -> f.rewritePath("/swagger/hub-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://hub-service"))
+                .route("hub-routes-service-swagger", r -> r.path("/swagger/hub-routes-service/**")
+                        .filters(f -> f.rewritePath("/swagger/hub-routes-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://hub-routes-service"))
 
                 .build();
     }
