@@ -64,16 +64,13 @@ public class CustomDeliveryService {
             // 1. 공급업체 & 수령업체 정보를 통해 출발/도착 허브 조회
             startHub = companyClient.getCompanyOrderInfo(requestDto.getSupplierId()).getData();
             endHub = companyClient.getCompanyOrderInfo(requestDto.getRecipientsId()).getData();
-//            CompanyResponseDto startHub = new CompanyResponseDto(UUID.fromString("45c4d201-1655-4716-8a7d-66b1d31a0684"), "서울특별시 광진구 12번지");
-//            CompanyResponseDto endHub = new CompanyResponseDto(UUID.fromString("46c4d201-1655-4716-8a7d-66b1d31a0685"), "서울특별시 광진구 29번지");
 
             // 2. 허브 서버에서 허브 간 경로 조회 (시작 허브와 도착허브가 같으면? )
             hubRoute = hubClient.getHubRouteForOrder(startHub.getHubId(), endHub.getHubId());
-//            hubRoute = new HubResponseDto("400km", "4시간 50분");
 
             // 2.5 배송 담당자 정보 가져오기 (시작 허브와 도착허브가 같으면? )
             deliveryManagerId = userClient.getDeliveryAgent().getData();
-//            deliveryManagerId = 2L;
+
 
         } catch (Exception e) {
             try {
@@ -138,10 +135,10 @@ public class CustomDeliveryService {
      *  권한 : Hub_Manager -> 자신의 허브만    //   Delivery_Manager -> 자신의 배송만
      *                                      // Company_Manager -> 자신의 업체만
      */
-    public Page<DeliveryResponseDto> getDeliveries(String token, Pageable pageable) {
+    public Page<DeliveryResponseDto> getDeliveries(String token, String receiver, String address, Pageable pageable) {
 
         Pageable validatedPageable = PageableUtils.validatePageable(pageable);
-        Page<Delivery> deliveryList = deliveryService.getDeliveries(token, validatedPageable);
+        Page<Delivery> deliveryList = deliveryService.getDeliveries(token, receiver, address, validatedPageable);
         return deliveryList.map(DeliveryResponseDto::new);
     }
 

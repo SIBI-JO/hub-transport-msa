@@ -7,6 +7,7 @@ import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.delivery.application.dto.DeliveryResponseDto;
 import com.sibijo.delivery.application.dto.DeliveryRouteResponseDto;
 import com.sibijo.delivery.application.service.CustomDeliveryService;
+import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j(topic = "배송 Controller")
@@ -60,10 +62,12 @@ public class DeliveryController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<DeliveryResponseDto>>> getDeliveries(
+            @RequestParam(required = false) String deliveryAddress,
+            @RequestParam(required = false) String receiver,
             HttpServletRequest request,
             @PageableDefault(size = 10, page = 1, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
-        return ResponseEntity.ok(ApiResponse.success("배송 전체 조회 성공", deliveryService.getDeliveries(token, pageable)));
+        return ResponseEntity.ok(ApiResponse.success("배송 전체 조회 성공", deliveryService.getDeliveries(token, receiver, deliveryAddress, pageable)));
     }
 
 

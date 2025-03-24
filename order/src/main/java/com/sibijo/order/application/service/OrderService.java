@@ -15,8 +15,10 @@ import com.sibijo.order.infrastructure.client.Product.ProductClient;
 import com.sibijo.order.infrastructure.client.Product.UpdateStockRequestDto;
 import com.sibijo.order.infrastructure.client.ai.AiClient;
 import com.sibijo.order.infrastructure.client.ai.AiNotificationRequestDto;
+import com.sibijo.order.infrastructure.repository.CustomOrderRepository;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
+import com.sibijo.order.presentation.dto.OrderSearchDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
 import java.util.Objects;
 import java.util.UUID;
@@ -133,21 +135,31 @@ public class OrderService {
      *   권한 : Hub_Manager -> 자신의 허브만, Delivery_Manager/Company_Manager -> 본인의 주문만
      */
     @Transactional(readOnly = true)
-    public Page<OrderResponseDto> getOrders(String token, Pageable pageable) {
+    public Page<OrderResponseDto> getOrders(String token, Long ordererId, UUID supplierId, UUID recipientsId, Pageable pageable) {
         Pageable validatedPageable = PageableUtils.validatePageable(pageable);
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
         UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
+
         Page<Order> orderList = switch (role) {
-            case "MASTER" -> orderRepository.findAllByDeletedAtIsNullAndOrderStatus(OrderStatusEnum.COMPLETED, validatedPageable);
-            case "HUB" -> orderRepository.findOrdersByHubId(hubId, validatedPageable);
-            case "DELIVERY", "COMPANY" -> orderRepository.findByOrdererIdAndDeletedAtIsNullAndOrderStatus(userId, OrderStatusEnum.COMPLETED, validatedPageable);
+            case "MASTER" -> orderRepository.searchOrders(ordererId, supplierId, recipientsId, validatedPageable);
+            case "HUB" -> orderRepository.searchOrdersForHub(hubId, ordererId, supplierId, recipientsId, validatedPageable);
+            case "DELIVERY", "COMPANY" ->
+                    orderRepository.searchOrdersByOrdererId(userId, supplierId, recipientsId, validatedPageable);
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 
         return orderList.map(OrderResponseDto::new);
+//        Page<Order> orderList = switch (role) {
+//            case "MASTER" -> orderRepository.findAllByDeletedAtIsNullAndOrderStatus(OrderStatusEnum.COMPLETED, validatedPageable);
+//            case "HUB" -> orderRepository.findOrdersByHubId(hubId, validatedPageable);
+//            case "DELIVERY", "COMPANY" -> orderRepository.findByOrdererIdAndDeletedAtIsNullAndOrderStatus(userId, OrderStatusEnum.COMPLETED, validatedPageable);
+//            default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+//        };
+//
+//        return orderList.map(OrderResponseDto::new);
     }
 
     /**

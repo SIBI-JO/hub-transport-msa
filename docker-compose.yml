@@ -39,7 +39,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
+      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
     depends_on:
@@ -61,7 +61,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
+      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - eureka
       - postgres
@@ -81,7 +82,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
+      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - eureka
       - postgres
@@ -141,7 +143,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
+      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - KAKAO_MAP_KEY = ${KAKAO_MAP_KEY}
     depends_on:
@@ -151,25 +153,25 @@ services:
     networks:
       - msa-network
 
-#  ai:
-#    build:
-#      context: ./ai
-#    container_name: ai
-#    ports:
-#      - "19098:19098"
-#    environment:
-#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
-#      - SPRING_PROFILES_ACTIVE=docker
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
-#      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-#      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-#      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-#    depends_on:
-#      - eureka
-#      - postgres
-#      - zipkin
-#    networks:
-#      - msa-network
+  ai:
+    build:
+      context: ./ai
+    container_name: ai
+    ports:
+      - "19098:19098"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    depends_on:
+      - eureka
+      - postgres
+      - zipkin
+    networks:
+      - msa-network
 
   hub-routes:
     build:
@@ -180,10 +182,10 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
+      - SPRING_DATASOURCE_URL=jdbc:jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
+      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - KAKAO_MAP_KEY = ${KAKAO_MAP_KEY}
     depends_on:
