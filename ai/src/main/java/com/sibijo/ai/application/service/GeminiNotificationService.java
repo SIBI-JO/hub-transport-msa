@@ -25,7 +25,7 @@ public class GeminiNotificationService {
                 ? routeResponseDto.getExpectedDistance() + " KM"
                 : "정보 없음";
 
-        // 실제 소요시간 처리: realDuration이 문자열(분 단위)로 제공된다면 파싱하여 사용하고, 없으면 기본 60분 사용
+        //  예상 소요시간 처리: realDuration이 문자열(분 단위)로 제공된다면 파싱하여 사용하고, 없으면 기본 60분 사용
         int realDurationMinutes = 0; // 기본값
         if (routeResponseDto != null && routeResponseDto.getExpectedDuration() != null) {
             try {
@@ -45,7 +45,6 @@ public class GeminiNotificationService {
                         "상품 정보: %s\n" +
                         "요청 사항: %s\n" +
                         "발송지: %s\n" +
-                        "경유지: %s\n" +
                         "도착지: %s\n" +
                         "배송 담당자: %s\n" +
                         "배송 담당자 근무시간: 09:00 - 18:00\n" +
@@ -58,7 +57,6 @@ public class GeminiNotificationService {
                 order.getProductInfo(),
                 order.getRequestInfo(),
                 order.getDispatchCenter(),
-                order.getTransitCenters() != null ? String.join(", ", order.getTransitCenters()) : "없음",
                 order.getDestination(),
                 order.getDeliveryPersonName(),
                 realDistanceStr,
