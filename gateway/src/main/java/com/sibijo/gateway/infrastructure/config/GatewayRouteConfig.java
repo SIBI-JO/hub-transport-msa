@@ -9,6 +9,7 @@ import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.orde
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.productRolePermissions;
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.userRolePermissions;
 
+import com.sibijo.gateway.infrastructure.filter.LogoutFilter;
 import com.sibijo.gateway.infrastructure.filter.RoleAuthorizationFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -20,7 +21,7 @@ public class GatewayRouteConfig {
 
     @Bean
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder,
-            RoleAuthorizationFilter roleAuthorizationFilter) {
+            RoleAuthorizationFilter roleAuthorizationFilter, LogoutFilter logoutFilter) {
         return builder.routes()
                 // User Service (일반 사용자 및 관리자)
                 .route("user-service", r -> r.path("/api/users/**")
@@ -74,12 +75,45 @@ public class GatewayRouteConfig {
                                 new RoleAuthorizationFilter.Config(deliveryRolePermissions))))
                         .uri("lb://delivery-service"))
 
+                // 로그아웃
+                .route("user-logout-service", r -> r.path("/api/logout")
+                        .filters(f -> f.filter(logoutFilter.apply(new Object())))
+                        .uri("lb://delivery-service"))
+
                 //swagger
                 // Swagger 문서 경로 라우팅
                 .route("user-service-swagger", r -> r.path("/swagger/user-service/**")
                         .filters(f -> f.rewritePath("/swagger/user-service(?<segment>/?.*)",
                                 "/${segment}"))
                         .uri("lb://user-service"))
+                .route("ai-service-swagger", r -> r.path("/swagger/ai-service/**")
+                        .filters(f -> f.rewritePath("/swagger/ai-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://ai-service"))
+                .route("product-service-swagger", r -> r.path("/swagger/product-service/**")
+                        .filters(f -> f.rewritePath("/swagger/product-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://product-service"))
+                .route("company-service-swagger", r -> r.path("/swagger/company-service/**")
+                        .filters(f -> f.rewritePath("/swagger/company-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://company-service"))
+                .route("delivery-service-swagger", r -> r.path("/swagger/delivery-service/**")
+                        .filters(f -> f.rewritePath("/swagger/delivery-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://delivery-service"))
+                .route("order-service-swagger", r -> r.path("/swagger/order-service/**")
+                        .filters(f -> f.rewritePath("/swagger/order-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://order-service"))
+                .route("hub-service-swagger", r -> r.path("/swagger/hub-service/**")
+                        .filters(f -> f.rewritePath("/swagger/hub-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://hub-service"))
+                .route("hub-routes-service-swagger", r -> r.path("/swagger/hub-routes-service/**")
+                        .filters(f -> f.rewritePath("/swagger/hub-routes-service(?<segment>/?.*)",
+                                "/${segment}"))
+                        .uri("lb://hub-routes-service"))
 
                 .build();
     }

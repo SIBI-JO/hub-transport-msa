@@ -22,6 +22,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
       - SPRING_PROFILES_ACTIVE=docker
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - eureka
     networks:
@@ -42,10 +43,12 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - eureka
       - postgres
       - zipkin
+      - redis-stack-compose
     networks:
       - msa-network
 
@@ -62,6 +65,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - eureka
       - postgres
@@ -82,6 +86,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - eureka
       - postgres
@@ -143,7 +148,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - KAKAO_MAP_KEY = ${KAKAO_MAP_KEY}
+      - KAKAO_MAP_KEY=${KAKAO_MAP_KEY}
     depends_on:
       - eureka
       - postgres
@@ -151,25 +156,32 @@ services:
     networks:
       - msa-network
 
-#  ai:
-#    build:
-#      context: ./ai
-#    container_name: ai
-#    ports:
-#      - "19098:19098"
-#    environment:
-#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
-#      - SPRING_PROFILES_ACTIVE=docker
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
-#      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-#      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-#      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-#    depends_on:
-#      - eureka
-#      - postgres
-#      - zipkin
-#    networks:
-#      - msa-network
+  ai:
+    build:
+      context: ./ai
+    container_name: ai
+    ports:
+      - "19098:19098"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_API_URL=${GEMINI_API_URL}
+      - order_service_url=${order_service_url}
+      - order_service_useDummyData=${order_service_useDummyData}
+      - slack_api_url=${slack_api_url}
+      - slack_api_token=${slack_api_token}
+      - slack_channel=${slack_channel}
+    depends_on:
+      - eureka
+      - postgres
+      - zipkin
+    networks:
+      - msa-network
 
   hub-routes:
     build:
@@ -185,7 +197,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - KAKAO_MAP_KEY = ${KAKAO_MAP_KEY}
+      - KAKAO_MAP_KEY=${KAKAO_MAP_KEY}
     depends_on:
       - eureka
       - postgres
@@ -212,6 +224,25 @@ services:
     container_name: zipkin
     ports:
       - "9411:9411"
+    networks:
+      - msa-network
+
+  redis-stack-compose:
+    image: redis/redis-stack
+    container_name: redis-stack-compose
+    restart: always
+    command: [ "redis-server", "--requirepass", "systempass" ]
+    ports:
+      - 6379:6379
+    networks:
+      - msa-network
+
+  redis-insight:
+    image: redislabs/redisinsight
+    container_name: redis-insight
+    restart: always
+    ports:
+      - 5540:5540
     networks:
       - msa-network
 

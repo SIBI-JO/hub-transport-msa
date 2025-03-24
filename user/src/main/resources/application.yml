@@ -13,8 +13,14 @@ spring:
   jpa:
     database-platform: ${SPRING_JPA_DATABASE_PLATFORM}
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
+  data:
+    redis:
+      host: redis-stack-compose
+      port: 6379
+      password: ${REDIS_PASSWORD}
+
 
 server:
   port: 19092
@@ -44,6 +50,8 @@ resilience4j:
         failureRateThreshold: 50
         permittedNumberOfCallsInHalfOpenState: 3
         waitDurationInOpenState: 20s
+
+
 
 management:
   zipkin:

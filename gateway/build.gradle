@@ -4,6 +4,9 @@ ext {
 }
 
 dependencies {
+	//redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 	// swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.7.0'
 
