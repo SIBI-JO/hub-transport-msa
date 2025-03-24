@@ -96,6 +96,7 @@ public class AiController {
                 throw new IllegalStateException("배송담당자 정보가 조회되지 않았습니다.");
             }
 
+            System.out.println(orderData.getDeliveryId());
             // 6) 배송경로 정보 조회 (deliveryId 기준)
             ApiResponse<DeliveryRouteResponseDto> routeResponse = deliveryRouteClient.getRouteByDeliveryId(orderData.getDeliveryId(), "Bearer " + bearerToken);
             DeliveryRouteResponseDto routeDetails = routeResponse.getData();

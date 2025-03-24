@@ -10,7 +10,7 @@ import java.util.UUID;
 @FeignClient(name = "delivery-service", contextId = "deliveryServiceClient")
 public interface DeliveryRouteClient {
 
-    @GetMapping("/api/deliveries/routes/{deliveryId}")
+    @GetMapping("/api/deliveries/routes/delivery/{deliveryId}")
     ApiResponse<DeliveryRouteResponseDto> getRouteByDeliveryId(
             @PathVariable("deliveryId") UUID deliveryId,
             @RequestHeader("Authorization") String bearerToken

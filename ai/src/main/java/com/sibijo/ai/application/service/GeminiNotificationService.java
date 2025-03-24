@@ -20,16 +20,16 @@ public class GeminiNotificationService {
      * 요청 시간에서 실제 소요시간을 뺀 최종 발송 시한을 산출하여 AI에 전달합니다.
      */
     public String generateAiSlackMessage(OrderDto order, DeliveryRouteResponseDto routeResponseDto) {
-        // 실제 거리 처리: realDistance 값이 있으면 "실제 거리: XX KM"로, 없으면 "정보 없음"
-        String realDistanceStr = (routeResponseDto != null && routeResponseDto.getRealDistance() != null)
-                ? routeResponseDto.getRealDistance() + " KM"
+
+        String realDistanceStr = (routeResponseDto != null && routeResponseDto.getExpectedDistance() != null)
+                ? routeResponseDto.getExpectedDistance() + " KM"
                 : "정보 없음";
 
         // 실제 소요시간 처리: realDuration이 문자열(분 단위)로 제공된다면 파싱하여 사용하고, 없으면 기본 60분 사용
         int realDurationMinutes = 0; // 기본값
-        if (routeResponseDto != null && routeResponseDto.getRealDuration() != null) {
+        if (routeResponseDto != null && routeResponseDto.getExpectedDuration() != null) {
             try {
-                realDurationMinutes = Integer.parseInt(routeResponseDto.getRealDuration());
+                realDurationMinutes = Integer.parseInt(routeResponseDto.getExpectedDuration());
             } catch (NumberFormatException e) {
                 // 파싱 실패 시 기본값 60분 사용
             }
