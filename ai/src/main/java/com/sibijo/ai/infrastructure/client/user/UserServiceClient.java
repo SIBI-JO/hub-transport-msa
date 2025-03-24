@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "user-service")
+@FeignClient(name = "user-service", contextId = "userServiceClient")
 public interface UserServiceClient {
 
     @GetMapping("/api/users/hub-manager/{hubId}")

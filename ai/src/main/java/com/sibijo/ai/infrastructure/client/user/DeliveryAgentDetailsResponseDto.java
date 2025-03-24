@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class DeliveryAgentDetailsResponseDto {
-    private Long id;
-    private String name;
-    private String slackUserId;
+    private Long userid;
+    private String username;
+    private String slackId;
 }

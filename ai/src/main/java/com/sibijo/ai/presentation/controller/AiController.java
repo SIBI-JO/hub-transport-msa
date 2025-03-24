@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
-
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
@@ -42,7 +41,7 @@ public class AiController {
     private final SlackMessageRepository slackMessageRepository;
 
     /**
-     * 주문 생성 알림: 주문 생성 시, 출발지 허브 담당자와 배송담당자 정보를 반영하여 AI 메시지를 생성하고 Slack DM 전송
+     * 주문 생성 알림: 주문 생성 시, 출발지 및 도착지 허브 담당자, 그리고 배송담당자 정보를 반영하여 AI 메시지를 생성하고 Slack DM 전송
      */
     @PostMapping("/orders/dm")
     public ResponseEntity<?> handleOrderCreated(@RequestBody AiNotificationRequestDto dto,
@@ -72,6 +71,14 @@ public class AiController {
             ApiResponse<HubInfoDto> hubResponse = hubServiceClient.getHubInfo(departureHubId, "Bearer " + bearerToken);
             HubInfoDto departureHub = hubResponse.getData();
 
+            // 4-1) 도착지 허브 정보 조회 (DeliveryDetailsDto에 endHubId 필드가 있다고 가정)
+            UUID destinationHubId = deliveryDetails.getEndHubId();
+            if (destinationHubId == null) {
+                throw new IllegalStateException("배송 상세 정보에 도착 허브 ID가 누락되었습니다.");
+            }
+            ApiResponse<HubInfoDto> destinationHubResponse = hubServiceClient.getHubInfo(destinationHubId, "Bearer " + bearerToken);
+            HubInfoDto destinationHub = destinationHubResponse.getData();
+
             // 5) 출발지 허브 담당자 정보 조회 (User Service)
             ApiResponse<HubManagerDto> hubManagerResponse = userServiceClient.getHubManagerByHubId(departureHubId, "Bearer " + bearerToken);
             HubManagerDto hubManager = hubManagerResponse.getData();
@@ -79,7 +86,7 @@ public class AiController {
                 throw new IllegalStateException("허브 담당자 정보가 조회되지 않았습니다.");
             }
 
-            // 6) 배송담당자 정보 조회 (Delivery 서비스의 DeliveryDetailsDto에서 deliveryManagerId 추출)
+            // 6) 배송담당자 정보 조회 (DeliveryDetailsDto에서 deliveryManagerId 추출)
             Long deliveryManagerId = deliveryDetails.getDeliveryManagerId();
             ApiResponse<DeliveryAgentDetailsResponseDto> agentResponse =
                     deliveryAgentServiceClient.getDeliveryAgentById(deliveryManagerId, "Bearer " + bearerToken);
@@ -98,17 +105,17 @@ public class AiController {
             orderDto.setRequestInfo(orderData.getRequest());
             orderDto.setDispatchCenter(departureHub.getHubName());
             orderDto.setTransitCenters(null); // 경유지가 있을 경우 리스트 세팅
-            orderDto.setDestination("미정");  // 필요에 따라 도착지 정보 설정
+            orderDto.setDestination(destinationHub.getHubName());  // 도착지 허브 이름 설정
 
-            // 실제 배송담당자의 이름과 Slack ID 반영 (예: 이름은 name, Slack ID는 slackUserId 필드)
-            orderDto.setDeliveryPersonName(deliveryAgent.getName());
-            orderDto.setDeliveryPersonEmail(deliveryAgent.getSlackUserId());
+            // 배송담당자의 이름과 Slack ID 반영
+            orderDto.setDeliveryPersonName(deliveryAgent.getUsername());
+            orderDto.setDeliveryPersonEmail(deliveryAgent.getSlackId());
 
             // 8) Gemini API 호출하여 AI 메시지 생성
             String aiMessage = geminiNotificationService.generateAiSlackMessage(orderDto);
 
             // 9) 출발지 허브 담당자의 Slack User ID를 사용하여 DM 전송
-            slackNotificationService.sendDirectMessageToUser(hubManager.getSlackUserId(), aiMessage);
+            slackNotificationService.sendDirectMessageToUser(hubManager.getSlackId(), aiMessage);
             System.out.println("Slack DM 전송 완료");
 
             return ResponseEntity.ok(Collections.singletonMap("aiMessage", aiMessage));

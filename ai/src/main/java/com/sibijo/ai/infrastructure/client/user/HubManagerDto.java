@@ -5,8 +5,8 @@ import java.util.UUID;
 
 @Data
 public class HubManagerDto {
-    private UUID userId;
-    private String name;
+    private Long userId;
+    private String username;
     private String email;
-    private String slackUserId;  // Slack 메시지 전송에 필요한 필드
+    private String slackId;  // Slack 메시지 전송에 필요한 필드
 }
