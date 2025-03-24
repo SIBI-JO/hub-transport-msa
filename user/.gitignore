@@ -38,3 +38,4 @@ out/
 
 ### secrets ###
 .env
+zipkin.jar

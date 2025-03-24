@@ -1,7 +1,8 @@
 package com.sibijo.ai.infrastructure.client;
 
+
+import com.sibijo.ai.application.config.GeminiApiProperties;
 import com.sibijo.ai.presentation.dto.GeminiApiResponseDto;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -12,15 +13,11 @@ import java.util.Map;
 @Component
 public class GeminiApiClient {
 
-    @Value("${gemini.api.url}")
-    private String geminiApiUrl;
-
-    @Value("${gemini.api.key}")
-    private String geminiApiKey;
-
+    private final GeminiApiProperties geminiApiProperties;
     private final RestTemplate restTemplate;
 
-    public GeminiApiClient(RestTemplate restTemplate) {
+    public GeminiApiClient(GeminiApiProperties geminiApiProperties, RestTemplate restTemplate) {
+        this.geminiApiProperties = geminiApiProperties;
         this.restTemplate = restTemplate;
     }
 
@@ -28,8 +25,14 @@ public class GeminiApiClient {
      * Gemini API에 요청을 보내고, AI 메시지를 반환합니다.
      */
     public String requestAiMessage(String prompt) {
-        // API 키를 URL에 쿼리 파라미터로 추가
-        String urlWithKey = geminiApiUrl + "?key=" + geminiApiKey;
+        String apiUrl = geminiApiProperties.getApiUrl();
+        String apiKey = geminiApiProperties.getApiKey();
+        System.out.println("Gemini API URL: " + apiUrl); // 디버그 출력
+        if (apiUrl == null || apiUrl.trim().isEmpty()) {
+            throw new IllegalStateException("Gemini API URL이 설정되지 않았습니다.");
+        }
+        String urlWithKey = apiUrl + "?key=" + apiKey;
+
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

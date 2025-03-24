@@ -1,20 +1,27 @@
 package com.sibijo.user.infrastructure.util;
 
 import com.sibijo.user.domain.enums.Role;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
+import javax.crypto.SecretKey;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
+@Getter
 public class UserJwtUtil {
 
     // 사용자 권한 값의 KEY
@@ -60,4 +67,18 @@ public class UserJwtUtil {
                         .signWith(key, signatureAlgorithm) // 암호화 알고리즘
                         .compact();
     }
+
+    public Date extractExpiration(String token) {
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getExpiration();  // JWT의 'auth(role)' 클레임 추출
+        } catch (Exception e) {
+            log.error("Failed to extract expiration from token: {}", e.getMessage());
+            return null;
+        }
+    }
+
 }

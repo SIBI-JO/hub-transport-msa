@@ -38,12 +38,12 @@ public class Order extends BaseEntity {
     private UUID orderId;
 
     @Column(nullable = false)
-    private UUID supplierId;
+    private UUID supplierId;   // 공급업체 ID
 
     private UUID supplierHubId;
 
     @Column(nullable = false)
-    private UUID recipientsId;
+    private UUID recipientsId;  // 수령업체 ID
 
     private UUID recipientHubId;
 
@@ -63,7 +63,7 @@ public class Order extends BaseEntity {
     private OrderStatusEnum orderStatus;
 
     @Column(nullable = false)
-    private Long ordererId;
+    private Long ordererId;   // 주문자 ID
 
 
     public static Order createOrder(OrderRequestDto requestDto, Long ordererId) {

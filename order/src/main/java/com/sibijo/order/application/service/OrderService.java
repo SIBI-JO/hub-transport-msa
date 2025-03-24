@@ -1,5 +1,6 @@
 package com.sibijo.order.application.service;
 
+import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
@@ -7,22 +8,25 @@ import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.order.application.dto.OrderResponseDto;
 import com.sibijo.order.domain.entity.Order;
+import com.sibijo.order.domain.enums.OrderDomainExceptionCode;
 import com.sibijo.order.domain.enums.OrderStatusEnum;
 import com.sibijo.order.domain.repository.OrderRepository;
 import com.sibijo.order.infrastructure.client.Delivery.DeliveryClient;
 import com.sibijo.order.infrastructure.client.Delivery.DeliveryRequestDto;
+import com.sibijo.order.infrastructure.client.Product.HubStockResponseDto;
 import com.sibijo.order.infrastructure.client.Product.ProductClient;
 import com.sibijo.order.infrastructure.client.Product.ProductResponseDto;
 import com.sibijo.order.infrastructure.client.Product.UpdateStockRequestDto;
 import com.sibijo.order.infrastructure.client.ai.AiClient;
 import com.sibijo.order.infrastructure.client.ai.AiNotificationRequestDto;
+import com.sibijo.order.infrastructure.repository.CustomOrderRepository;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
+import com.sibijo.order.presentation.dto.OrderSearchDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,14 +48,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final DeliveryClient deliveryClient;
     private final ProductClient productClient;
-    private final AiClient aiClient;
     private final PlatformTransactionManager transactionManager;
+    private final AiClient aiClient;
 
     /**
      *   주문 생성
      */
     public OrderResponseDto createOrder(OrderRequestDto requestDto, String token) {
-
+        log.info("주문 생성 시작");
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
 
@@ -61,8 +65,7 @@ public class OrderService {
         }
 
         // 상품 서버에서 재고 확인
-        Long amount = productClient.getProductOrderInfo(requestDto.getProductId()).getData().getAmount();
-//        Long amount = 2L;
+        Long amount = getProductOrderInfo(requestDto.getProductId());
 
         if (amount < requestDto.getAmount().longValue()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "재고 부족하여 주문을 진행할 수 없습니다.");
@@ -70,7 +73,7 @@ public class OrderService {
 
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-        //  주문 저장
+        // 3. 주문 저장
         Order order = transactionTemplate.execute(status -> {
             Order newOrder = Order.createOrder(requestDto, userId);
             orderRepository.save(newOrder);
@@ -78,69 +81,58 @@ public class OrderService {
             return newOrder;
         });
 
-        // 재고 차감: 현재 재고에서 주문 수량 만큼 차감
-        Long newStock = amount - requestDto.getAmount();
-        productClient.updateStock(requestDto.getProductId(), new UpdateStockRequestDto(newStock));
+        Long productAmount = amount - requestDto.getAmount().longValue();
+        updateStock(order.getProductId(), new UpdateStockRequestDto(productAmount));
 
-        try {
-            // 배송 생성 호출
-            DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
-                    order.getOrderId(),
-                    requestDto.getSupplierId(),
-                    requestDto.getRecipientsId(),
-                    requestDto.getReceiver(),
-                    requestDto.getReceiverSlackId()
-            );
-            deliveryClient.createDelivery(deliveryRequestDto);
-        } catch (Exception e) {
-            // 배송 생성 실패 시 보상 트랜잭션 수행 : 재고 복구 및 주문 취소
-            // 재고 복구: 원래 재고로 복원 (혹은 주문 수량 만큼 추가)
-            productClient.updateStock(requestDto.getProductId(), new UpdateStockRequestDto(amount));
-
-            // 주문 취소 처리 (내부 주문 삭제 등)
-            deleteOrderInternal(order.getOrderId());
-
-            // 이후 적절한 예외 전달
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "배송 생성 실패로 주문이 취소되었습니다.", e);
-        }
+        DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
+                order.getOrderId(),
+                requestDto.getSupplierId(),
+                requestDto.getRecipientsId(),
+                requestDto.getReceiver(),
+                requestDto.getReceiverSlackId(),
+                token,
+                requestDto.getProductId(),
+                amount,
+                requestDto.getAmount().longValue()
+        );
 
 
-        //  AI 서비스에 알림 전송
-        try {
-            AiNotificationRequestDto aiDto = new AiNotificationRequestDto();
-            aiDto.setOrderId(order.getOrderId());
-            aiDto.setUserSlackId(requestDto.getReceiverSlackId());
-            // 수령자의 slackID 로 일단 했는데, 발송 허브 담당자? 에게 보내야한다고함. 누구지?
+        // 배송 서버 호출
+        deliveryClient.createDelivery(deliveryRequestDto);
 
-
-
-            // token을 헤더로 넘기기 위해 Feign 인터셉터나 메서드 파라미터로 전달
-            aiClient.notifyOrderCreated(aiDto, token);
-        } catch (Exception e) {
-            log.error("[AI 알림 실패] {}", e.getMessage());
-            // 주문 생성 자체는 성공했으므로, 여기서는 예외 삼키고 넘어감
-        }
-
+        log.info("주문 생성 종료");
         return new OrderResponseDto(order);
 
     }
 
-
     /**
      *   주문에 배송 정보 업데이트
      */
-    @Transactional
     public void updateOrderWithDelivery(UUID orderId, OrderCreateUpdateRequestDto requestDto) {
 
-        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-        if (optionalOrder.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order 없음");
+        Order updatedOrder = transactionTemplate.execute(status -> {
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order 없음"));
+
+            // 주문 수정
+            order.updateDelivery(requestDto);
+
+            return order;
+        });
+
+        try {
+            AiNotificationRequestDto aiDto = new AiNotificationRequestDto();
+            aiDto.setOrderId(updatedOrder.getOrderId());
+            aiDto.setUserSlackId(requestDto.getSlackId());
+
+            // token을 헤더로 넘기기 위해 Feign 인터셉터나 메서드 파라미터로 전달
+            aiClient.notifyOrderCreated(aiDto, requestDto.getToken());
+        } catch (Exception e) {
+            log.error("[AI 알림 실패] {}", e.getMessage());
+            // 주문 생성 자체는 성공했으므로, 여기서는 예외 삼키고 넘어감
         }
-
-        Order order = optionalOrder.get();
-
-        order.updateDelivery(requestDto);
     }
 
     /**
@@ -149,21 +141,31 @@ public class OrderService {
      *   권한 : Hub_Manager -> 자신의 허브만, Delivery_Manager/Company_Manager -> 본인의 주문만
      */
     @Transactional(readOnly = true)
-    public Page<OrderResponseDto> getOrders(String token, Pageable pageable) {
+    public Page<OrderResponseDto> getOrders(String token, Long ordererId, UUID supplierId, UUID recipientsId, Pageable pageable) {
         Pageable validatedPageable = PageableUtils.validatePageable(pageable);
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
         UUID hubId = jwtUtil.extractHubIdForOrder(token);
 
+
         Page<Order> orderList = switch (role) {
-            case "MASTER" -> orderRepository.findAllByDeletedAtIsNull(validatedPageable);
-            case "HUB" -> orderRepository.findOrdersByHubId(hubId, validatedPageable);
-            case "DELIVERY", "COMPANY" -> orderRepository.findByOrdererIdAndDeletedAtIsNullAndOrderStatus(userId, OrderStatusEnum.COMPLETED, validatedPageable);
+            case "MASTER" -> orderRepository.searchOrders(ordererId, supplierId, recipientsId, validatedPageable);
+            case "HUB" -> orderRepository.searchOrdersForHub(hubId, ordererId, supplierId, recipientsId, validatedPageable);
+            case "DELIVERY", "COMPANY" ->
+                    orderRepository.searchOrdersByOrdererId(userId, supplierId, recipientsId, validatedPageable);
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 
         return orderList.map(OrderResponseDto::new);
+//        Page<Order> orderList = switch (role) {
+//            case "MASTER" -> orderRepository.findAllByDeletedAtIsNullAndOrderStatus(OrderStatusEnum.COMPLETED, validatedPageable);
+//            case "HUB" -> orderRepository.findOrdersByHubId(hubId, validatedPageable);
+//            case "DELIVERY", "COMPANY" -> orderRepository.findByOrdererIdAndDeletedAtIsNullAndOrderStatus(userId, OrderStatusEnum.COMPLETED, validatedPageable);
+//            default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
+//        };
+//
+//        return orderList.map(OrderResponseDto::new);
     }
 
     /**
@@ -179,12 +181,11 @@ public class OrderService {
 
 
         Order order = orderRepository.findById(orderId)
-                .filter(o -> o.getDeletedAt() == null )
+                .filter(o -> o.getDeletedAt() == null && o.getOrderStatus() == OrderStatusEnum.COMPLETED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "주문이 없거나 삭제된 주문입니다."));
 
         switch (role) {
             case "HUB":
-                System.out.println(hubId);
                 if (!hubId.equals(order.getSupplierHubId()) && !hubId.equals(order.getRecipientHubId())) {
                     // 허브 담당자인데 공급업체나 수령업체의 허브 담당자가 아닐 때
                     throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
@@ -276,5 +277,30 @@ public class OrderService {
 
         orderRepository.deleteById(order.getOrderId());
         log.info("[System] 주문 내부 삭제 처리됨 - ID: {}", orderId);
+    }
+
+    /**
+     *   내부 메서드
+     */
+
+    // 상품 조회 서킷 브레이커
+    @CircuitBreaker(name = "productClient", fallbackMethod = "getProductOrderInfoFallback")
+    public Long getProductOrderInfo(UUID productId) {
+        return productClient.getProductOrderInfo(productId).getData().getAmount();
+    }
+
+    public Long getProductOrderInfoFallback(UUID productId, Throwable t) {
+        log.error("Product Feign Client 호출 실패 (Fallback 처리): {}", t.getMessage());
+        return null;
+    }
+
+    @CircuitBreaker(name = "productClient", fallbackMethod = "updateStockFallback")
+    public void updateStock(UUID productId, UpdateStockRequestDto requestDto) {
+        productClient.updateStock(productId, requestDto);
+    }
+
+    public void updateStockFallback(UUID productId, UpdateStockRequestDto requestDto, Throwable t) {
+        log.error("Product Feign Client 호출 실패 (Fallback 처리): {}", t.getMessage());
+        log.info("  주문 후 남았어야 하는 재고량 :  "+requestDto.getNewAmount()+" 개");
     }
 }
