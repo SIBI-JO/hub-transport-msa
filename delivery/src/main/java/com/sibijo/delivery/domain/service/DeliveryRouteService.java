@@ -7,7 +7,10 @@ import com.sibijo.delivery.application.dto.DeliveryResponseDto;
 import com.sibijo.delivery.application.dto.DeliveryRouteResponseDto;
 import com.sibijo.delivery.domain.entity.Delivery;
 import com.sibijo.delivery.domain.entity.DeliveryRoute;
+import com.sibijo.delivery.domain.enums.DeliveryDomainExceptionCode;
+import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.domain.repository.DeliveryRouteRepository;
+import com.sibijo.delivery.infrastructure.client.user.UserClient;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
@@ -29,6 +32,7 @@ public class DeliveryRouteService {
 
     private final JwtUtil jwtUtil;
     private final DeliveryRouteRepository routeRepository;
+    private final UserClient userClient;
 
     /**
      *  배송 경로 생성
@@ -49,7 +53,7 @@ public class DeliveryRouteService {
      *                                      // Company_Manager -> 자신의 업체만
      */
     @Transactional(readOnly = true)
-    public Page<DeliveryRoute> getDeliveryRoutes(String token, Pageable pageable) {
+    public Page<DeliveryRoute> getDeliveryRoutes(String token, UUID recipientsId, Long deliveryManagerId, Pageable pageable) {
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
@@ -57,10 +61,10 @@ public class DeliveryRouteService {
         UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
 
         Page<DeliveryRoute> routeList = switch (role) {
-            case "MASTER" -> routeRepository.findAllByDeletedAtIsNull(pageable);
-            case "HUB" -> routeRepository.findDeliveriesByHubId(hubId, pageable);
-            case "DELIVERY" -> routeRepository.findByDeliveryManagerIdAndDeletedAtIsNull(userId, pageable);
-            case "COMPANY" -> routeRepository.findByRecipientsIdAndDeletedAtIsNull(companyId, pageable);
+            case "MASTER" -> routeRepository.searchDeliveryRoutes(recipientsId, deliveryManagerId, pageable);
+            case "HUB" -> routeRepository.searchDeliveryRoutesByHub(hubId, recipientsId, deliveryManagerId, pageable);
+            case "DELIVERY" -> routeRepository.searchDeliveryRoutesByDeliveryManager(userId, recipientsId, pageable);
+            case "COMPANY" -> routeRepository.searchDeliveryRoutesByCompany(companyId, deliveryManagerId, pageable);
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 
@@ -176,4 +180,35 @@ public class DeliveryRouteService {
         return new DeliveryRouteResponseDto(route);
     }
 
+
+    /**
+     *  배송 상태 및 배송 담당자 수정
+     */
+    @Transactional
+    public void updateDeliveryStatus(DeliveryRoute route) {
+        DeliveryStatusEnum currentStatus = route.getDeliveryStatus();
+
+        switch (currentStatus) {
+            case HUB_WAITING -> {
+                route.updateDeliveryStatus(DeliveryStatusEnum.HUB_MOVING);
+            }
+            case HUB_MOVING -> {
+                route.updateDeliveryStatus(DeliveryStatusEnum.HUB_ARRIVED);
+                // 업체 배송 담당자 ID 요청
+                Long companyDeliveryManagerId = userClient.getCompanyDeliveryAgent(route.getEndHubId()).getData();
+                route.updateDeliveryManager(companyDeliveryManagerId);
+            }
+            case HUB_ARRIVED -> {
+                route.updateDeliveryStatus(DeliveryStatusEnum.COMPANY_DELIVERING);
+            }
+            case COMPANY_DELIVERING -> {
+                route.updateDeliveryStatus(DeliveryStatusEnum.COMPLETED);
+            }
+            default -> throw new CustomException(DeliveryDomainExceptionCode.INVALID_DELIVERY_STATUS);
+        }
+    }
+
+    public DeliveryRoute getDeliveryRouteByDeliveryId(UUID deliveryId) {
+        return routeRepository.findByDelivery_DeliveryId(deliveryId);
+    }
 }

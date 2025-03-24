@@ -21,4 +21,12 @@ public class OrderToDeliveryRequestDto {
 
     private String receiverSlackId;
 
+    private String token;
+
+    private UUID productId;
+
+    private Long productAmount;
+
+    private Long orderAmount;
+
 }

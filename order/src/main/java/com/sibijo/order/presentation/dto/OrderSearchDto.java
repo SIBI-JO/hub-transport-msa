@@ -8,16 +8,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCreateUpdateRequestDto {
-
-    private UUID deliveryId;
-
-    private UUID supplierHubId;
-
-    private UUID recipientHubId;
-
-    private String slackId;
-
-    private String token;
-
+public class OrderSearchDto {
+    private Long ordererId;
+    private UUID supplierId;
+    private UUID recipientsId;
 }

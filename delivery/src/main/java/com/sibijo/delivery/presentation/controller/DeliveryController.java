@@ -1,13 +1,17 @@
 package com.sibijo.delivery.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
+import com.sibijo.common.exception.CustomException;
+import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.delivery.application.dto.DeliveryResponseDto;
 import com.sibijo.delivery.application.dto.DeliveryRouteResponseDto;
 import com.sibijo.delivery.application.service.CustomDeliveryService;
+import com.sibijo.delivery.domain.enums.DeliveryStatusEnum;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryUpdateRequestDto;
 import com.sibijo.delivery.presentation.dto.OrderToDeliveryRequestDto;
+import com.sibijo.delivery.presentation.dto.StockInfomationDto;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +23,14 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j(topic = "배송 Controller")
@@ -56,10 +62,12 @@ public class DeliveryController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<DeliveryResponseDto>>> getDeliveries(
+            @RequestParam(required = false) String deliveryAddress,
+            @RequestParam(required = false) String receiver,
             HttpServletRequest request,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, page = 1, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
-        return ResponseEntity.ok(ApiResponse.success("배송 전체 조회 성공", deliveryService.getDeliveries(token, pageable)));
+        return ResponseEntity.ok(ApiResponse.success("배송 전체 조회 성공", deliveryService.getDeliveries(token, receiver, deliveryAddress, pageable)));
     }
 
 
@@ -106,8 +114,18 @@ public class DeliveryController {
         return ResponseEntity.ok(ApiResponse.success("배송 삭제 성공", deliveryService.deleteDelivery(deliveryId, token)));
     }
 
-
-
+    /**
+     *  배송 상태 변경 & 배송 담당자 변경
+     */
+    @PatchMapping("/{deliveryId}/status")
+    public ResponseEntity<ApiResponse<String>> updateDeliveryStatus(
+            @PathVariable UUID deliveryId,
+            HttpServletRequest request
+    ) {
+        String token = jwtUtil.extractToken(request);
+        deliveryService.updateDeliveryStatus(deliveryId, token);
+        return ResponseEntity.ok(ApiResponse.success("배송 상태 변경 성공", ""));
+    }
 
 
     /*******************************************************************
@@ -117,10 +135,12 @@ public class DeliveryController {
      */
     @GetMapping("/routes")
     public ResponseEntity<ApiResponse<Page<DeliveryRouteResponseDto>>> getDeliveryRoutes(
+            @RequestParam(required = false) UUID recipientsId,
+            @RequestParam(required = false) Long deliveryManagerId,
             HttpServletRequest request,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, page = 1, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
-        return ResponseEntity.ok(ApiResponse.success("배송 경로 전체 조회 성공", deliveryService.getDeliveryRoutes(token, pageable)));
+        return ResponseEntity.ok(ApiResponse.success("배송 경로 전체 조회 성공", deliveryService.getDeliveryRoutes(token, recipientsId, deliveryManagerId, pageable)));
     }
 
 
