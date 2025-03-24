@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "delivery-service")
+@FeignClient(name = "delivery-service", contextId = "deliveryRouteClient")
 public interface DeliveryServiceClient {
 
     @GetMapping("/api/deliveries/{deliveryId}")
