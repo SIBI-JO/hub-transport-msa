@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface HubClient {
 
     @GetMapping("/api/hub-routes/order")
-    HubResponseDto getHubRouteForOrder(@RequestParam UUID startHubId, @RequestParam UUID endHubId);
+    HubResponseDto getHubRouteForOrder(@RequestParam("startHubId") UUID startHubId, @RequestParam("endHubId") UUID endHubId);
 
 }

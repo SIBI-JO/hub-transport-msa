@@ -62,7 +62,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AssignRoleResponseDto>> assignRole(
             @RequestBody @Valid AssignRoleRequestDto requestDto,
             BindingResult bindingResult) {
-
+        System.out.println(requestDto.getUsername());
         // 입력 값 검증
         raiseValidationException(bindingResult);
 

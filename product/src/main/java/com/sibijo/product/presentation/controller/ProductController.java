@@ -50,7 +50,7 @@ public class ProductController {
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable UUID productId, HttpServletRequest request, @RequestBody ProductRequest req) {
+    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable("productId") UUID productId, HttpServletRequest request, @RequestBody ProductRequest req) {
         String token = jwtUtil.extractToken(request);
         Product updated = productService.updateProduct(productId, req, token);
         return ResponseEntity.ok(ApiResponse.success("상품 수정 성공", updated));
@@ -64,7 +64,7 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}/order")
-    public ResponseEntity<ApiResponse<ProductResponseDto>> getProductOrderInfo(@PathVariable UUID productId) {
+    public ResponseEntity<ApiResponse<ProductResponseDto>> getProductOrderInfo(@PathVariable("productId") UUID productId) {
         ProductResponseDto dto = productService.getProductOrderInfo(productId);
         return ResponseEntity.ok(ApiResponse.success("주문용 상품 재고/허브 정보 조회 성공", dto));
     }

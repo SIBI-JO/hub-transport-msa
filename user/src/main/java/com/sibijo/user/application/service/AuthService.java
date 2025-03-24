@@ -12,14 +12,15 @@ import com.sibijo.user.presentation.dto.auth.AssignRoleResponseDto;
 import com.sibijo.user.presentation.dto.auth.CommonSignUpRequestDto;
 import com.sibijo.user.presentation.dto.auth.MasterSignUpRequestDto;
 import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -98,7 +99,8 @@ public class AuthService {
         // username 존재 확인
         User user = userRepository.findByUsername(requestDto.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
-
+        log.info("requestDto : {}", requestDto);
+        log.info("user : {}", user.getRole());
         // role에 따라 처리
         switch (requestDto.getRole()) {
             case HUB:

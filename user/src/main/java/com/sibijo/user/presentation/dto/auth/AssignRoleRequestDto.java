@@ -4,11 +4,16 @@ import com.sibijo.user.domain.enums.DeliveryType;
 import com.sibijo.user.domain.enums.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class AssignRoleRequestDto {
 
