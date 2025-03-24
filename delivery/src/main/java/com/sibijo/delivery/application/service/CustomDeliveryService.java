@@ -276,4 +276,9 @@ public class CustomDeliveryService {
         }
         return deliveryRouteService.deleteDeliveryRoute(routeId, token);
     }
+
+    public DeliveryRouteResponseDto getDeliveryRouteForAi(UUID deliveryId) {
+        DeliveryRoute route = deliveryRouteService.getDeliveryRouteByDeliveryId(deliveryId);
+        return new DeliveryRouteResponseDto(route);
+    }
 }

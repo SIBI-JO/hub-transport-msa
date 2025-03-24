@@ -1,5 +1,6 @@
 package com.sibijo.order.application.service;
 
+import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.AuthUtil;
@@ -7,11 +8,14 @@ import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.order.application.dto.OrderResponseDto;
 import com.sibijo.order.domain.entity.Order;
+import com.sibijo.order.domain.enums.OrderDomainExceptionCode;
 import com.sibijo.order.domain.enums.OrderStatusEnum;
 import com.sibijo.order.domain.repository.OrderRepository;
 import com.sibijo.order.infrastructure.client.Delivery.DeliveryClient;
 import com.sibijo.order.infrastructure.client.Delivery.DeliveryRequestDto;
+import com.sibijo.order.infrastructure.client.Product.HubStockResponseDto;
 import com.sibijo.order.infrastructure.client.Product.ProductClient;
+import com.sibijo.order.infrastructure.client.Product.ProductResponseDto;
 import com.sibijo.order.infrastructure.client.Product.UpdateStockRequestDto;
 import com.sibijo.order.infrastructure.client.ai.AiClient;
 import com.sibijo.order.infrastructure.client.ai.AiNotificationRequestDto;
@@ -20,6 +24,7 @@ import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderSearchDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +55,7 @@ public class OrderService {
      *   주문 생성
      */
     public OrderResponseDto createOrder(OrderRequestDto requestDto, String token) {
-
+        log.info("주문 생성 시작");
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
 
@@ -60,7 +65,7 @@ public class OrderService {
         }
 
         // 상품 서버에서 재고 확인
-        Long amount = productClient.getProductOrderInfo(requestDto.getProductId()).getData().getAmount();
+        Long amount = getProductOrderInfo(requestDto.getProductId());
 
         if (amount < requestDto.getAmount().longValue()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "재고 부족하여 주문을 진행할 수 없습니다.");
@@ -77,7 +82,7 @@ public class OrderService {
         });
 
         Long productAmount = amount - requestDto.getAmount().longValue();
-        productClient.updateStock(order.getProductId(), new UpdateStockRequestDto(productAmount));
+        updateStock(order.getProductId(), new UpdateStockRequestDto(productAmount));
 
         DeliveryRequestDto deliveryRequestDto = new DeliveryRequestDto(
                 order.getOrderId(),
@@ -95,6 +100,7 @@ public class OrderService {
         // 배송 서버 호출
         deliveryClient.createDelivery(deliveryRequestDto);
 
+        log.info("주문 생성 종료");
         return new OrderResponseDto(order);
 
     }
@@ -271,5 +277,30 @@ public class OrderService {
 
         orderRepository.deleteById(order.getOrderId());
         log.info("[System] 주문 내부 삭제 처리됨 - ID: {}", orderId);
+    }
+
+    /**
+     *   내부 메서드
+     */
+
+    // 상품 조회 서킷 브레이커
+    @CircuitBreaker(name = "productClient", fallbackMethod = "getProductOrderInfoFallback")
+    public Long getProductOrderInfo(UUID productId) {
+        return productClient.getProductOrderInfo(productId).getData().getAmount();
+    }
+
+    public Long getProductOrderInfoFallback(UUID productId, Throwable t) {
+        log.error("Product Feign Client 호출 실패 (Fallback 처리): {}", t.getMessage());
+        return null;
+    }
+
+    @CircuitBreaker(name = "productClient", fallbackMethod = "updateStockFallback")
+    public void updateStock(UUID productId, UpdateStockRequestDto requestDto) {
+        productClient.updateStock(productId, requestDto);
+    }
+
+    public void updateStockFallback(UUID productId, UpdateStockRequestDto requestDto, Throwable t) {
+        log.error("Product Feign Client 호출 실패 (Fallback 처리): {}", t.getMessage());
+        log.info("  주문 후 남았어야 하는 재고량 :  "+requestDto.getNewAmount()+" 개");
     }
 }

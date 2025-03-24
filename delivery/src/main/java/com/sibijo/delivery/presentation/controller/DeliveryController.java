@@ -186,6 +186,14 @@ public class DeliveryController {
         return ResponseEntity.ok(ApiResponse.success("배송 삭제 성공", deliveryService.deleteDeliveryRoute(routeId, token)));
     }
 
-
+    /**
+     *  배송 경로 배송ID로 조회
+     */
+    @GetMapping("/routes/delivery/{deliveryId}")
+    public ResponseEntity<ApiResponse<DeliveryRouteResponseDto>> getDeliveryRouteForAi(
+            @PathVariable UUID deliveryId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success("배송 경로 정보 조회 성공", deliveryService.getDeliveryRouteForAi(deliveryId)));
+    }
 
 }
