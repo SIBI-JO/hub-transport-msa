@@ -7,6 +7,7 @@ import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.hubR
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.hubRouteRolePermissions;
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.orderRolePermissions;
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.productRolePermissions;
+import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.slackRolePermissions;
 import static com.sibijo.gateway.infrastructure.config.RolePermissionPolicy.userRolePermissions;
 
 import com.sibijo.gateway.infrastructure.filter.LogoutFilter;
@@ -79,6 +80,12 @@ public class GatewayRouteConfig {
                 .route("user-logout-service", r -> r.path("/api/logout")
                         .filters(f -> f.filter(logoutFilter.apply(new Object())))
                         .uri("lb://delivery-service"))
+
+                // AI
+                .route("ai-service", r -> r.path("/api/ai/**")
+                        .filters(f -> f.filter(roleAuthorizationFilter.apply(
+                                new RoleAuthorizationFilter.Config(slackRolePermissions))))
+                        .uri("lb://ai-service"))
 
                 //swagger
                 // Swagger 문서 경로 라우팅
