@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient(name = "user-service", contextId = "deliveryAgentServiceClient")
 public interface DeliveryAgentServiceClient {
 
-    @GetMapping("/api/users/{id}")
+    @GetMapping("/api/users/delivery-manager/{userId}")
     ApiResponse<DeliveryAgentDetailsResponseDto> getDeliveryAgentById(
-            @PathVariable("id") Long id,
+            @PathVariable("userId") Long userId,
             @RequestHeader("Authorization") String bearerToken
     );
 }

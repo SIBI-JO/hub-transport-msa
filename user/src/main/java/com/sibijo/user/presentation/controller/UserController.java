@@ -116,6 +116,15 @@ public class UserController {
                 .ok(ApiResponse.success("허브 담당자 정보 조회", user));
     }
 
+    @GetMapping("/delivery-manager/{userId}")
+    private ResponseEntity<ApiResponse<UserDetailsResponseDto>> getDeliveryManagerNameByuserId(@PathVariable Long userId) {
+        // 허브 담당자 정보 조회
+        UserDetailsResponseDto user = userService.getUserById(userId);
+
+        return ResponseEntity
+                .ok(ApiResponse.success("배송 담당자 정보 조회", user));
+    }
+
     private static void raiseValidationException(BindingResult bindingResult) {
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         if (fieldErrors.size() > 0) {
