@@ -16,6 +16,7 @@ spring:
       ddl-auto: create
     show-sql: true
 
+
 server:
   port: 19092
 
@@ -44,6 +45,8 @@ resilience4j:
         failureRateThreshold: 50
         permittedNumberOfCallsInHalfOpenState: 3
         waitDurationInOpenState: 20s
+
+
 
 management:
   zipkin:

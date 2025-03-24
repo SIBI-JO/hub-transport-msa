@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "slack_messages")
@@ -12,9 +13,10 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 public class SlackMessage extends BaseEntity {
 
+    // UUID를 기본키(PK)로 사용
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "message_id", unique = true, nullable = false, updatable = false)
+    private UUID messageId;
 
     // 메시지를 보낸 대상 (Slack User ID)
     private String recipientSlackId;
