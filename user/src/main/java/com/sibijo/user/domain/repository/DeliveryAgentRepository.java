@@ -3,6 +3,7 @@ package com.sibijo.user.domain.repository;
 import com.sibijo.user.domain.enums.DeliveryType;
 import com.sibijo.user.domain.model.DeliveryAgent;
 import com.sibijo.user.domain.model.User;
+import feign.Param;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +21,7 @@ public interface DeliveryAgentRepository extends JpaRepository<DeliveryAgent, Lo
     Optional<Integer> findMaxDeliveryOrderByHubIdAndType(UUID hubId, DeliveryType deliveryType);
 
     @Query("SELECT MAX(d.deliveryOrder) FROM DeliveryAgent d WHERE d.deliveryType = :deliveryType")
-    Optional<Integer> findMaxDeliveryOrderByType(DeliveryType deliveryType);
+    Optional<Integer> findMaxDeliveryOrderByType(@Param("deliveryType") DeliveryType deliveryType);
 
     Page<DeliveryAgent> findAllBydeliveryTypeContains(String deliveryType, Pageable pageable);
 

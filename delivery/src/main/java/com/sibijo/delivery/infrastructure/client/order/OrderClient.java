@@ -15,5 +15,5 @@ public interface OrderClient {
     void updateOrderWithDelivery(@PathVariable UUID orderId, @RequestBody OrderCreateUpdateRequestDto requestDto);
 
     @DeleteMapping("/api/orders/internal/{orderId}")
-    void deleteOrderInternal(@PathVariable UUID orderId);
+    void deleteOrderInternal(@PathVariable("orderId") UUID orderId);
 }

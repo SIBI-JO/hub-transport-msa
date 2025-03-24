@@ -13,6 +13,6 @@ public interface UserClient {
     ApiResponse<Long> getDeliveryAgent();
 
     @GetMapping("/api/delivery-agents/hub/{hubId}")
-    ApiResponse<Long> getCompanyDeliveryAgent(@PathVariable UUID hubId);
+    ApiResponse<Long> getCompanyDeliveryAgent(@PathVariable("hubId") UUID hubId);
 
 }

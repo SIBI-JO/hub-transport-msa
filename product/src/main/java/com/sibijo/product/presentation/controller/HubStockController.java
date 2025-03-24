@@ -26,7 +26,7 @@ public class HubStockController {
 
     // 상품 ID만으로 재고 업데이트 (PATCH → PUT)
     @PutMapping("/{productId}")
-    public ResponseEntity<ApiResponse<HubStockResponse>> updateStock(@PathVariable UUID productId,
+    public ResponseEntity<ApiResponse<HubStockResponse>> updateStock(@PathVariable("productId") UUID productId,
             @RequestBody UpdateStockRequest request) {
         HubStockResponse response = hubStockService.updateStock(productId, request.getNewAmount());
         return ResponseEntity.ok(ApiResponse.success("허브 재고 업데이트 성공", response));

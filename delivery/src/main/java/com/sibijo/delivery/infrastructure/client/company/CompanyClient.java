@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface CompanyClient {
 
     @GetMapping("/api/companies/{companyId}/order")
-    ApiResponse<CompanyResponseDto> getCompanyOrderInfo(@PathVariable UUID companyId);
+    ApiResponse<CompanyResponseDto> getCompanyOrderInfo(@PathVariable("companyId") UUID companyId);
 }

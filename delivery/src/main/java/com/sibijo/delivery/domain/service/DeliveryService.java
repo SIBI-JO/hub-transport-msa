@@ -78,7 +78,7 @@ public class DeliveryService {
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .filter(o -> o.getDeletedAt() == null)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "배송이 삭제 되었거나 없습니다."));
-
+        System.out.println("deliver: " + delivery);
         switch (role) {
             case "HUB":
                 if (!hubId.equals(delivery.getStartHubId()) && !hubId.equals(delivery.getEndHubId())) {
