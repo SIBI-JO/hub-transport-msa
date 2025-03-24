@@ -229,4 +229,19 @@ public class UserService {
                 .role(user.getRole())
                 .build();
     }
+
+    public UserDetailsResponseDto getUserById(Long userId) {
+        // 존재 확인
+        User user = userRepository.findByIdAndRole(userId, Role.DELIVERY).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
+        );
+
+        return UserDetailsResponseDto
+                .builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .slackId(user.getSlackId())
+                .role(user.getRole())
+                .build();
+    }
 }
