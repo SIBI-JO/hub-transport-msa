@@ -217,7 +217,7 @@ public class UserService {
 
     public UserDetailsResponseDto getUserByHubId(UUID hubId) {
         // 존재 확인
-        User user = userRepository.findByHubId(hubId).orElseThrow(
+        User user = userRepository.findByHubIdAndRole(hubId, Role.HUB).orElseThrow(
                 () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
         );
 
@@ -226,6 +226,7 @@ public class UserService {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .slackId(user.getSlackId())
+                .role(user.getRole())
                 .build();
     }
 }
