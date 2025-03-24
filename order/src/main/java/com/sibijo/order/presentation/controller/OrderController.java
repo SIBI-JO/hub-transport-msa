@@ -4,6 +4,7 @@ import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.order.application.dto.OrderResponseDto;
 import com.sibijo.order.application.service.OrderService;
+import com.sibijo.order.domain.service.CustomOrderService;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
 import com.sibijo.order.presentation.dto.OrderSearchDto;
@@ -37,6 +38,7 @@ public class OrderController {
 
     private final JwtUtil jwtUtil;
     private final OrderService orderService;
+    private final CustomOrderService customOrderService;
 
     /**
      *  주문 생성
@@ -116,6 +118,6 @@ public class OrderController {
      */
     @DeleteMapping("/internal/{orderId}")
     public void deleteOrderInternal(@PathVariable UUID orderId) {
-        orderService.deleteOrderInternal(orderId);
+        customOrderService.deleteOrderInternal(orderId);
     }
 }
