@@ -15,7 +15,6 @@ import com.sibijo.delivery.infrastructure.client.DeliveryCircuitBreaker;
 import com.sibijo.delivery.infrastructure.client.company.CompanyResponseDto;
 import com.sibijo.delivery.infrastructure.client.hub.HubResponseDto;
 import com.sibijo.delivery.infrastructure.client.order.OrderCreateUpdateRequestDto;
-import com.sibijo.delivery.infrastructure.client.product.UpdateStockRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteUpdateRequestDto;
@@ -93,7 +92,6 @@ public class CustomDeliveryService {
         );
 
         System.out.println("주문의 Id  :   " + requestDto.getOrderId());
-        deliveryCircuitBreaker.updateOrderWithDelivery(requestDto.getOrderId(), updateRequestDto);
 
         // 5. 배송 경로 생성에 필요한 정보 생성
         DeliveryRouteRequestDto routeRequestDto = new DeliveryRouteRequestDto(
@@ -109,8 +107,7 @@ public class CustomDeliveryService {
 
         // 6. 배송 경로 생성
         DeliveryRoute deliveryRoute = deliveryRouteService.createDeliveryRoute(routeRequestDto, delivery);
-        orderClient.updateOrderWithDelivery(requestDto.getOrderId(), updateRequestDto);
-
+        deliveryCircuitBreaker.updateOrderWithDelivery(requestDto.getOrderId(), updateRequestDto);
     }
 
 

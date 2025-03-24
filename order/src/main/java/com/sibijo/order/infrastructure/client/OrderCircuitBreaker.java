@@ -40,9 +40,10 @@ public class OrderCircuitBreaker {
         return productClient.updateStock(productId, requestDto).getData();
     }
 
-    public void updateStockFallback(UUID productId, UpdateStockRequestDto requestDto, Throwable t) {
+    public HubStockResponseDto updateStockFallback(UUID productId, UpdateStockRequestDto requestDto, Throwable t) {
         log.error("상품 재고 차감 실패 (Fallback 처리): {}", t.getMessage());
         log.info("  주문 후 남았어야 하는 재고량 :  "+requestDto.getNewAmount()+" 개");
+        return new HubStockResponseDto();
     }
 
 
