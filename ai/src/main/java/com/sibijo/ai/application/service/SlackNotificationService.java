@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class SlackNotificationService {
@@ -30,40 +30,32 @@ public class SlackNotificationService {
     }
 
     /**
-     * 특정 채널(또는 사용자)로 Slack 메시지를 전송.
-     * (기존 channel 기반)
-     */
-    public void sendSlackMessage(String channel, String message) {
-        // 삭제
-    }
-
-    /**
      * 특정 사용자(Slack User ID)에게 DM을 전송하고, DB에 메시지를 저장합니다.
+     * 반환값으로 생성된 UUID messageId를 리턴합니다.
      *
      * @param userSlackId 예) U08XXXXXX 형태의 Slack User ID
      * @param message     전송할 메시지 내용
+     * @return 생성된 메시지의 UUID messageId
      */
-    public void sendDirectMessageToUser(String userSlackId, String message) {
+    public UUID sendDirectMessageToUser(String userSlackId, String message) {
         // 1) Slack API 호출 준비
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(slackApiToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // DM을 보낼 때 channel 필드에 "사용자 ID"를 직접 입력
         Map<String, String> body = new HashMap<>();
-        body.put("channel", userSlackId); // "U08XXXXXX" 같은 실제 Slack User ID
+        body.put("channel", userSlackId);
         body.put("text", message);
 
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<String> response =
                 restTemplate.postForEntity(slackApiUrl, request, String.class);
 
-        // 2) HTTP 응답 코드 확인
+        // 2) HTTP 응답 코드 및 응답 바디 확인
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new RuntimeException("슬랙 메시지 전송 실패(HTTP): " + response.getStatusCode());
         }
 
-        // 3) Slack 응답 바디에서 "ok" 여부 확인
         String responseBody = response.getBody();
         if (responseBody == null) {
             throw new RuntimeException("슬랙 메시지 전송 실패: 응답 바디가 없습니다.");
@@ -74,11 +66,16 @@ public class SlackNotificationService {
             throw new RuntimeException("슬랙 메시지 전송 실패(Slack 응답): " + responseBody);
         }
 
-        // 4) 전송 성공 시, DB에 메시지 저장
+        // 3) 메시지 저장 전 UUID 생성 및 할당
+        UUID messageUuid = UUID.randomUUID();
+
         SlackMessage slackMessage = new SlackMessage();
+        slackMessage.setMessageId(messageUuid);
         slackMessage.setRecipientSlackId(userSlackId);
         slackMessage.setMessage(message);
         slackMessage.setSentAt(LocalDateTime.now());
         slackMessageRepository.save(slackMessage);
+
+        return messageUuid;
     }
 }

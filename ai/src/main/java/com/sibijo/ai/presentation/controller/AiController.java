@@ -2,6 +2,7 @@ package com.sibijo.ai.presentation.controller;
 
 import com.sibijo.ai.application.service.GeminiNotificationService;
 import com.sibijo.ai.application.service.SlackNotificationService;
+import com.sibijo.ai.domain.entity.SlackMessage;
 import com.sibijo.ai.infrastructure.client.order.OrderServiceClient;
 import com.sibijo.ai.infrastructure.client.order.OrderServiceResponseDto;
 import com.sibijo.ai.infrastructure.client.product.ProductServiceClient;
@@ -10,18 +11,22 @@ import com.sibijo.ai.infrastructure.client.delivery.DeliveryServiceClient;
 import com.sibijo.ai.infrastructure.client.delivery.DeliveryDetailsDto;
 import com.sibijo.ai.infrastructure.client.hub.HubServiceClient;
 import com.sibijo.ai.infrastructure.client.hub.HubInfoDto;
+import com.sibijo.ai.infrastructure.repository.SlackMessageRepository;
 import com.sibijo.ai.presentation.dto.AiNotificationRequestDto;
 import com.sibijo.ai.presentation.dto.OrderDto;
 import com.sibijo.common.dto.ApiResponse;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.Collections;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/ai/orders")
+@RequestMapping("/api/ai")
 @RequiredArgsConstructor
 public class AiController {
 
@@ -31,11 +36,12 @@ public class AiController {
     private final ProductServiceClient productServiceClient;
     private final DeliveryServiceClient deliveryServiceClient;
     private final HubServiceClient hubServiceClient;
+    private final SlackMessageRepository slackMessageRepository;
 
     /**
      * Order 서비스에서 주문 생성 알림을 받는 엔드포인트
      */
-    @PostMapping("/dm")
+    @PostMapping("/orders/dm")
     public ResponseEntity<?> handleOrderCreated(@RequestBody AiNotificationRequestDto dto,
             @RequestHeader("Authorization") String bearerToken) {
         System.out.println("Received bearerToken: " + bearerToken);
@@ -107,5 +113,24 @@ public class AiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("AI 메시지 생성/전송 중 오류: " + e.getMessage());
         }
+    }
+
+    // 단건 조회: GET /api/ai/messages/{messageId}
+    @GetMapping("/messages/{messageId}")
+    public ResponseEntity<ApiResponse<SlackMessage>> getMessage(@PathVariable UUID messageId) {
+        Optional<SlackMessage> messageOpt = slackMessageRepository.findById(messageId);
+        if (messageOpt.isPresent()) {
+            return ResponseEntity.ok(ApiResponse.success("AI 메시지 조회 성공", messageOpt.get()));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.exception("AI 메시지를 찾을 수 없습니다.", null));
+        }
+    }
+
+    // 전체 조회: GET /api/ai/messages
+    @GetMapping("/messages")
+    public ResponseEntity<ApiResponse<List<SlackMessage>>> getAllMessages() {
+        List<SlackMessage> messages = slackMessageRepository.findAll();
+        return ResponseEntity.ok(ApiResponse.success("전체 Slack 메시지 조회 성공", messages));
     }
 }
