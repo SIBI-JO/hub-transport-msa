@@ -49,8 +49,8 @@ public class GeminiNotificationService {
                         "도착지: %s\n" +
                         "배송 담당자: %s\n" +
                         "배송 담당자 근무시간: 09:00 - 18:00\n" +
-                        "실제 거리: %s\n" +
-                        "실제 소요시간: %s\n" +
+                        "예상 거리: %s\n" +
+                        "예상 소요시간: %s\n" +
                         "최종 발송 시한: %s\n" +
                         "이 정보를 바탕으로 Slack 메시지 전문을 생성해줘.",
                 order.getOrderId(),

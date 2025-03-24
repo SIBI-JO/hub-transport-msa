@@ -131,6 +131,7 @@ public class CustomDeliveryService {
 
         // 6. 배송 경로 생성
         DeliveryRoute deliveryRoute = deliveryRouteService.createDeliveryRoute(routeRequestDto, delivery);
+        orderClient.updateOrderWithDelivery(requestDto.getOrderId(), updateRequestDto);
 
     }
 
