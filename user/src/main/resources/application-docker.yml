@@ -1,0 +1,11 @@
+management:
+  zipkin:
+    tracing:
+      endpoint: "http://zipkin:9411/api/v2/spans"
+
+spring:
+  data:
+    redis:
+      host: redis-stack-compose
+      port: 6379
+      password: ${REDIS_PASSWORD}

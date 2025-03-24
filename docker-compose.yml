@@ -42,10 +42,13 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - eureka
       - postgres
       - zipkin
+      - redis-stack-compose
+      - redis-insight
     networks:
       - msa-network
 
@@ -143,7 +146,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - KAKAO_MAP_KEY = ${KAKAO_MAP_KEY}
+      - KAKAO_MAP_KEY=${KAKAO_MAP_KEY}
     depends_on:
       - eureka
       - postgres
@@ -151,25 +154,25 @@ services:
     networks:
       - msa-network
 
-#  ai:
-#    build:
-#      context: ./ai
-#    container_name: ai
-#    ports:
-#      - "19098:19098"
-#    environment:
-#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
-#      - SPRING_PROFILES_ACTIVE=docker
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
-#      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-#      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-#      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-#    depends_on:
-#      - eureka
-#      - postgres
-#      - zipkin
-#    networks:
-#      - msa-network
+  ai:
+    build:
+      context: ./ai
+    container_name: ai
+    ports:
+      - "19098:19098"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    depends_on:
+      - eureka
+      - postgres
+      - zipkin
+    networks:
+      - msa-network
 
   hub-routes:
     build:
@@ -185,7 +188,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - KAKAO_MAP_KEY = ${KAKAO_MAP_KEY}
+      - KAKAO_MAP_KEY=${KAKAO_MAP_KEY}
     depends_on:
       - eureka
       - postgres
@@ -215,7 +218,7 @@ services:
     networks:
       - msa-network
 
-  redis-stack:
+  redis-stack-compose:
     image: redis/redis-stack
     container_name: redis-stack-compose
     restart: always
@@ -223,7 +226,7 @@ services:
     ports:
       - 6379:6379
     networks:
-      - redis-network
+      - msa-network
 
   redis-insight:
     image: redislabs/redisinsight
@@ -232,7 +235,7 @@ services:
     ports:
       - 5540:5540
     networks:
-      - redis-network
+      - msa-network
 
 networks:
   msa-network:

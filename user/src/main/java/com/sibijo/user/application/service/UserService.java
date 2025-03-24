@@ -252,40 +252,26 @@ public class UserService {
                 .build();
     }
 
-    private void saveBlacklist(HttpServletRequest request) {
-
-        String token = jwtUtil.extractToken(request);
-        Date expiration = jwtUtil.extractExpiration(token);
-        long now = System.currentTimeMillis();
-        long ttl = expiration.getTime() - now;
-
-        if (ttl > 0) {
-            redisTemplate.opsForValue().set(
-                    "blacklist:" + token,
-                    "logout",
-                    ttl,
-                    TimeUnit.MILLISECONDS
-            );
-            log.info("Token blacklisted successfully");
-        }
-    }
-
     private void saveBlacklist(String token) {
         log.info("blacklist 저장할 token: {}", token);
-        token = token.substring(7);
+        try {
+            token = token.substring(7);
 
-        Date expiration = jwtUtil.extractExpiration(token);
-        long now = System.currentTimeMillis();
-        long ttl = expiration.getTime() - now;
+            Date expiration = jwtUtil.extractExpiration(token);
+            long now = System.currentTimeMillis();
+            long ttl = expiration.getTime() - now;
 
-        if (ttl > 0) {
-            redisTemplate.opsForValue().set(
-                    "blacklist:" + token,
-                    "logout",
-                    ttl,
-                    TimeUnit.MILLISECONDS
-            );
-            log.info("Token blacklisted successfully");
+            if (ttl > 0) {
+                redisTemplate.opsForValue().set(
+                        "blacklist:" + token,
+                        "logout",
+                        ttl,
+                        TimeUnit.MILLISECONDS
+                );
+                log.info("Token blacklisted successfully");
+            }
+        } catch (Exception e) {
+            log.error("블랙리스트 저장 중 예외 발생: {}", e.getMessage(), e);
         }
     }
 }

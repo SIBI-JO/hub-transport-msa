@@ -34,14 +34,18 @@ public class BlacklistCheckFilter implements GlobalFilter, Ordered {
 
         // blacklist 체크
         log.info("BlacklistCheckFilter 체크중");
-        String token = jwtUtil.extractToken(exchange);
-        String redisKey = "blacklist:" + token;
+        try {
+            String token = jwtUtil.extractToken(exchange);
+            String redisKey = "blacklist:" + token;
 
-        Boolean isBlacklisted = redisTemplate.hasKey(redisKey);
-        if (Boolean.TRUE.equals(isBlacklisted)) {
-            log.warn("Token is blacklisted: {}", token);
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            Boolean isBlacklisted = redisTemplate.hasKey(redisKey);
+            if (Boolean.TRUE.equals(isBlacklisted)) {
+                log.warn("Token is blacklisted: {}", token);
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        } catch (Exception e) {
+            log.error("블랙리스트 체크 중 예외 발생: {}", e.getMessage(), e);
         }
 
         return chain.filter(exchange);

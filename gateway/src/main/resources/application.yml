@@ -10,7 +10,7 @@ spring:
           enabled: true  # 서비스 디스커버리를 통해 동적으로 라우트를 생성하도록 설정
   data:
     redis:
-      host: localhost
+      host: redis-stack-compose
       port: 6379
       password: ${REDIS_PASSWORD}
 
