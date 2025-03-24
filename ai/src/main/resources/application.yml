@@ -32,7 +32,11 @@ jwt:
   secret:
     key: ${JWT_SECRET_KEY}
 
-api:
-  gemini:
-    key: ${AI_API_KEY}
-    url: ${AI_URL_ENTRYPOINT}
+gemini:
+  api-url: ${GEMINI_API_URL}
+  api-key: ${GEMINI_API_KEY}
+
+slack:
+  api-url: ${slack_api_url}
+  api-token: ${slack_api_token}
+  channel: ${slack_channel}

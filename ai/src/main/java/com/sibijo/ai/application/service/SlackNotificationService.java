@@ -1,10 +1,11 @@
 package com.sibijo.ai.application.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sibijo.ai.application.config.SlackApiProperties;
 import com.sibijo.ai.domain.entity.SlackMessage;
+
 import com.sibijo.ai.infrastructure.repository.SlackMessageRepository;
 import java.nio.charset.StandardCharsets;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -18,17 +19,14 @@ public class SlackNotificationService {
 
     private final RestTemplate restTemplate;
     private final SlackMessageRepository slackMessageRepository;
-
-    @Value("${slack.api.url}")
-    private String slackApiUrl; // 예: https://slack.com/api/chat.postMessage
-
-    @Value("${slack.api.token}")
-    private String slackApiToken; // Slack Bot User OAuth Token
+    private final SlackApiProperties slackApiProperties;
 
     public SlackNotificationService(RestTemplate restTemplate,
-            SlackMessageRepository slackMessageRepository) {
+            SlackMessageRepository slackMessageRepository,
+            SlackApiProperties slackApiProperties) {
         this.restTemplate = restTemplate;
         this.slackMessageRepository = slackMessageRepository;
+        this.slackApiProperties = slackApiProperties;
     }
 
     /**
@@ -41,19 +39,14 @@ public class SlackNotificationService {
      */
     public UUID sendDirectMessageToUser(String userSlackId, String message) {
         System.out.println(userSlackId);
-        // userSlackId 유효성 검사
         if (userSlackId == null || userSlackId.trim().isEmpty()) {
             throw new IllegalArgumentException("유효한 Slack User ID가 필요합니다.");
         }
 
-
-        // 1) Slack API 호출 준비
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(slackApiToken);
-        // 명시적으로 charset 정보를 포함한 Content-Type 설정
+        headers.setBearerAuth(slackApiProperties.getApiToken());
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
-        // 요청 본문 구성
         Map<String, String> body = new HashMap<>();
         body.put("channel", userSlackId);
         body.put("text", message);
@@ -63,9 +56,8 @@ public class SlackNotificationService {
             String jsonBody = objectMapper.writeValueAsString(body);
 
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-            ResponseEntity<String> response = restTemplate.postForEntity(slackApiUrl, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(slackApiProperties.getApiUrl(), request, String.class);
 
-            // 2) HTTP 응답 코드 및 응답 바디 확인
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("슬랙 메시지 전송 실패(HTTP): " + response.getStatusCode());
             }
@@ -80,9 +72,7 @@ public class SlackNotificationService {
                 throw new RuntimeException("슬랙 메시지 전송 실패(Slack 응답): " + responseBody);
             }
 
-            // 3) 메시지 저장 전 UUID 생성 및 할당
             UUID messageUuid = UUID.randomUUID();
-
             SlackMessage slackMessage = new SlackMessage();
             slackMessage.setMessageId(messageUuid);
             slackMessage.setRecipientSlackId(userSlackId);
