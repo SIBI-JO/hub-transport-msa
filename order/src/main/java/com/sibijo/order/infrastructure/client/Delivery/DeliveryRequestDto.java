@@ -22,4 +22,11 @@ public class DeliveryRequestDto {
     private String receiverSlackId;
 
     private String token;
+
+    // 롤백 처리를 위한 정보
+    private UUID productId;
+
+    private Long productAmount;
+
+    private Long orderAmount;
 }
