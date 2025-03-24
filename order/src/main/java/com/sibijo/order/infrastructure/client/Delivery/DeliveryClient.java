@@ -11,5 +11,4 @@ public interface DeliveryClient {
     @Retry(name = "deliveryServiceRetry")
     @PostMapping("/api/deliveries")
     void createDelivery(@RequestBody DeliveryRequestDto requestDto);
-
 }

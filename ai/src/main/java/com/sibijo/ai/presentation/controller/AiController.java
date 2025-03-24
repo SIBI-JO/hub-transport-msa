@@ -3,6 +3,8 @@ package com.sibijo.ai.presentation.controller;
 import com.sibijo.ai.application.service.GeminiNotificationService;
 import com.sibijo.ai.application.service.SlackNotificationService;
 import com.sibijo.ai.domain.entity.SlackMessage;
+import com.sibijo.ai.infrastructure.client.delivery.DeliveryRouteClient;
+import com.sibijo.ai.infrastructure.client.delivery.DeliveryRouteResponseDto;
 import com.sibijo.ai.infrastructure.client.order.OrderServiceClient;
 import com.sibijo.ai.infrastructure.client.order.OrderServiceResponseDto;
 import com.sibijo.ai.infrastructure.client.product.ProductServiceClient;
@@ -19,12 +21,14 @@ import com.sibijo.ai.infrastructure.repository.SlackMessageRepository;
 import com.sibijo.ai.presentation.dto.AiNotificationRequestDto;
 import com.sibijo.ai.presentation.dto.OrderDto;
 import com.sibijo.common.dto.ApiResponse;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
@@ -37,11 +41,12 @@ public class AiController {
     private final DeliveryServiceClient deliveryServiceClient;
     private final HubServiceClient hubServiceClient;
     private final UserServiceClient userServiceClient;
-    private final DeliveryAgentServiceClient deliveryAgentServiceClient; // 배송담당자 정보 조회용
+    private final DeliveryAgentServiceClient deliveryAgentServiceClient;
+    private final DeliveryRouteClient deliveryRouteClient; // 배송경로 조회용
     private final SlackMessageRepository slackMessageRepository;
 
     /**
-     * 주문 생성 알림: 주문 생성 시, 출발지 및 도착지 허브 담당자, 그리고 배송담당자 정보를 반영하여 AI 메시지를 생성하고 Slack DM 전송
+     * 주문 생성 시, 배송경로 정보를 포함하여 AI 메시지를 생성하고 Slack DM으로 전송합니다.
      */
     @PostMapping("/orders/dm")
     public ResponseEntity<?> handleOrderCreated(@RequestBody AiNotificationRequestDto dto,
@@ -55,12 +60,10 @@ public class AiController {
             }
             OrderServiceResponseDto orderData = orderResponse.getData();
 
-            System.out.println("1");
             // 2) 상품 상세 조회
             ApiResponse<ProductDetailsDto> productResponse = productServiceClient.getProductDetails(orderData.getProductId(), "Bearer " + bearerToken);
             ProductDetailsDto productDetails = productResponse.getData();
 
-            System.out.println("2");
             // 3) 배송 상세 정보 조회
             ApiResponse<DeliveryDetailsDto> deliveryResponse = deliveryServiceClient.getDeliveryDetails(orderData.getDeliveryId(), "Bearer " + bearerToken);
             DeliveryDetailsDto deliveryDetails = deliveryResponse.getData();
@@ -68,14 +71,10 @@ public class AiController {
             if (departureHubId == null) {
                 throw new IllegalStateException("배송 상세 정보에 출발 허브 ID가 누락되었습니다.");
             }
-            System.out.println("3");
 
-            // 4) 출발지 허브 정보 조회
+            // 4) 출발지 및 도착지 허브 정보 조회
             ApiResponse<HubInfoDto> hubResponse = hubServiceClient.getHubInfo(departureHubId, "Bearer " + bearerToken);
             HubInfoDto departureHub = hubResponse.getData();
-
-            System.out.println("4");
-            // 4-1) 도착지 허브 정보 조회 (DeliveryDetailsDto에 endHubId 필드가 있다고 가정)
             UUID destinationHubId = deliveryDetails.getEndHubId();
             if (destinationHubId == null) {
                 throw new IllegalStateException("배송 상세 정보에 도착 허브 ID가 누락되었습니다.");
@@ -83,16 +82,12 @@ public class AiController {
             ApiResponse<HubInfoDto> destinationHubResponse = hubServiceClient.getHubInfo(destinationHubId, "Bearer " + bearerToken);
             HubInfoDto destinationHub = destinationHubResponse.getData();
 
-            System.out.println("5");
-            // 5) 출발지 허브 담당자 정보 조회 (User Service)
+            // 5) 허브 담당자 및 배송담당자 정보 조회
             ApiResponse<HubManagerDto> hubManagerResponse = userServiceClient.getHubManagerByHubId(departureHubId, "Bearer " + bearerToken);
             HubManagerDto hubManager = hubManagerResponse.getData();
             if (hubManager == null) {
                 throw new IllegalStateException("허브 담당자 정보가 조회되지 않았습니다.");
             }
-
-            System.out.println("6");
-            // 6) 배송담당자 정보 조회 (DeliveryDetailsDto에서 deliveryManagerId 추출)
             Long deliveryManagerId = deliveryDetails.getDeliveryManagerId();
             ApiResponse<DeliveryAgentDetailsResponseDto> agentResponse =
                     deliveryAgentServiceClient.getDeliveryAgentById(deliveryManagerId, "Bearer " + bearerToken);
@@ -101,8 +96,12 @@ public class AiController {
                 throw new IllegalStateException("배송담당자 정보가 조회되지 않았습니다.");
             }
 
-            System.out.println("7");
-            // 7) AI 메시지 생성을 위한 주문 정보 DTO 구성
+            System.out.println(orderData.getDeliveryId());
+            // 6) 배송경로 정보 조회 (deliveryId 기준)
+            ApiResponse<DeliveryRouteResponseDto> routeResponse = deliveryRouteClient.getRouteByDeliveryId(orderData.getDeliveryId(), "Bearer " + bearerToken);
+            DeliveryRouteResponseDto routeDetails = routeResponse.getData();
+
+            // 7) 주문 정보 DTO 구성
             OrderDto orderDto = new OrderDto();
             orderDto.setOrderId(orderData.getOrderId().toString());
             orderDto.setOrdererName("공급사 ID: " + orderData.getSupplierId());
@@ -111,17 +110,15 @@ public class AiController {
                     " / 수량: " + orderData.getAmount());
             orderDto.setRequestInfo(orderData.getRequest());
             orderDto.setDispatchCenter(departureHub.getHubName());
-            orderDto.setTransitCenters(null); // 경유지가 있을 경우 리스트 세팅
-            orderDto.setDestination(destinationHub.getHubName());  // 도착지 허브 이름 설정
-
-            // 배송담당자의 이름과 Slack ID 반영
+            orderDto.setTransitCenters(routeDetails != null ? List.of(departureHub.getHubName(), destinationHub.getHubName()) : null);
+            orderDto.setDestination(destinationHub.getHubName());
             orderDto.setDeliveryPersonName(deliveryAgent.getUsername());
             orderDto.setDeliveryPersonEmail(deliveryAgent.getSlackId());
 
-            // 8) Gemini API 호출하여 AI 메시지 생성
-            String aiMessage = geminiNotificationService.generateAiSlackMessage(orderDto);
+            // 8) Gemini API 호출하여 AI 메시지 생성 (배송경로의 예상거리 및 예상 소요시간 활용)
+            String aiMessage = geminiNotificationService.generateAiSlackMessage(orderDto, routeDetails);
 
-            // 9) 출발지 허브 담당자의 Slack User ID를 사용하여 DM 전송
+            // 9) Slack DM 전송
             slackNotificationService.sendDirectMessageToUser(hubManager.getSlackId(), aiMessage);
             System.out.println("Slack DM 전송 완료");
 
