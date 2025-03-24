@@ -53,7 +53,7 @@ public class DeliveryRouteService {
      *                                      // Company_Manager -> 자신의 업체만
      */
     @Transactional(readOnly = true)
-    public Page<DeliveryRoute> getDeliveryRoutes(String token, Pageable pageable) {
+    public Page<DeliveryRoute> getDeliveryRoutes(String token, UUID recipientsId, Long deliveryManagerId, Pageable pageable) {
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
@@ -61,10 +61,10 @@ public class DeliveryRouteService {
         UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
 
         Page<DeliveryRoute> routeList = switch (role) {
-            case "MASTER" -> routeRepository.findAllByDeletedAtIsNull(pageable);
-            case "HUB" -> routeRepository.findDeliveriesByHubId(hubId, pageable);
-            case "DELIVERY" -> routeRepository.findByDeliveryManagerIdAndDeletedAtIsNull(userId, pageable);
-            case "COMPANY" -> routeRepository.findByRecipientsIdAndDeletedAtIsNull(companyId, pageable);
+            case "MASTER" -> routeRepository.searchDeliveryRoutes(recipientsId, deliveryManagerId, pageable);
+            case "HUB" -> routeRepository.searchDeliveryRoutesByHub(hubId, recipientsId, deliveryManagerId, pageable);
+            case "DELIVERY" -> routeRepository.searchDeliveryRoutesByDeliveryManager(userId, recipientsId, pageable);
+            case "COMPANY" -> routeRepository.searchDeliveryRoutesByCompany(companyId, deliveryManagerId, pageable);
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 

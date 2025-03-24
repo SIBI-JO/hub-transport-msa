@@ -8,10 +8,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockInfomationDto {
-
-    private UUID productId;   // 상품 ID
-
-    private Long stockRollbackAmount; // 재고 수량
-
+public class OrderSearchDto {
+    private Long ordererId;
+    private UUID supplierId;
+    private UUID recipientsId;
 }

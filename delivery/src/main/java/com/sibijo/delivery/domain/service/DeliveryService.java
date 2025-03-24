@@ -49,7 +49,7 @@ public class DeliveryService {
      *                                      // Company_Manager -> 자신의 업체만
      */
     @Transactional(readOnly = true)
-    public Page<Delivery> getDeliveries(String token, Pageable pageable) {
+    public Page<Delivery> getDeliveries(String token, String receiver, String address, Pageable pageable) {
 
         String role = jwtUtil.extractRole(token);
         Long userId = jwtUtil.extractUserID(token);
@@ -57,10 +57,16 @@ public class DeliveryService {
         UUID companyId = jwtUtil.extractCompanyIdForOrder(token);
 
         Page<Delivery> deliveryList = switch (role) {
-            case "MASTER" -> deliveryRepository.findAllByDeletedAtIsNull(pageable);
-            case "HUB" -> deliveryRepository.findDeliveriesByHubId(hubId, pageable);
-            case "DELIVERY" -> deliveryRepository.findByDeliveryManagerIdAndDeletedAtIsNull(userId, pageable);
-            case "COMPANY" -> deliveryRepository.findByRecipientsIdAndDeletedAtIsNull(companyId, pageable);
+            case "MASTER" -> deliveryRepository.searchByReceiverAndAddress(receiver, address, pageable);
+            case "HUB" -> {
+                yield deliveryRepository.searchByReceiverAndAddressForHubManager(hubId, receiver, address, pageable);
+            }
+            case "DELIVERY" -> {
+                yield deliveryRepository.searchByReceiverAndAddressAndManager(userId, receiver, address, pageable);
+            }
+            case "COMPANY" -> {
+                yield deliveryRepository.searchByReceiverAndAddressAndRecipient(companyId, receiver, address, pageable);
+            }
             default -> throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         };
 

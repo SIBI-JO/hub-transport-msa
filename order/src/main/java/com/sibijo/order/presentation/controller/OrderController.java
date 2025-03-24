@@ -6,6 +6,7 @@ import com.sibijo.order.application.dto.OrderResponseDto;
 import com.sibijo.order.application.service.OrderService;
 import com.sibijo.order.presentation.dto.OrderCreateUpdateRequestDto;
 import com.sibijo.order.presentation.dto.OrderRequestDto;
+import com.sibijo.order.presentation.dto.OrderSearchDto;
 import com.sibijo.order.presentation.dto.OrderUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -19,11 +20,13 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j(topic = "주문 Controller")
@@ -63,10 +66,13 @@ public class OrderController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> getOrders(
+            @RequestParam(required = false) Long ordererId,
+            @RequestParam(required = false) UUID supplierId,
+            @RequestParam(required = false) UUID recipientsId,
             HttpServletRequest request,
             @PageableDefault(size = 10, page = 1, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
-        return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orderService.getOrders(token, pageable)));
+        return ResponseEntity.ok(ApiResponse.success("주문 전체 조회 성공", orderService.getOrders(token, ordererId, supplierId, recipientsId, pageable)));
     }
 
     /**
