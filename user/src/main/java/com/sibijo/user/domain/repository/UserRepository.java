@@ -1,5 +1,6 @@
 package com.sibijo.user.domain.repository;
 
+import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.domain.model.User;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,5 +16,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findBySlackId(String slackId);
 
 
-    Optional<User> findByHubId(UUID hubId);
+    Optional<User> findByHubIdAndRole(UUID hubId, Role role);
 }

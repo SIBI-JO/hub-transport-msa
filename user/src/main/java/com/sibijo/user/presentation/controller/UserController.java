@@ -2,6 +2,7 @@ package com.sibijo.user.presentation.controller;
 
 import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.user.application.service.UserService;
+import com.sibijo.user.domain.enums.Role;
 import com.sibijo.user.domain.model.User;
 import com.sibijo.user.presentation.dto.user.SignUpRequestDto;
 import com.sibijo.user.presentation.dto.user.SignUpResponseDto;
@@ -106,7 +107,7 @@ public class UserController {
     //internal
     @GetMapping("/hub-manager/{hubId}")
     private ResponseEntity<ApiResponse<UserDetailsResponseDto>> getUserBySlackId(@PathVariable UUID hubId) {
-        // 배송 담당자 배정
+        // 허브 담당자 정보 조회
         UserDetailsResponseDto user = userService.getUserByHubId(hubId);
 
         return ResponseEntity
