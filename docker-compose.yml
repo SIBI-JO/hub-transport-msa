@@ -22,6 +22,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
       - SPRING_PROFILES_ACTIVE=docker
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - eureka
     networks:
@@ -39,7 +40,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
+      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -48,7 +49,6 @@ services:
       - postgres
       - zipkin
       - redis-stack-compose
-      - redis-insight
     networks:
       - msa-network
 
@@ -64,7 +64,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
+      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - eureka
@@ -85,7 +85,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
+      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - eureka
@@ -146,7 +146,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
+      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - KAKAO_MAP_KEY=${KAKAO_MAP_KEY}
     depends_on:
@@ -169,6 +169,13 @@ services:
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_API_URL=${GEMINI_API_URL}
+      - order_service_url=${order_service_url}
+      - order_service_useDummyData=${order_service_useDummyData}
+      - slack_api_url=${slack_api_url}
+      - slack_api_token=${slack_api_token}
+      - slack_channel=${slack_channel}
     depends_on:
       - eureka
       - postgres
@@ -185,10 +192,10 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:19090/eureka
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:jdbc:postgresql://postgres:5432/hub_transport
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hub_transport
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_DATABASE_PLATFORM=${SPRING_DATASOURCE_PLATFORM}
+      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - KAKAO_MAP_KEY=${KAKAO_MAP_KEY}
     depends_on:
