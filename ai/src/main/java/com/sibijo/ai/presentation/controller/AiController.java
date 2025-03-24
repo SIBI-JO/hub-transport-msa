@@ -55,10 +55,12 @@ public class AiController {
             }
             OrderServiceResponseDto orderData = orderResponse.getData();
 
+            System.out.println("1");
             // 2) 상품 상세 조회
             ApiResponse<ProductDetailsDto> productResponse = productServiceClient.getProductDetails(orderData.getProductId(), "Bearer " + bearerToken);
             ProductDetailsDto productDetails = productResponse.getData();
 
+            System.out.println("2");
             // 3) 배송 상세 정보 조회
             ApiResponse<DeliveryDetailsDto> deliveryResponse = deliveryServiceClient.getDeliveryDetails(orderData.getDeliveryId(), "Bearer " + bearerToken);
             DeliveryDetailsDto deliveryDetails = deliveryResponse.getData();
@@ -66,11 +68,13 @@ public class AiController {
             if (departureHubId == null) {
                 throw new IllegalStateException("배송 상세 정보에 출발 허브 ID가 누락되었습니다.");
             }
+            System.out.println("3");
 
             // 4) 출발지 허브 정보 조회
             ApiResponse<HubInfoDto> hubResponse = hubServiceClient.getHubInfo(departureHubId, "Bearer " + bearerToken);
             HubInfoDto departureHub = hubResponse.getData();
 
+            System.out.println("4");
             // 4-1) 도착지 허브 정보 조회 (DeliveryDetailsDto에 endHubId 필드가 있다고 가정)
             UUID destinationHubId = deliveryDetails.getEndHubId();
             if (destinationHubId == null) {
@@ -79,6 +83,7 @@ public class AiController {
             ApiResponse<HubInfoDto> destinationHubResponse = hubServiceClient.getHubInfo(destinationHubId, "Bearer " + bearerToken);
             HubInfoDto destinationHub = destinationHubResponse.getData();
 
+            System.out.println("5");
             // 5) 출발지 허브 담당자 정보 조회 (User Service)
             ApiResponse<HubManagerDto> hubManagerResponse = userServiceClient.getHubManagerByHubId(departureHubId, "Bearer " + bearerToken);
             HubManagerDto hubManager = hubManagerResponse.getData();
@@ -86,6 +91,7 @@ public class AiController {
                 throw new IllegalStateException("허브 담당자 정보가 조회되지 않았습니다.");
             }
 
+            System.out.println("6");
             // 6) 배송담당자 정보 조회 (DeliveryDetailsDto에서 deliveryManagerId 추출)
             Long deliveryManagerId = deliveryDetails.getDeliveryManagerId();
             ApiResponse<DeliveryAgentDetailsResponseDto> agentResponse =
@@ -95,6 +101,7 @@ public class AiController {
                 throw new IllegalStateException("배송담당자 정보가 조회되지 않았습니다.");
             }
 
+            System.out.println("7");
             // 7) AI 메시지 생성을 위한 주문 정보 DTO 구성
             OrderDto orderDto = new OrderDto();
             orderDto.setOrderId(orderData.getOrderId().toString());

@@ -40,3 +40,11 @@ slack:
   api-url: ${slack_api_url}
   api-token: ${slack_api_token}
   channel: ${slack_channel}
+
+management:
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+  tracing:
+    sampling:
+      probability: 1.0
