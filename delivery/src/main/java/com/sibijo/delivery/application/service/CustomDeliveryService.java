@@ -218,7 +218,7 @@ public class CustomDeliveryService {
      *  권한 : Hub_Manager -> 자신의 허브만    //   Delivery_Manager -> 자신의 배송만
      *                                      // Company_Manager -> 자신의 업체만
      */
-    public Page<DeliveryRouteResponseDto> getDeliveryRoutes(String token, Pageable pageable) {
+    public Page<DeliveryRouteResponseDto> getDeliveryRoutes(String token, UUID recipientsId, Long deliveryManagerId, Pageable pageable) {
         Pageable validatedPageable = PageableUtils.validatePageable(pageable);
 
         String role = jwtUtil.extractRole(token);
@@ -229,7 +229,7 @@ public class CustomDeliveryService {
             throw new CustomException(CommonExceptionCode.UNAUTHORIZED_ACCESS);
         }
 
-        Page<DeliveryRoute> deliveryRouteList = deliveryRouteService.getDeliveryRoutes(token, validatedPageable);
+        Page<DeliveryRoute> deliveryRouteList = deliveryRouteService.getDeliveryRoutes(token, recipientsId, deliveryManagerId, validatedPageable);
 
         return deliveryRouteList.map(DeliveryRouteResponseDto::new);
     }

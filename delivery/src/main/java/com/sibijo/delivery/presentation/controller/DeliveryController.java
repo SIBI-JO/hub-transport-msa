@@ -135,10 +135,12 @@ public class DeliveryController {
      */
     @GetMapping("/routes")
     public ResponseEntity<ApiResponse<Page<DeliveryRouteResponseDto>>> getDeliveryRoutes(
+            @RequestParam(required = false) UUID recipientsId,
+            @RequestParam(required = false) Long deliveryManagerId,
             HttpServletRequest request,
             @PageableDefault(size = 10, page = 1, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String token = jwtUtil.extractToken(request);
-        return ResponseEntity.ok(ApiResponse.success("배송 경로 전체 조회 성공", deliveryService.getDeliveryRoutes(token, pageable)));
+        return ResponseEntity.ok(ApiResponse.success("배송 경로 전체 조회 성공", deliveryService.getDeliveryRoutes(token, recipientsId, deliveryManagerId, pageable)));
     }
 
 
