@@ -1,5 +1,6 @@
 package com.sibijo.delivery.application.service;
 
+import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.JwtUtil;
@@ -20,6 +21,7 @@ import com.sibijo.delivery.infrastructure.client.order.OrderCreateUpdateRequestD
 import com.sibijo.delivery.infrastructure.client.product.ProductClient;
 import com.sibijo.delivery.infrastructure.client.product.UpdateStockRequest;
 import com.sibijo.delivery.infrastructure.client.user.UserClient;
+
 import com.sibijo.delivery.infrastructure.client.user.UserResponseDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRequestDto;
 import com.sibijo.delivery.presentation.dto.DeliveryRouteRequestDto;
@@ -33,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Slf4j(topic = "배송 통합 Service")
 @Service
@@ -116,6 +120,7 @@ public class CustomDeliveryService {
         // 5. 배송 경로 생성에 필요한 정보 생성
         DeliveryRouteRequestDto routeRequestDto = new DeliveryRouteRequestDto(
                 1,
+                hubRoute.getRouteSequence().toString(),
                 startHub.getHubId(),
                 endHub.getHubId(),
                 requestDto.getRecipientsId(),
@@ -183,8 +188,8 @@ public class CustomDeliveryService {
 
 
     /**
-     *  배송 취소
-     *  권한 : Hub_Manager -> 자신의 허브만
+     * 배송 취소
+     * 권한 : Hub_Manager -> 자신의 허브만
      */
     public DeliveryResponseDto deleteDelivery(UUID deliveryId, String token) {
         String role = jwtUtil.extractRole(token);

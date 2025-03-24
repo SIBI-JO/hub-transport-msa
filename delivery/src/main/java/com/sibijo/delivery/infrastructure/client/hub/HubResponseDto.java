@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class HubResponseDto {
 
     private String distance;
-
     private String estimatedTime;
+    private String routeSequence;
 
 }

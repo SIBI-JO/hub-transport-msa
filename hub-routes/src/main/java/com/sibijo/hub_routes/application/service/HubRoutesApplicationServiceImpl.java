@@ -4,7 +4,6 @@ import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
 import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.hub_routes.application.dto.HubRoutesCommand;
-import com.sibijo.hub_routes.domain.exception.HubRoutesDomainExceptionCode;
 import com.sibijo.hub_routes.domain.model.HubRoutesEntity;
 import com.sibijo.hub_routes.domain.repository.HubRoutesRepository;
 import com.sibijo.hub_routes.domain.service.HubRoutesDomainService;
@@ -21,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -42,35 +42,31 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
     @Transactional
     public HubRoutesResponseDto createHubRoutes(String token, HubRoutesRequestDto hubRoutesRequestDto) {
         checkUserAuth(token, "MASTER");
-        //중복 체크
-        if (hubRoutesRepository.existsByDepartureAndDestinationID(hubRoutesRequestDto.departureId(),
-                hubRoutesRequestDto.destinationId())) {
-            throw new CustomException(HubRoutesDomainExceptionCode.HUB_ROUTES_IS_DUPLICATED);
-        }
         log.info("hubRoutesRequestDto ={}", hubRoutesRequestDto);
-        // 허브서비스에 허브아이디로 좌표 조회
-        HubServiceClientDto departure = hubServiceClient.getHubForHubRoutes(
-                hubRoutesRequestDto.departureId());
-        HubServiceClientDto destination = hubServiceClient.getHubForHubRoutes(
-                hubRoutesRequestDto.destinationId());
-        log.info("HubServiceClientDto ={}", departure);
-        log.info("HubServiceClientDto ={}", destination);
-        // 허브서비스에 중앙허브 데이터 전부 조회
-//        List<HubServiceResponseDto> centralHubList = hubServiceClient.getCentralHub();
+        // 허브서비스에 허브 전체 조회
+        HubServiceClientDto hubServiceClientDto = hubServiceClient.getHubForHubRoutes();
 
-        // 출발, 도착 좌표, 중앙허브 데이터 -> command로 바꿈
+        // 출발, 도착, 허브 전체 데이터 -> command로 바꿈
         HubRoutesCommand hubRoutesCommand = new HubRoutesCommand(
-                departure,
-                destination,
-                null
+                hubRoutesRequestDto.departureId(),
+                hubRoutesRequestDto.destinationId(),
+                hubServiceClientDto.getHubs()
         );
         log.info("createHubRoutesCommand ={}", hubRoutesCommand);
 
         HubRoutesEntity hubRoutesEntity = hubRoutesDomainService.createHubRoutes(
                 hubRoutesCommand);
 
-        HubRoutesEntity savedHubRoutesEntity = hubRoutesRepository.save(hubRoutesEntity);
-        return convertToHubRoutesResponseDto(savedHubRoutesEntity);
+        String hashedSequenceJson = hubRoutesEntity.getHashSequence();
+
+        //기존 데이터 있으면 save 안함
+        Optional<HubRoutesEntity> compareHubRoutesEntity = hubRoutesRepository.findByHashSequence(hashedSequenceJson);
+
+        if (compareHubRoutesEntity.isEmpty()) {
+            HubRoutesEntity savedHubRoutesEntity = hubRoutesRepository.save(hubRoutesEntity);
+            return convertToHubRoutesResponseDto(savedHubRoutesEntity);
+        }
+        return convertToHubRoutesResponseDto(compareHubRoutesEntity.get());
     }
 
     /**
@@ -129,11 +125,18 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
      */
     @Override
     public HubRouteToDeliveryDto getHubRouteForOrder(UUID startHubId, UUID endHubId) {
-        HubRoutesEntity hubRoutesEntity = hubRoutesDomainService.getHubRouteForOrder(startHubId,
-                endHubId);
+        //허브 테이블 전체 조회
+        HubServiceClientDto hubServiceClientDto = hubServiceClient.getHubForHubRoutes();
+        HubRoutesCommand hubRoutesCommand = new HubRoutesCommand(
+                startHubId,
+                endHubId,
+                hubServiceClientDto.getHubs()
+        );
+        HubRoutesEntity hubRoutesEntity = hubRoutesDomainService.getHubRouteForOrder(hubRoutesCommand);
         return new HubRouteToDeliveryDto(
                 String.valueOf(hubRoutesEntity.getDistance()),
-                String.valueOf(hubRoutesEntity.getEstimatedTime())
+                String.valueOf(hubRoutesEntity.getEstimatedTime()),
+                hubRoutesEntity.getSequence()
         );
     }
 
@@ -143,9 +146,10 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
                 hubRoutesEntity.getId(),
                 hubRoutesEntity.getDepartureId(),
                 hubRoutesEntity.getDestinationId(),
-                hubRoutesEntity.getCentralId(),
                 hubRoutesEntity.getDistance(),
-                hubRoutesEntity.getEstimatedTime()
+                hubRoutesEntity.getEstimatedTime(),
+                hubRoutesEntity.getSequence(),
+                hubRoutesEntity.getHashSequence()
         );
     }
 

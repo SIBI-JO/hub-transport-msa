@@ -12,4 +12,5 @@ import lombok.Setter;
 public class HubRouteToDeliveryDto {
         private String distance;
         private String estimatedTime;
+        private String routeSequence;
 }

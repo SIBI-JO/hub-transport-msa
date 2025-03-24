@@ -15,5 +15,5 @@ public interface HubRoutesDomainService {
 
     HubRoutesEntity deleteHubRoute(UUID hubRoutesId);
 
-    HubRoutesEntity getHubRouteForOrder(UUID startHubId, UUID endHubId);
+    HubRoutesEntity getHubRouteForOrder(HubRoutesCommand hubRoutesCommand);
 }

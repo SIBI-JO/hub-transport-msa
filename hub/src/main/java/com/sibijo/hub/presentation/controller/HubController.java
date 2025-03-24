@@ -4,13 +4,13 @@ import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.hub.application.service.HubApplicationService;
+import com.sibijo.hub.domain.repository.HubRepository;
 import com.sibijo.hub.presentation.dto.HubRequestDto;
 import com.sibijo.hub.presentation.dto.HubResponseDto;
 import com.sibijo.hub.presentation.dto.HubToRouteDto;
 import com.sibijo.hub.presentation.dto.HubUpdateRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,15 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -36,6 +30,7 @@ public class HubController {
 
     private final HubApplicationService hubApplicationService;
     private final JwtUtil jwtUtil;
+    private final HubRepository hubRepository;
 
     //회원가입 시 허브 아이디 존재 확인
     @GetMapping("/{hubId}/exists")
@@ -44,18 +39,15 @@ public class HubController {
         return ResponseEntity.ok(ApiResponse.success("허브 존재 확인 성공", exists));
     }
 
-    @GetMapping("/hub-routes/{hubId}")
-    public HubToRouteDto getHubForHubRoutes(@PathVariable("hubId") UUID hubId) {
-        return hubApplicationService.getHubForHubRoutes(hubId);
+    @GetMapping("/hub-routes")
+    public HubToRouteDto getHubForHubRoutes() {
+        return hubApplicationService.getHubForHubRoutes();
     }
 
     /**
-     *
      * @param hubRequestDto
      * @param request
-     * @return
-     *
-     * auth : master
+     * @return auth : master
      */
     @PostMapping
     public ResponseEntity<ApiResponse<HubResponseDto>> createHub(
@@ -74,14 +66,11 @@ public class HubController {
     }
 
     /**
-     *
      * @param hubName
      * @param hubLocation
      * @param hubTypeName
      * @param pageable
-     * @return
-     *
-     * auth : all
+     * @return auth : all
      */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<HubResponseDto>>> searchHubs(
@@ -121,17 +110,14 @@ public class HubController {
     }
 
     /**
-     *
      * @param hubId
      * @param request
-     * @return
-     *
-     * auth : all
+     * @return auth : all
      */
     @GetMapping("/{hubId}")
     public ResponseEntity<ApiResponse<HubResponseDto>> getHub(
             @PathVariable("hubId") UUID hubId,
-            HttpServletRequest request ) {
+            HttpServletRequest request) {
         String token = jwtUtil.extractToken(request);
         HubResponseDto hubResponseDto = hubApplicationService.getHub(token, hubId);
         return ResponseEntity.ok(ApiResponse.success("허브 단일 조회 성공", hubResponseDto));
@@ -139,12 +125,9 @@ public class HubController {
 
 
     /**
-     *
      * @param hubId
      * @param hubUpdateRequestDto
-     * @return
-     *
-     * auth : master
+     * @return auth : master
      */
     @PatchMapping("/{hubId}")
     public ResponseEntity<ApiResponse<HubResponseDto>> updateHub(
@@ -157,11 +140,8 @@ public class HubController {
     }
 
     /**
-     *
      * @param hubId
-     * @return
-     *
-     * auth : master
+     * @return auth : master
      */
     @DeleteMapping("/{hubId}")
     public ResponseEntity<ApiResponse<?>> deleteHub(@PathVariable("hubId") UUID hubId, HttpServletRequest request) {

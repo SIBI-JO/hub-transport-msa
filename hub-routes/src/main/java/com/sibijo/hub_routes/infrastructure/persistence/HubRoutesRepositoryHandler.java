@@ -74,4 +74,13 @@ public class HubRoutesRepositoryHandler implements HubRoutesRepository {
         return jpaHubRoutesRepository.findByDepartureIdAndDestinationId(startHubId, endHubId);
     }
 
+    /**
+     * @param hashedSequenceJson
+     * @return
+     */
+    @Override
+    public Optional<HubRoutesEntity> findByHashSequence(String hashedSequenceJson) {
+        return jpaHubRoutesRepository.findByHashSequence(hashedSequenceJson);
+    }
+
 }

@@ -20,4 +20,6 @@ public interface HubRoutesRepository {
     void deleteHubRoute(HubRoutesEntity hubRoutesEntity);
 
     Optional<HubRoutesEntity> findByDepartureIdAndDestinationId(UUID startHubId, UUID endHubId);
+
+    Optional<HubRoutesEntity> findByHashSequence(String hashedSequenceJson);
 }

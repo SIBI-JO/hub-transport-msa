@@ -8,10 +8,7 @@ import com.sibijo.hub.domain.model.HubType;
 import com.sibijo.hub.domain.repository.HubRepository;
 import com.sibijo.hub.domain.service.HubDomainService;
 import com.sibijo.hub.exception.domain.HubDomainExceptionCode;
-import com.sibijo.hub.presentation.dto.HubRequestDto;
-import com.sibijo.hub.presentation.dto.HubResponseDto;
-import com.sibijo.hub.presentation.dto.HubToRouteDto;
-import com.sibijo.hub.presentation.dto.HubUpdateRequestDto;
+import com.sibijo.hub.presentation.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,7 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -45,20 +44,16 @@ public class HubApplicationServiceImpl implements HubApplicationService {
     /**
      * 허브 경로서비스 에서
      *
-     * @param hubId
+     * @param
      * @return
      */
     @Override
-    public HubToRouteDto getHubForHubRoutes(UUID hubId) {
-        HubEntity foundHub = findHubEntityOrElseThrow(hubId);
-        return new HubToRouteDto(
-                foundHub.getId(),
-                foundHub.getHubName(),
-                foundHub.getHubLocation(),
-                foundHub.getLatitude(),
-                foundHub.getLongitude(),
-                foundHub.getHubType().getHubTypeName()
-        );
+    public HubToRouteDto getHubForHubRoutes() {
+        List<HubDto> hubs = hubRepository.findAll()
+                .stream()
+                .map(HubDto::fromEntity)
+                .collect(Collectors.toList());
+        return new HubToRouteDto(hubs);
     }
 
     /**

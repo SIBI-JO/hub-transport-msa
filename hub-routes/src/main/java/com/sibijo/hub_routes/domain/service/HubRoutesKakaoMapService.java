@@ -4,16 +4,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sibijo.common.exception.CustomException;
 import com.sibijo.common.exception.codes.CommonExceptionCode;
-import com.sibijo.hub_routes.application.dto.CentralHubDto;
-import com.sibijo.hub_routes.application.dto.HubRoutesCommand;
 import com.sibijo.hub_routes.application.dto.HubRoutesKakaoMapResponseDto;
 import com.sibijo.hub_routes.application.dto.RouteCoordRequestDto;
 import com.sibijo.hub_routes.application.dto.RouteTimeResponseDto;
-import com.sibijo.hub_routes.infrastructure.dto.HubServiceClientDto;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @Slf4j
 @Service
@@ -104,84 +99,6 @@ public class HubRoutesKakaoMapService {
             e.printStackTrace();
             throw new CustomException(CommonExceptionCode.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    public CentralHubDto getCentralHub(HubRoutesCommand hubRoutesCommand) {
-        BigDecimal departureToCentralMinDistance = new BigDecimal(Integer.MAX_VALUE);
-        UUID departureAndCentralId = null;
-        int departureAndCentralDuration = 0;
-
-        BigDecimal destinationToCentralMinDistance = new BigDecimal(Integer.MAX_VALUE);
-        UUID destinationAndCentralId = null;
-        int destinationAndCentralDuration = 0;
-
-        for (HubServiceClientDto central : hubRoutesCommand.centralHubList()) {
-            // 도착에 가장 가까운 중앙허브
-            RouteCoordRequestDto routeCoordRequestDto = buildRouteCoordRequest(
-                    hubRoutesCommand.departure(), central);
-
-            RouteTimeResponseDto departureAndCentral = getDirections(routeCoordRequestDto);
-            compareAndUpdateMinDistance(departureAndCentral, departureToCentralMinDistance,
-                    departureAndCentralId, central.getHubId(), departureAndCentralDuration);
-
-            // 출발에 가장 가까운 중앙허브
-            RouteCoordRequestDto destinationWithCentral = buildRouteCoordRequest(
-                    hubRoutesCommand.destination(), central);
-            RouteTimeResponseDto destinationAndCentral = getDirections(destinationWithCentral);
-            compareAndUpdateMinDistance(destinationAndCentral, destinationToCentralMinDistance,
-                    destinationAndCentralId, central.getHubId(), destinationAndCentralDuration);
-        }
-
-        if (departureAndCentralId != null && destinationAndCentralId != null) {
-            if (departureAndCentralId.equals(destinationAndCentralId)) {
-                // 출발지와 도착지가 같은 중앙 허브
-                return new CentralHubDto(
-                        departureAndCentralId,
-                        null,
-                        departureToCentralMinDistance,
-                        destinationToCentralMinDistance,
-                        departureAndCentralDuration,
-                        destinationAndCentralDuration
-                );
-            }
-        }
-
-        return new CentralHubDto(
-                departureAndCentralId,
-                destinationAndCentralId,
-                departureToCentralMinDistance,
-                destinationToCentralMinDistance,
-                departureAndCentralDuration,
-                destinationAndCentralDuration
-        );
-    }
-
-    // 출발지와 중앙허브 간의 거리 및 시간을 비교하여 업데이트
-    private void compareAndUpdateMinDistance(RouteTimeResponseDto responseDto,
-            BigDecimal minDistance, UUID hubId, UUID centralHubId, int duration) {
-        if (responseDto.getRoutes().get(0).getSummary().getDistanceToKm()
-                .compareTo(minDistance) < 0) {
-            minDistance = responseDto.getRoutes().get(0).getSummary().getDistanceToKm();
-            duration = responseDto.getRoutes().get(0).getSummary().getDurationToMinutes();
-            hubId = centralHubId;
-        }
-    }
-
-    // 출발지 및 도착지, 중앙허브 간의 요청을 빌드
-    private RouteCoordRequestDto buildRouteCoordRequest(HubServiceClientDto location,
-            HubServiceClientDto central) {
-        return RouteCoordRequestDto.builder()
-                .departure(RouteCoordRequestDto.Location.builder()
-                        .x(String.valueOf(location.getLongitude()))
-                        .y(String.valueOf(location.getLatitude()))
-                        .angle(0)
-                        .build())
-                .destination(RouteCoordRequestDto.Location.builder()
-                        .x(String.valueOf(central.getLongitude()))
-                        .y(String.valueOf(central.getLatitude()))
-                        .build())
-                .wayPoints(List.of())
-                .build();
     }
 
 }

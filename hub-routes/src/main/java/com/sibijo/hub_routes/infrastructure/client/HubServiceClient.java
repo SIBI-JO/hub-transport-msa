@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "hub-service")
 public interface HubServiceClient {
 
-    @GetMapping("/api/hubs/hub-routes/{hubId}")
-    HubServiceClientDto getHubForHubRoutes(@PathVariable("hubId") UUID hubId);
+    @GetMapping("/api/hubs/hub-routes")
+    HubServiceClientDto getHubForHubRoutes();
 
     @GetMapping("/api/hubs/central-hub")
     List<HubServiceResponseDto> getCentralHub();

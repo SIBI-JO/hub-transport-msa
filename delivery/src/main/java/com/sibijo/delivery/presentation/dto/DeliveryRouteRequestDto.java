@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class DeliveryRouteRequestDto {
 
     private Integer sequence;
+    private String routeSequence;
     private UUID startHubId;
     private UUID endHubId;
     private UUID recipientsId;
