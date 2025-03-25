@@ -15,8 +15,8 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .components(new Components().addSecuritySchemes
-                                ("Bearer Authentication", createAPIKeyScheme()))
-                        .info(apiInfo());
+                        ("Bearer Authentication", createAPIKeyScheme()))
+                .info(apiInfo());
     }
 
     private Info apiInfo() {

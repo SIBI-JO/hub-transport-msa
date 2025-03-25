@@ -4,7 +4,6 @@ import com.sibijo.common.dto.ApiResponse;
 import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.common.utils.page.PageableUtils;
 import com.sibijo.hub.application.service.HubApplicationService;
-import com.sibijo.hub.domain.repository.HubRepository;
 import com.sibijo.hub.presentation.dto.HubRequestDto;
 import com.sibijo.hub.presentation.dto.HubResponseDto;
 import com.sibijo.hub.presentation.dto.HubToRouteDto;
@@ -30,7 +29,11 @@ public class HubController {
 
     private final HubApplicationService hubApplicationService;
     private final JwtUtil jwtUtil;
-    private final HubRepository hubRepository;
+
+    @GetMapping("/health-check")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("OK");
+    }
 
     //회원가입 시 허브 아이디 존재 확인
     @GetMapping("/{hubId}/exists")

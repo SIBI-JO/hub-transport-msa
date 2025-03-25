@@ -1,17 +1,23 @@
 package com.sibijo.hub_routes.presentation.dto;
 
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record
-HubRoutesResponseDto(
-        UUID id,
-        UUID departureId,
-        UUID destinationID,
-        BigDecimal distance,
-        Integer estimatedTime,
-        String sequence,
-        String hashedSequence
-) {
+@Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class HubRoutesResponseDto {
+    private UUID id;
+    private UUID departureId;
+    private UUID destinationId;
+    private BigDecimal distance;
+    private Integer estimatedTime;
+    private String sequence;
+    private String hashedSequence;
 
 }
+
+

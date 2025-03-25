@@ -28,12 +28,15 @@ public class HubRoutesController {
     private final HubRoutesApplicationService hubRoutesApplicationService;
     private final JwtUtil jwtUtil;
 
+    @GetMapping("/health-check")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok().body("OK");
+    }
 
     @GetMapping("/order")
     public HubRouteToDeliveryDto getHubRouteForOrder(
             @RequestParam("startHubId") UUID startHubId,
             @RequestParam("endHubId") UUID endHubId) {
-        HubRouteToDeliveryDto hubRouteToDeliveryDto = hubRoutesApplicationService.getHubRouteForOrder(startHubId, endHubId);
         return hubRoutesApplicationService.getHubRouteForOrder(startHubId, endHubId);
     }
 
