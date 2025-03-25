@@ -198,6 +198,7 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - KAKAO_MAP_KEY=${KAKAO_MAP_KEY}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - eureka
       - postgres
