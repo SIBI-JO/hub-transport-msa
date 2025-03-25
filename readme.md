@@ -57,7 +57,7 @@
 # 트러블슈팅
 - [트러블 슈팅 #1 : 삭제/수정된 유저의 JWT를 통한 접근 문제 해결](https://github.com/SIBI-JO/hub-transport-msa/wiki/%ED%8A%B8%EB%9F%AC%EB%B8%94%EC%8A%88%ED%8C%85-%231:-%EC%82%AD%EC%A0%9C-%EC%88%98%EC%A0%95%EB%90%9C-%EC%9C%A0%EC%A0%80%EC%9D%98-JWT%EB%A5%BC-%ED%86%B5%ED%95%9C-%EC%A0%91%EA%B7%BC-%EB%AC%B8%EC%A0%9C)
 - [트러블슈팅 #2 : MSA 환경에서 DTO 필드 네이밍 불일치 문제](https://github.com/SIBI-JO/hub-transport-msa/wiki/%ED%8A%B8%EB%9F%AC%EB%B8%94%EC%8A%88%ED%8C%85-%232-:-MSA-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-DTO-%ED%95%84%EB%93%9C-%EB%84%A4%EC%9D%B4%EB%B0%8D-%EB%B6%88%EC%9D%BC%EC%B9%98-%EB%AC%B8%EC%A0%9C)
-- [트러블슈팅 #3 주문과 배송의 동시 생성에서 발생한 트랜잭션 문제](https://github.com/SIBI-JO/hub-transport-msa/wiki/%ED%8A%B8%EB%9F%AC%EB%B8%94%EC%8A%88%ED%8C%85-%233-%EC%A3%BC%EB%AC%B8%EA%B3%BC-%EB%B0%B0%EC%86%A1%EC%9D%98-%EB%8F%99%EC%8B%9C-%EC%83%9D%EC%84%B1%EC%97%90%EC%84%9C-%EB%B0%9C%EC%83%9D%ED%95%9C-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98-%EB%AC%B8%EC%A0%9C)
+- [트러블슈팅 #3 : 주문과 배송의 동시 생성에서 발생한 트랜잭션 문제](https://github.com/SIBI-JO/hub-transport-msa/wiki/%ED%8A%B8%EB%9F%AC%EB%B8%94%EC%8A%88%ED%8C%85-%233-%EC%A3%BC%EB%AC%B8%EA%B3%BC-%EB%B0%B0%EC%86%A1%EC%9D%98-%EB%8F%99%EC%8B%9C-%EC%83%9D%EC%84%B1%EC%97%90%EC%84%9C-%EB%B0%9C%EC%83%9D%ED%95%9C-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98-%EB%AC%B8%EC%A0%9C)
 - [트러블슈팅 #4 : 허브 투 허브 릴레이 방식의 다익스트라 비용 계산시 카카오맵 API 이용 및 많은 API 호출](https://github.com/SIBI-JO/hub-transport-msa/wiki/%ED%8A%B8%EB%9F%AC%EB%B8%94%EC%8A%88%ED%8C%85-%234-:-%ED%97%88%EB%B8%8C-%ED%88%AC-%ED%97%88%EB%B8%8C-%EB%A6%B4%EB%A0%88%EC%9D%B4-%EB%B0%A9%EC%8B%9D%EC%9D%98-%EB%8B%A4%EC%9D%B5%EC%8A%A4%ED%8A%B8%EB%9D%BC-%EB%B9%84%EC%9A%A9-%EA%B3%84%EC%82%B0%EC%8B%9C-%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%A7%B5-API-%EC%9D%B4%EC%9A%A9-%EB%B0%8F-%EB%A7%8E%EC%9D%80-API-%ED%98%B8%EC%B6%9C)
 
 
