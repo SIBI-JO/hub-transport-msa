@@ -49,7 +49,7 @@ public class HubRoutesEntity extends BaseEntity {
     @Column(name = "sequence", columnDefinition = "TEXT", nullable = false)
     private String sequence;
 
-    @Column(name = "hash-sequence", nullable = false)
+    @Column(name = "hash_sequence", nullable = false)
     private String hashSequence;
 
     @Builder
@@ -95,31 +95,35 @@ public class HubRoutesEntity extends BaseEntity {
     }
 
     public void updateDestinationId(UUID destinationId) {
-        if (destinationId != null) {
-            this.destinationId = destinationId;
+        if (destinationId == null) {
+            throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
         }
-        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
+        this.destinationId = destinationId;
+        System.out.println("destinationId: " + destinationId);
     }
 
     public void updateDepartureId(UUID departureId) {
-        if (departureId != null) {
-            this.departureId = departureId;
+        if (departureId == null) {
+            throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
         }
-        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
+//        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ID);
+        this.departureId = departureId;
+        System.out.println("departureId=" + departureId);
     }
 
     public void updateDistance(BigDecimal distance) {
-        if (distance != null) {
-            this.distance = distance;
+        System.out.println("distance: " + distance);
+        if (distance == null) {
+            throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ROUTE_DISTANCE);
         }
-        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ROUTE_DISTANCE);
+        this.distance = distance;
     }
 
     public void updateEstimatedTime(Integer estimatedTime) {
-        if (estimatedTime != null) {
-            this.estimatedTime = estimatedTime;
+        if (estimatedTime == null) {
+            throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ROUTE_TIME);
         }
-        throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_ROUTE_TIME);
+        this.estimatedTime = estimatedTime;
     }
 
     public void updateRoutes(BigDecimal distance, Integer estimatedTime) {

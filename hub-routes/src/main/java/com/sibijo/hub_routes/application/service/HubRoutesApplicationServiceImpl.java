@@ -62,17 +62,26 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
         String hashedSequenceJson = hubRoutesEntity.getHashSequence();
 
         // Redis에 중복 데이터 조회
+        Long startTime = System.nanoTime();
         HubRoutesResponseDto cachedResponse = hubRouteCacheService.getCachedRecentRoutes(hashedSequenceJson);
+        Long endTime = System.nanoTime();
+        System.out.println("Redis 캐시 조회 시간: " + (endTime - startTime) / 1_000_000.0 + " ms");
         if (cachedResponse != null) {
             return cachedResponse;
         }
 
         //기존 데이터 있으면 save 안함
+        startTime = System.nanoTime();
         Optional<HubRoutesEntity> compareHubRoutesEntity = hubRoutesRepository.findByHashSequence(hashedSequenceJson);
+        endTime = System.nanoTime();
+        System.out.println("DB 조회 시간: " + (endTime - startTime) / 1_000_000.0 + " ms");
 
         HubRoutesResponseDto responseDto = null;
         if (compareHubRoutesEntity.isEmpty()) {
+            startTime = System.nanoTime();
             HubRoutesEntity savedHubRoutesEntity = hubRoutesRepository.save(hubRoutesEntity);
+            endTime = System.nanoTime();
+            System.out.println("DB 저장 시간: " + (endTime - startTime) / 1_000_000.0 + " ms");
             responseDto = convertToHubRoutesResponseDto(savedHubRoutesEntity);
         } else {
             responseDto = convertToHubRoutesResponseDto(compareHubRoutesEntity.get());

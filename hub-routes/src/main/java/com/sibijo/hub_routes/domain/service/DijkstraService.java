@@ -34,13 +34,14 @@ public class DijkstraService {
         if (!hubListGraph.containsKey(departureHubName) || !hubListGraph.containsKey(destinationHubName)) {
             throw new CustomException(HubRoutesDomainExceptionCode.INVALID_HUB_NAME_FOR_HUB_ROUTES);
         }
-        //그래프의 모든 경로 생성(DFS)
+        //그래프의 모든 경로 생성
         List<List<String>> allPath = findAllPath(hubListGraph, departureHubName, destinationHubName, new ArrayList<>(), new ArrayList<>());
         Map<Integer, List<String>> matchPathMap = new HashMap<>();
         for (int i = 0; i < allPath.size(); i++) {
             matchPathMap.put(i, allPath.get(i));
         }
-
+        log.info("matchPathMap={}", matchPathMap);
+        log.info("matchPathMap count={}", matchPathMap.keySet().size());
         //카카오맵 api 요청 dto로 변환
         Map<Integer, RouteCoordRequestDto> routeCoordRequestDtoMap = convertHubNamesToLocations(matchPathMap, hubRoutesCommand.hubDtoList());
 
@@ -107,6 +108,7 @@ public class DijkstraService {
             if (routeTimeResponseDto != null) {
                 result.put(routeIndex, routeTimeResponseDto);
             }
+            log.info("routeTimeResponseDto={}", routeTimeResponseDto);
         }
         return result;
     }
@@ -175,7 +177,8 @@ public class DijkstraService {
         hubConnections.put("경상북도 센터", Arrays.asList("경기 남부 센터", "대구광역시 센터"));
         //반대 방향도 만들어 주기
         Map<String, List<String>> biHubConnections = createBiHubGraph(hubConnections);
-
+        log.info("biHubConnections={}", biHubConnections);
+        log.info("biHubConnections count={}", biHubConnections.keySet().size());
         //허브 테이블의 데이터만으로 그래프 만듬
         Map<String, List<HubDto>> graph = new HashMap<>();
 
@@ -204,6 +207,7 @@ public class DijkstraService {
             }
         }
         log.info("graph={}", graph);
+        log.info("graph count={}", graph.keySet().size());
 
         return graph;
     }
