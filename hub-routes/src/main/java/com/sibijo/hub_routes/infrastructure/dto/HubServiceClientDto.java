@@ -2,6 +2,7 @@ package com.sibijo.hub_routes.infrastructure.dto;
 
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -10,5 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class HubServiceClientDto {
-    List<HubDto> hubs;
+    @Builder.Default
+    List<HubDto> hubs = new ArrayList<>();
 }

@@ -6,6 +6,7 @@ import com.sibijo.common.utils.Auth.JwtUtil;
 import com.sibijo.hub_routes.application.dto.HubRoutesCommand;
 import com.sibijo.hub_routes.domain.model.HubRoutesEntity;
 import com.sibijo.hub_routes.domain.repository.HubRoutesRepository;
+import com.sibijo.hub_routes.domain.service.HubRouteCacheService;
 import com.sibijo.hub_routes.domain.service.HubRoutesDomainService;
 import com.sibijo.hub_routes.infrastructure.client.HubServiceClient;
 import com.sibijo.hub_routes.infrastructure.dto.HubServiceClientDto;
@@ -33,6 +34,7 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
     private final HubRoutesRepository hubRoutesRepository;
     private final HubRoutesDomainService hubRoutesDomainService;
     private final HubServiceClient hubServiceClient;
+    private final HubRouteCacheService hubRouteCacheService;
 
     /**
      * @param hubRoutesRequestDto
@@ -59,14 +61,27 @@ public class HubRoutesApplicationServiceImpl implements HubRoutesApplicationServ
 
         String hashedSequenceJson = hubRoutesEntity.getHashSequence();
 
+        // Redis에 중복 데이터 조회
+        HubRoutesResponseDto cachedResponse = hubRouteCacheService.getCachedRecentRoutes(hashedSequenceJson);
+        if (cachedResponse != null) {
+            return cachedResponse;
+        }
+
         //기존 데이터 있으면 save 안함
         Optional<HubRoutesEntity> compareHubRoutesEntity = hubRoutesRepository.findByHashSequence(hashedSequenceJson);
 
+        HubRoutesResponseDto responseDto = null;
         if (compareHubRoutesEntity.isEmpty()) {
             HubRoutesEntity savedHubRoutesEntity = hubRoutesRepository.save(hubRoutesEntity);
-            return convertToHubRoutesResponseDto(savedHubRoutesEntity);
+            responseDto = convertToHubRoutesResponseDto(savedHubRoutesEntity);
+        } else {
+            responseDto = convertToHubRoutesResponseDto(compareHubRoutesEntity.get());
         }
-        return convertToHubRoutesResponseDto(compareHubRoutesEntity.get());
+
+        // Redis에 최신 데이터 저장
+        hubRouteCacheService.createCacheRoute(hashedSequenceJson, responseDto);
+
+        return responseDto;
     }
 
     /**
