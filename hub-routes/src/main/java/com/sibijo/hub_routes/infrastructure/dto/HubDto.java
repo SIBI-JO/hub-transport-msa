@@ -19,4 +19,9 @@ public class HubDto {
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String hubTypeName;
+
+    @Override
+    public String toString() {
+        return hubName;
+    }
 }
